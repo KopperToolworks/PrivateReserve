@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Software — Calibration (draft)</title>
+  <link rel="stylesheet" href="page.css">
+</head>
+<body>
+  <article class="page">
+    <p class="lede">Private Reserve · DIN controller · first draft</p>
+    <h1>Calibration</h1>
+    <p>Initial setup and later recals. A full first run does every stage. A later run can open one process. Header prefix is <code>CAL ·</code>.</p>
+
+    <nav class="sec" aria-label="Software pages">
+      <a href="index.html">Overview</a>
+      <a href="main.html">Main</a>
+      <a href="calibration.html" aria-current="page">Calibration</a>
+      <a href="diagnostics.html">Diagnostics</a>
+      <a href="settings.html">Settings</a>
+      <a href="wiring-guide.html">Wiring</a>
+      <a class="pdf-dl" href="../pdf/Software_User_Manual.pdf">User Manual (PDF)</a>
+      <a class="pdf-dl" href="../pdf/Wiring_Guide.pdf">Wiring Guide (PDF)</a>
+    </nav>
+
+    <div class="banner">
+      <strong>Draft.</strong> Pixel layout:
+      UI/calibration.html.
+      Hardware procedures:
+      Limit_Marker_And_Snug.md,
+      Load_Bin_Obstruction_Calibration.md.
+    </div>
+
+    <div class="warn">
+      <strong>The door will move.</strong> Path-clear must pass before any stage
+      that commands the motor. There is no physical E-stop. HOLD cancels: PWM
+      off, wait for current decay, leave K1 unchanged, discard the partial
+      result, return to the stage list. Never write NVS mid-motion. Review
+      is the single save.
+    </div>
+
+    <section class="shot">
+      <h2>1. Stage list</h2>
+      <p>Entry for a full setup and for a single recalibration. Status words name stale or missing work so you do not run a later stage on a bad earlier one. Six compact rows fit. TURN windows the list. All eight stages are on this shot.</p>
+      <figure class="lcd">
+        <img src="shots/cal-01.png" width="320" alt="CAL stages list with stroke entry selected, needed">
+        <figcaption>Figure 1. CAL · stages. Stroke entry selected. Stages 7–8 blocked until stroke exists.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · stages</code></td><td>Header left. Calibration mode, stage list.</td></tr>
+          <tr><td><code>8 stages</code></td><td>Header right. Count of guided processes. Review is a ninth screen after these, not a stage.</td></tr>
+          <tr><td>Green pip + <code>1 · Baselines (current, shaft, key)</code> + <code>DONE</code></td><td>Stage 1 complete. Three rest captures: ACS712 zero, AS5600 jitter, 49E levels.</td></tr>
+          <tr><td>Green pip + <code>2 · Direction verify</code> + <code>MATCH</code></td><td>Commanded direction agreed with the shaft. Invert flag is good. Gates all seeks.</td></tr>
+          <tr><td>Green pip + <code>3 · Open marker → origin</code> + <code>± 6 CNT</code></td><td>Open-edge probes accepted. Spread across repeats is 6 counts. That edge is count 0.</td></tr>
+          <tr><td>Green pip + <code>4 · Close marker → span</code> + <code>± 9 CNT</code></td><td>Close-edge probes accepted. Spread 9 counts. Edge minus origin is the measured span.</td></tr>
+          <tr><td>Green pip + <code>5 · Closed seated</code> + <code>BY CURRENT</code></td><td>Seated found by current rise, not stall. Confirmation, not a home.</td></tr>
+          <tr><td>Amber pip + highlight + <code>6 · Stroke entry</code> + <code>NEEDED</code></td><td>Selected row. Operator inches are missing. Required before learn runs, not before marker seeks.</td></tr>
+          <tr><td>Grey pip + <code>7 · Obstruction table — empty</code> + <code>BLOCKED</code></td><td>Cannot start until stroke exists. Empty-rack learn.</td></tr>
+          <tr><td>Grey pip + <code>8 · Obstruction table — loaded</code> + <code>OPTIONAL</code></td><td>Second table with racks at max expected load. Skip is allowed.</td></tr>
+          <tr><td><code>TURN scroll</code></td><td>Move the highlight. Window the list if more rows exist than fit.</td></tr>
+          <tr><td><code>PRESS open</code></td><td>Enter the highlighted stage. Moving stages show path-clear first.</td></tr>
+          <tr><td><code>HOLD exit</code></td><td>Return to Main. Incomplete RAM results stay until Review saves or you discard them there.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>2. Path-clear gate</h2>
+      <p>Shown before any stage that commands the motor. A checklist, not a single OK. The door does not move until every line is ticked.</p>
+      <figure class="lcd">
+        <img src="shots/cal-02.png" width="320" alt="CAL confirm: THE DOOR WILL MOVE, three checklist lines">
+        <figcaption>Figure 2. CAL · confirm, before stage 3. Third line still unticked.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · confirm</code></td><td>Header left. Gate, not a capture screen.</td></tr>
+          <tr><td><code>before stage 3</code></td><td>Header right. This shot is the gate for open-marker seek. Other moving stages show their own number.</td></tr>
+          <tr><td><code>THE DOOR WILL MOVE</code></td><td>Amber banner title. Condition before command.</td></tr>
+          <tr><td><code>140 V motor · no physical E-stop installed</code></td><td>Banner detail. HOLD is the only cancel. There is no E-stop on this build.</td></tr>
+          <tr><td>Green pip + <code>Travel path clear of tools and people</code></td><td>Ticked. Operator has acknowledged a clear path.</td></tr>
+          <tr><td>Green pip + <code>Both marker switches wired and reading LOW</code></td><td>Ticked. NC markers at rest read LOW on this polarity. A HIGH rest would mean a cut wire or a made switch.</td></tr>
+          <tr><td>Grey pip + highlight + <code>Racks empty for this stage</code></td><td>Not yet ticked. Selected line. TURN moves among lines. This line appears when the stage requires empty racks.</td></tr>
+          <tr><td><code>TURN tick</code></td><td>Toggle the highlighted checklist line.</td></tr>
+          <tr><td><code>PRESS start</code></td><td>Start the stage when every line is ticked. Does nothing while a line is still grey.</td></tr>
+          <tr><td><code>HOLD cancel</code></td><td>Return to the stage list. No motion.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>3. Stage 1a — current zero</h2>
+      <p>Captured with PWM at zero. ACS712 offset only. It shares nothing with the shaft or key baselines.</p>
+      <figure class="lcd">
+        <img src="shots/cal-03.png" width="320" alt="CAL baseline current: 1.650 V, 1a of 8">
+        <figcaption>Figure 3. CAL · baseline · current. Motor at rest.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · baseline · current</code></td><td>Header left. First of three baseline captures.</td></tr>
+          <tr><td><code>1a of 8</code></td><td>Header right. Stage 1, first sensor, of eight stages.</td></tr>
+          <tr><td><code>1.650 V</code> (green)</td><td>Hero. Mean ACS712 output at PWM 0. Green means the spread is acceptable.</td></tr>
+          <tr><td><code>16 samples at PWM 0 · spread 3 counts</code></td><td>How the mean was taken. Spread is ADC counts, not amps.</td></tr>
+          <tr><td><code>raw adc mean · implies</code> · <code>2 046 / 4095 · 0.00 A</code></td><td>Raw mean of 4095, and the cooked amp reading that offset implies (zero at rest).</td></tr>
+          <tr><td><code>scale (fixed)</code> · <code>185 mV/A · 10k/20k</code></td><td>ACS712-05B sensitivity and the Board A divider. Not an operator edit.</td></tr>
+          <tr><td><code>previous capture</code> · <code>1.648 V · 41 boots ago</code></td><td>Last stored zero, for comparison. No RTC. Age is boot count.</td></tr>
+          <tr><td>Progress bar, first segment amber, <code>baselines</code> · <code>1 of 3</code></td><td>Three baseline screens. This is the first. Green segments are done. Amber is now. Grey is remaining.</td></tr>
+          <tr><td><code>PRESS accept</code></td><td>Keep this zero in RAM and go to shaft jitter.</td></tr>
+          <tr><td><code>HOLD cancel</code></td><td>Discard this capture. Return to the stage list.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>4. Stage 1b — shaft jitter band</h2>
+      <p>Measured at rest. This band sets stall minimum progress and the accumulation deadband.</p>
+      <figure class="lcd">
+        <img src="shots/cal-04.png" width="320" alt="CAL baseline shaft: plus or minus 3 counts peak to peak">
+        <figcaption>Figure 4. CAL · baseline · shaft. Rest jitter over 2.0 s.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · baseline · shaft</code></td><td>Header left. Second baseline.</td></tr>
+          <tr><td><code>1b of 8</code></td><td>Header right.</td></tr>
+          <tr><td><code>± 3 cnt</code> (green)</td><td>Hero. Peak-to-peak AS5600 counts at rest.</td></tr>
+          <tr><td><code>peak-to-peak at rest · 2.0 s window</code></td><td>How long the band was watched.</td></tr>
+          <tr><td><code>samples · magnet</code> · <code>200 at 10 ms · OK</code></td><td>Sample count and magnet status from the AS5600.</td></tr>
+          <tr><td><code>sets stall minimum progress</code> · <code>8 cnt / 500 ms</code></td><td>Stall check needs more motion than rest jitter. Derived from this band, not guessed.</td></tr>
+          <tr><td><code>sets accumulation deadband</code> · <code>3 cnt</code></td><td>Counts inside this band do not walk idle position.</td></tr>
+          <tr><td>Progress, two green + one amber, <code>baselines</code> · <code>2 of 3</code></td><td>Current zero accepted. Shaft is now. Key remains.</td></tr>
+          <tr><td><code>PRESS accept</code> · <code>HOLD cancel</code></td><td>Keep the band, or discard and return to the list.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>5. Stage 1c — bottle key levels</h2>
+      <p>Two captures: bottle out, then bottle in. Enter and exit thresholds are derived from the gap.</p>
+      <figure class="lcd">
+        <img src="shots/cal-05.png" width="320" alt="CAL baseline key: 2980 present, absent 1605">
+        <figcaption>Figure 5. CAL · baseline · key. Second capture, bottle in the recess.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · baseline · key</code></td><td>Header left. Third baseline.</td></tr>
+          <tr><td><code>1c of 8</code></td><td>Header right.</td></tr>
+          <tr><td><code>2 980</code> (green)</td><td>Hero. Present-level ADC this capture.</td></tr>
+          <tr><td><code>capture 2 of 2 — bottle IN the recess</code></td><td>Operator has placed the bottle. Capture 1 was absent.</td></tr>
+          <tr><td><code>absent 1 605</code></td><td>Right of the hero. First capture, bottle out.</td></tr>
+          <tr><td><code>captured 00:41 ago</code></td><td>Age of the absent capture this session.</td></tr>
+          <tr><td><code>gap between levels</code> · <code>1 375 counts</code></td><td>Present minus absent. A small gap means a weak magnet or a bad placement.</td></tr>
+          <tr><td><code>derived enter / exit · dead zone</code> · <code>2 400 / 2 100 · 300</code></td><td>Hysteresis pair and the dead zone between them. Not a single threshold.</td></tr>
+          <tr><td><code>polarity for this build</code> · <code>absent → OPEN</code></td><td>Default handbook polarity. Place the bottle to close. Change it in Settings if this cabinet is wired the other way.</td></tr>
+          <tr><td>Progress, three green + one amber, <code>baselines</code> · <code>3 of 3</code></td><td>Last baseline. Amber segment is this capture.</td></tr>
+          <tr><td><code>PRESS accept</code> · <code>HOLD cancel</code></td><td>Keep both levels, or discard.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>6. Stage 2 — direction verify</h2>
+      <p>Runs before any seek. A wrong invert flag would send the first seek at the far end of travel. Slow duty, short move. The operator confirms the door went the way the screen says.</p>
+      <figure class="lcd">
+        <img src="shots/cal-06.png" width="320" alt="CAL direction: MATCH, commanded OPEN, shaft CCW">
+        <figcaption>Figure 6. CAL · direction. Match. Invert is unchanged.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · direction</code></td><td>Header left.</td></tr>
+          <tr><td><code>2 of 8</code></td><td>Header right.</td></tr>
+          <tr><td><code>MATCH</code> (green)</td><td>Hero. Commanded OPEN and the shaft turned the expected way.</td></tr>
+          <tr><td><code>commanded OPEN · shaft turned CCW</code></td><td>What firmware asked and what the encoder saw.</td></tr>
+          <tr><td><code>+412 cnt</code></td><td>Net counts during the short move.</td></tr>
+          <tr><td><code>duty 96 · 1.4 s</code></td><td>Creep duty and how long the probe ran.</td></tr>
+          <tr><td><code>invert flag</code> · <code>false (unchanged)</code></td><td>Mapping of K1 to shaft sense. False means the compiled default already matches this cabinet.</td></tr>
+          <tr><td><code>current during move</code> · <code>0.62 A peak</code></td><td>Peak amps on this short move. A stall here is a wiring or bind problem, not a direction problem.</td></tr>
+          <tr><td><code>door moved toward</code> · <code>OPEN — confirm on the door</code></td><td>Look at the physical door. The encoder can match a wrong invert if you never look.</td></tr>
+          <tr><td>Amber line: <code>If the door moved to CLOSE, press to set the invert flag and repeat.</code></td><td>Mismatch path. PRESS sets invert and runs the probe again.</td></tr>
+          <tr><td><code>PRESS invert</code></td><td>Flip the invert flag and repeat the short move.</td></tr>
+          <tr><td><code>TURN accept</code></td><td>Keep MATCH (or the new invert after a repeat).</td></tr>
+          <tr><td><code>HOLD cancel</code></td><td>Discard. Return to the stage list.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>7. Stage 3 — open marker and origin</h2>
+      <p>Repeat probes of the same edge from the same direction. The spread is the pass criterion. The accepted actuation edge becomes count zero.</p>
+      <figure class="lcd">
+        <img src="shots/cal-07.png" width="320" alt="CAL open marker: PROBE 3 of 3, three actuate and release pairs">
+        <figcaption>Figure 7. CAL · open marker. Third probe complete. Spread 6 counts.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · open marker</code></td><td>Header left.</td></tr>
+          <tr><td><code>3 of 8</code></td><td>Header right.</td></tr>
+          <tr><td><code>PROBE 3 / 3</code> (amber)</td><td>Hero. Last of three approaches. Amber because the motor just moved.</td></tr>
+          <tr><td><code>creep · back off 400 cnt · re-approach</code></td><td>Probe method. Operational snug does not apply during calibration seeks.</td></tr>
+          <tr><td><code>probe 1 — actuate / release</code> · <code>402 / 361 cnt</code></td><td>First pair. Actuation and release differ because the switch has hysteresis. Approach from the same direction each time.</td></tr>
+          <tr><td><code>probe 2 — actuate / release</code> · <code>398 / 358 cnt</code></td><td>Second pair.</td></tr>
+          <tr><td><code>probe 3 — actuate / release</code> · <code>404 / 363 cnt</code></td><td>Third pair.</td></tr>
+          <tr><td><code>spread · tolerance</code> · <code>6 · 20 cnt</code></td><td>Actuate spread across repeats versus the allowed band. 6 is inside 20.</td></tr>
+          <tr><td><code>origin will be set at</code> · <code>actuate edge → 0</code></td><td>Accepted open actuation becomes count zero for everything downstream.</td></tr>
+          <tr><td><code>PRESS accept origin</code></td><td>Keep the origin in RAM.</td></tr>
+          <tr><td><code>HOLD cancel</code></td><td>Discard a half-probed edge. Partial marker data is not usable.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>8. Stage 4 — close marker and span</h2>
+      <p>Same probe method at the other end. The accepted edge minus origin is the measured span. Obstruction bins divide this span.</p>
+      <figure class="lcd">
+        <img src="shots/cal-08.png" width="320" alt="CAL close marker: 20180 counts measured span">
+        <figcaption>Figure 8. CAL · close marker. Measured span accepted if you press.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · close marker</code></td><td>Header left.</td></tr>
+          <tr><td><code>4 of 8</code></td><td>Header right.</td></tr>
+          <tr><td><code>20 180 cnt</code> (green)</td><td>Hero. Measured span from origin to close actuation.</td></tr>
+          <tr><td><code>measured span · origin to close actuate</code></td><td>What the hero number is. Not seated. Seated is stage 5, past this edge.</td></tr>
+          <tr><td><code>probe 1 / 2 / 3 actuate</code> · <code>20 174 / 20 183 / 20 180</code></td><td>Three actuation edges. Release edges were captured. This row shows actuate only.</td></tr>
+          <tr><td><code>spread · tolerance</code> · <code>9 · 20 cnt</code></td><td>Spread inside tolerance.</td></tr>
+          <tr><td><code>implies shaft revolutions</code> · <code>4.93 rev</code></td><td>Span divided by 4096 counts/rev. Sanity check against the mechanical stroke.</td></tr>
+          <tr><td><code>bin width at 81 bins</code> · <code>249 cnt</code></td><td>Span divided into 81 obstruction bins.</td></tr>
+          <tr><td>Progress, three green, <code>close probes</code> · <code>3 of 3</code></td><td>All three close probes done.</td></tr>
+          <tr><td><code>PRESS accept span</code> · <code>HOLD cancel</code></td><td>Keep the span, or discard the half-probed edge.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>9. Stage 5 — closed seated</h2>
+      <p>Past the close marker on creep. How the stop was found is stored: a current rise means the seal is loading. A stall without one means the door hit something solid.</p>
+      <figure class="lcd">
+        <img src="shots/cal-09.png" width="320" alt="CAL closed seated: SEATED by current rise at 1.90 A">
+        <figcaption>Figure 9. CAL · closed seated. Found by current rise, 168 counts past the marker.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · closed seated</code></td><td>Header left.</td></tr>
+          <tr><td><code>5 of 8</code></td><td>Header right.</td></tr>
+          <tr><td><code>SEATED</code> (green)</td><td>Hero. Physical closed stop found.</td></tr>
+          <tr><td><code>found by CURRENT RISE at 1.90 A</code></td><td>Method. Prefer current-draw rise (snug). Else record stall.</td></tr>
+          <tr><td><code>+168 cnt</code></td><td>Counts past the close-marker actuation.</td></tr>
+          <tr><td><code>past close marker</code></td><td>Seated is beyond the near-end flag, not at it.</td></tr>
+          <tr><td><code>method stored</code> · <code>current rise (not stall)</code></td><td>Written with the capture so Diagnostics can show why seated was accepted.</td></tr>
+          <tr><td><code>creep duty · timeout</code> · <code>96 · 1.4 s of 2.0 s</code></td><td>Duty used and how much of the seek timeout was consumed.</td></tr>
+          <tr><td><code>overtravel cap</code> · <code>220 cnt — not reached</code></td><td>Hard cap past the marker. A hit here is a fault, not a seated capture.</td></tr>
+          <tr><td><code>seated position</code> · <code>20 348 cnt</code></td><td>Origin-relative counts of the seated stop.</td></tr>
+          <tr><td>Green line: <code>Seated is a confirmation, not a position reference. Re-homing uses the marker edges.</code></td><td>Do not treat seated as a home. Power-loss recovery seeks the open marker.</td></tr>
+          <tr><td><code>PRESS accept</code> · <code>HOLD cancel</code></td><td>Keep seated, or discard.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>10. Stage 6 — stroke entry</h2>
+      <p>The only operator-typed number, and the only place inches enter the system. It gates learn runs because bin widths are reported in centimetres. It never widens a safety limit.</p>
+      <figure class="lcd">
+        <img src="shots/cal-10.png" width="320" alt="CAL stroke entry: 32.0 inches, 631 counts per inch">
+        <figcaption>Figure 10. CAL · stroke. 32.0 in, derived 631 cnt/in.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · stroke</code></td><td>Header left.</td></tr>
+          <tr><td><code>6 of 8</code></td><td>Header right.</td></tr>
+          <tr><td><code>32.0</code> with caret</td><td>Pending inches, open marker to closed seated. TURN adjusts.</td></tr>
+          <tr><td><code>inches, open marker → closed seated</code></td><td>What the number measures. Not overall cabinet width.</td></tr>
+          <tr><td><code>derived 631 cnt/in from 20 348 cnt</code></td><td>Seated counts divided by the typed inches. Display only.</td></tr>
+          <tr><td><code>geometric estimate</code> · <code>640 cnt/in (unverified)</code></td><td>Independent estimate from the mechanical drawing. Unverified means it is not a measured fact.</td></tr>
+          <tr><td><code>difference</code> · <code>1.4% — plausible</code></td><td>Typed stroke versus the geometric estimate. A large disagreement warns. It does not block.</td></tr>
+          <tr><td><code>used for</code> · <code>display and warnings only</code></td><td>Inches and counts-per-inch never feed a seek cap.</td></tr>
+          <tr><td><code>never used for</code> · <code>seek caps, snug window, bins</code></td><td>Those limits stay in counts from stages 3–5.</td></tr>
+          <tr><td>Green line: <code>Warns on a large disagreement. It does not block, and it can be re-entered later.</code></td><td>You can fix a typo without repeating marker probes.</td></tr>
+          <tr><td><code>TURN adjust</code></td><td>Change the pending inches.</td></tr>
+          <tr><td><code>PRESS accept</code></td><td>Keep the stroke in RAM. Unblocks stage 7.</td></tr>
+          <tr><td><code>HOLD cancel</code></td><td>Leave the previous stroke (or none).</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>11. Stage 7 — obstruction table, empty racks</h2>
+      <p>Three clear runs each way at the production profile. Obstruction reverse is off. The 2.50&nbsp;A ceiling stays on. A trip discards that run instead of teaching it.</p>
+      <figure class="lcd">
+        <img src="shots/cal-11.png" width="320" alt="CAL learn empty: CLOSE RUN 2, bin 44 of 81">
+        <figcaption>Figure 11. CAL · learn · empty. Second close run in cruise.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · learn · empty</code></td><td>Header left. Empty-rack table.</td></tr>
+          <tr><td><code>7 of 8</code></td><td>Header right.</td></tr>
+          <tr><td><code>CLOSE RUN 2</code> (amber)</td><td>Hero. Second of three close strokes. Motor live.</td></tr>
+          <tr><td><code>cruise · bin 44 of 81 · 1.38 A</code></td><td>Profile phase, current bin, live amps.</td></tr>
+          <tr><td><code>74 / 81</code></td><td>Bins that already have a valid sample this run set.</td></tr>
+          <tr><td><code>bins valid</code></td><td>Learn runs stop at the marker, so some end bins stay unvisited.</td></tr>
+          <tr><td>Open-run pips, two green + one amber, <code>open runs</code> · <code>2 of 3</code></td><td>Open-direction progress. This shot is mid close-run, so the open bar may already be ahead.</td></tr>
+          <tr><td>Close-run pips, one green + one amber + one grey, <code>close runs</code> · <code>1 of 3</code></td><td>Close-direction progress. Run 2 is live.</td></tr>
+          <tr><td><code>profile identity</code> · <code>512 · 3000/6000/3000 ms</code></td><td>Cruise duty and accel / cruise / decel times. Stored with the table so a later profile change can invalidate it.</td></tr>
+          <tr><td><code>reverse off · ceiling armed</code> · <code>learn mode · 2.50 A</code></td><td>Obstruction reverse is off so a bind is not taught as load. The hard ceiling still trips and discards the run.</td></tr>
+          <tr><td><code>HOLD cancel run set</code></td><td>PWM off, current decay, K1 unchanged, discard the incomplete table. Return to the stage list. There is no PRESS on this live run.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>12. Stage 8 — obstruction table, loaded racks</h2>
+      <p>Optional second table with racks at maximum expected load. Which table arms in service is still an open spec decision, so the screen states it.</p>
+      <figure class="lcd">
+        <img src="shots/cal-12.png" width="320" alt="CAL learn loaded: LOAD THE RACKS banner">
+        <figcaption>Figure 12. CAL · learn · loaded. Gate before the loaded run set.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · learn · loaded</code></td><td>Header left.</td></tr>
+          <tr><td><code>8 of 8</code></td><td>Header right.</td></tr>
+          <tr><td><code>LOAD THE RACKS</code></td><td>Amber banner title. Do not start this set empty.</td></tr>
+          <tr><td><code>Fill to maximum expected capacity before starting this set</code></td><td>Banner detail. Max expected load, not an overload test.</td></tr>
+          <tr><td><code>empty table</code> · <code>stored · armed</code></td><td>Stage 7 already produced a usable empty-rack envelope.</td></tr>
+          <tr><td><code>loaded table</code> · <code>not yet learned</code></td><td>This stage has not run.</td></tr>
+          <tr><td><code>arming rule</code> · <code>undecided — see spec</code></td><td>Which table Main uses in service is not chosen on this panel. See Production_Software.md.</td></tr>
+          <tr><td><code>runs required</code> · <code>3 open · 3 close</code></td><td>Same run count as the empty table.</td></tr>
+          <tr><td><code>PRESS start</code></td><td>After racks are loaded, start the run set (path-clear still applies).</td></tr>
+          <tr><td><code>HOLD skip</code></td><td>Leave the loaded table unlearned. Review will show it as optional skipped.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>13. Review and save</h2>
+      <p>Single NVS write. Everything above lived in RAM until this screen. The blob carries the profile identity that will later invalidate it. Motor must be idle.</p>
+      <figure class="lcd">
+        <img src="shots/cal-13.png" width="320" alt="CAL review: READY TO SAVE, eight stages complete">
+        <figcaption>Figure 13. CAL · review. One optional stage skipped. Motor idle.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · review</code></td><td>Header left.</td></tr>
+          <tr><td><code>save</code></td><td>Header right. This is the write point.</td></tr>
+          <tr><td><code>READY TO SAVE</code> (green)</td><td>Hero. Completeness check passed.</td></tr>
+          <tr><td><code>8 stages complete · 1 optional skipped</code></td><td>Loaded-rack table was skipped. Empty table is enough to leave Needs Setup.</td></tr>
+          <tr><td><code>origin · span · seated</code> · <code>0 · 20 180 · 20 348 cnt</code></td><td>The three count references from stages 3–5.</td></tr>
+          <tr><td><code>marker spread (open / close)</code> · <code>6 / 9 cnt</code></td><td>Probe quality from stages 3 and 4.</td></tr>
+          <tr><td><code>stroke → derived</code> · <code>32.0 in → 631 cnt/in</code></td><td>Typed stroke and the display-only scale.</td></tr>
+          <tr><td><code>tables · blob</code> · <code>empty armed · v3 3.6 kB</code></td><td>Which envelope is armed, format version, and blob size.</td></tr>
+          <tr><td>Green line: <code>Motor is idle and current has decayed. NVS is never written while the motor runs.</code></td><td>If the motor is still spinning, this screen will not write.</td></tr>
+          <tr><td><code>PRESS save</code></td><td>One NVS write. Then return toward Main.</td></tr>
+          <tr><td><code>HOLD discard</code></td><td>Drop the RAM results. Stored NVS is unchanged.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <h2>14. Knob on a live stage</h2>
+    <table>
+      <thead>
+        <tr><th>Gesture</th><th>Typical meaning</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>TURN</td><td>Jog or adjust where the stage allows it (stroke entry, direction accept, checklist tick).</td></tr>
+        <tr><td>PRESS</td><td>Capture, accept, or start the next sample.</td></tr>
+        <tr><td>HOLD</td><td>Cancel the live procedure. Return to the stage list.</td></tr>
+      </tbody>
+    </table>
+    <p>When an earlier value changes, mark dependent later steps stale. There is no RTC. Metadata uses run count and relative millis only. Never reverse K1 without PWM blanking.</p>
+
+    <h2>15. Related</h2>
+    <nav class="links">
+      <ul>
+        <li><a href="index.html">Software overview</a> — full web UI, figure 1</li>
+      </ul>
+    </nav>
+
+    <footer>This page is a chapter of the <a href="../pdf/Software_User_Manual.pdf">Software User Manual</a>.</footer>
+  </article>
+</body>
+</html>

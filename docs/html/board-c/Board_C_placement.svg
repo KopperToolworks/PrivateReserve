@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="660" height="814"
+     viewBox="0 0 660 814" role="img" aria-labelledby="title desc">
+<title id="title">Board C placement — Perma-Proto 1/4 HV switch stage</title>
+<desc id="desc">Draft placement. Heatsink up, screw terminals down. Floating HV domain only.</desc>
+<defs>
+  <style>
+    .title { font: 700 16px system-ui, sans-serif; fill: #101828; }
+    .sub { font: 12px system-ui, sans-serif; fill: #475467; }
+    .col { font: 8px system-ui, sans-serif; fill: #667085; }
+    .gutter-lab { font: 8px system-ui, sans-serif; fill: #667085; }
+    .rail-lab { font: 700 8px system-ui, sans-serif; }
+    .mod { font: 700 10px system-ui, sans-serif; fill: #f2f4f7; }
+    .mod-s { font: 8px system-ui, sans-serif; fill: #d0d5dd; }
+    .note { font: 10px system-ui, sans-serif; fill: #b54708; }
+    .term { font: 700 8px system-ui, sans-serif; fill: #101828; }
+    .term-id { font: 600 7px system-ui, sans-serif; fill: #667085; }
+    .edge { font: 700 10px system-ui, sans-serif; fill: #344054; }
+    .part { font: 700 9px system-ui, sans-serif; fill: #101828; }
+    .part-s { font: 7.5px system-ui, sans-serif; fill: #475467; }
+    .callout-title { font: 700 10px system-ui, sans-serif; fill: #93370d; }
+    .callout-sub { font: 8px system-ui, sans-serif; fill: #b54708; }
+    .callout-body { font: 8px system-ui, sans-serif; fill: #475467; }
+    .flow-node { font: 700 8px system-ui, sans-serif; fill: #101828; }
+  </style>
+</defs>
+<rect width="660" height="814" fill="#ffffff"/>
+<text x="24" y="28" class="title">Board C — placement (first draft)</text>
+<text x="24" y="46" class="sub">Heatsink up · terminals down · floating HV only · cols 1–15</text>
+<rect x="72.0" y="68.0" width="330.0" height="7.0" rx="1" fill="#f2f4f7" stroke="#98a2b3" stroke-width="1" stroke-dasharray="3 2"/><text x="64.0" y="73.2" text-anchor="end" class="rail-lab" fill="#98a2b3">unused</text>
+<rect x="72.0" y="77.0" width="330.0" height="7.0" rx="1" fill="#f2f4f7" stroke="#98a2b3" stroke-width="1" stroke-dasharray="3 2"/><text x="64.0" y="82.2" text-anchor="end" class="rail-lab" fill="#98a2b3">unused</text>
+<rect x="72.0" y="88.0" width="330.0" height="320.0" fill="#ffffff" stroke="#344054" stroke-width="1.2"/>
+<text x="83.0" y="99.0" text-anchor="middle" class="col">1</text>
+<line x1="83.0" y1="102.0" x2="83.0" y2="404.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="171.0" y="99.0" text-anchor="middle" class="col">5</text>
+<line x1="171.0" y1="102.0" x2="171.0" y2="404.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="281.0" y="99.0" text-anchor="middle" class="col">10</text>
+<line x1="281.0" y1="102.0" x2="281.0" y2="404.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="391.0" y="99.0" text-anchor="middle" class="col">15</text>
+<line x1="391.0" y1="102.0" x2="391.0" y2="404.0" stroke="#eaecf0" stroke-width="0.6"/>
+<rect x="73.0" y="235.2" width="328.0" height="14" fill="#eaecf0"/>
+<text x="237.0" y="245.2" text-anchor="middle" class="gutter-lab">Adafruit Perma-Proto 1/4 · cols 1–15</text>
+<rect x="72.0" y="412.0" width="330.0" height="7.0" rx="1" fill="#f2f4f7" stroke="#98a2b3" stroke-width="1" stroke-dasharray="3 2"/><text x="64.0" y="417.2" text-anchor="end" class="rail-lab" fill="#98a2b3">unused</text>
+<rect x="72.0" y="421.0" width="330.0" height="7.0" rx="1" fill="#f2f4f7" stroke="#98a2b3" stroke-width="1" stroke-dasharray="3 2"/><text x="64.0" y="426.2" text-anchor="end" class="rail-lab" fill="#98a2b3">unused</text>
+<rect x="215.0" y="96.0" width="143.0" height="18" rx="2" fill="#94a3b8" stroke="#344054" stroke-width="1"/>
+<text x="286.5" y="108.0" text-anchor="middle" class="mod-s" fill="#101828">heatsink (insulate tab)</text>
+<rect x="227.0" y="118.0" width="119.0" height="36" rx="3" fill="#1d2939" stroke="#344054" stroke-width="1"/>
+<text x="286.5" y="140.0" text-anchor="middle" class="mod">Q1 IRFP460</text>
+<text x="286.5" y="150.0" text-anchor="middle" class="mod-s">G · D/SW · S/−70V</text>
+<rect x="138.0" y="236.0" width="198.0" height="14" rx="2" fill="#101828" stroke="#344054" stroke-width="1"/>
+<text x="146.0" y="246.0" class="part" fill="#fff">D9</text>
+<text x="237.0" y="246.0" text-anchor="middle" class="mod-s" fill="#e4e7ec">STTH8R06 · K→+70V · A→SW</text>
+<text x="328.0" y="246.0" text-anchor="end" class="part-s" fill="#fbbf24">band</text>
+<rect x="204.0" y="268.0" width="16" height="36" rx="2" fill="#fb923c" stroke="#344054" stroke-width="1"/>
+<text x="228.0" y="282.0" class="part">TVS1</text>
+<text x="228.0" y="294.0" class="part-s">P6KE200A</text>
+<text x="228.0" y="304.0" class="part-s">K→+70V · A→−70V</text>
+<rect x="138.0" y="316.0" width="52" height="10" rx="2" fill="#3b82f6" stroke="#344054" stroke-width="0.8"/>
+<text x="196.0" y="325.0" class="part-s">Rgs 10 kΩ</text>
+<rect x="248.0" y="316.0" width="36" height="10" rx="2" fill="#6366f1" stroke="#344054" stroke-width="0.8"/>
+<text x="290.0" y="325.0" class="part-s">Dz BZX85C15</text>
+<text x="138.0" y="340.0" class="part-s">Gate network at Q1 (100 Ω may be on Board B)</text>
+<rect x="24.0" y="448.0" width="612.0" height="128.0" rx="4" fill="#fffaeb" stroke="#dc6803" stroke-width="1.4" stroke-dasharray="5 3"/>
+<text x="36.0" y="464.0" class="callout-title">Flyback loop</text>
+<text x="36.0" y="478.0" class="callout-sub">Placement rule — not a wire path</text>
+<rect x="36.0" y="488.0" width="30.0" height="18.0" rx="2" fill="#d97706" stroke="#344054" stroke-width="0.8"/>
+<text x="51.0" y="500.0" text-anchor="middle" class="flow-node" fill="#101828">SW</text>
+<text x="74.0" y="500.0" class="callout-body">→</text>
+<rect x="83.0" y="488.0" width="30.0" height="18.0" rx="2" fill="#101828" stroke="#344054" stroke-width="0.8"/>
+<text x="98.0" y="500.0" text-anchor="middle" class="flow-node" style="fill:#fff">D9</text>
+<text x="121.0" y="500.0" class="callout-body">→</text>
+<rect x="130.0" y="488.0" width="38.0" height="18.0" rx="2" fill="#ea580c" stroke="#344054" stroke-width="0.8"/>
+<text x="149.0" y="500.0" text-anchor="middle" class="flow-node" fill="#101828">+70V</text>
+<text x="36.0" y="522.0" class="callout-body">When Q1 turns off, motor inductance pushes current through D9.</text>
+<text x="36.0" y="536.0" class="callout-body">Path: SW → D9 anode → D9 cathode → +70V.</text>
+<text x="36.0" y="550.0" class="callout-body">Keep D9 physically close to the SW node and +70V landing.</text>
+<text x="36.0" y="564.0" class="callout-body">Do not route this flyback loop off Board C.</text>
+<text x="24" y="604.0" class="edge">BOTTOM edge · left → right</text>
+<rect x="80.0" y="614.0" width="58.0" height="26.0" rx="3" fill="#fff" stroke="#ea580c" stroke-width="1.6"/>
+<text x="109.0" y="624.0" text-anchor="middle" class="term-id">T1</text>
+<text x="109.0" y="636.0" text-anchor="middle" class="term">+70V</text>
+<rect x="148.0" y="614.0" width="58.0" height="26.0" rx="3" fill="#fff" stroke="#78716c" stroke-width="1.6"/>
+<text x="177.0" y="624.0" text-anchor="middle" class="term-id">T2</text>
+<text x="177.0" y="636.0" text-anchor="middle" class="term">−70V</text>
+<rect x="216.0" y="614.0" width="58.0" height="26.0" rx="3" fill="#fff" stroke="#175cd3" stroke-width="1.6"/>
+<text x="245.0" y="624.0" text-anchor="middle" class="term-id">T3</text>
+<text x="245.0" y="636.0" text-anchor="middle" class="term">GATE</text>
+<rect x="284.0" y="614.0" width="58.0" height="26.0" rx="3" fill="#fff" stroke="#d97706" stroke-width="1.6"/>
+<text x="313.0" y="624.0" text-anchor="middle" class="term-id">T4</text>
+<text x="313.0" y="636.0" text-anchor="middle" class="term">NC1</text>
+<rect x="352.0" y="614.0" width="58.0" height="26.0" rx="3" fill="#fff" stroke="#d97706" stroke-width="1.6"/>
+<text x="381.0" y="624.0" text-anchor="middle" class="term-id">T5</text>
+<text x="381.0" y="636.0" text-anchor="middle" class="term">NO2</text>
+<text x="24.0" y="668.0" class="edge">Net colors</text>
+<rect x="24.0" y="682.0" width="12" height="12" rx="2" fill="#ea580c"/>
+<text x="42.0" y="693.0" class="sub">+70V fused high rail</text>
+<rect x="338.0" y="682.0" width="12" height="12" rx="2" fill="#78716c"/>
+<text x="356.0" y="693.0" class="sub">−70V motor low / Q1 source</text>
+<rect x="24.0" y="704.0" width="12" height="12" rx="2" fill="#d97706"/>
+<text x="42.0" y="715.0" class="sub">SW — K1 NC1 / NO2 (T4 / T5)</text>
+<rect x="338.0" y="704.0" width="12" height="12" rx="2" fill="#175cd3"/>
+<text x="356.0" y="715.0" class="sub">GATE from Board B TC4426</text>
+<rect x="24.0" y="726.0" width="12" height="12" rx="2" fill="#fffaeb" stroke="#dc6803" stroke-width="1" stroke-dasharray="3 2"/>
+<text x="42.0" y="737.0" class="sub">Dashed box = placement rule (not a net)</text>
+<rect x="338.0" y="726.0" width="12" height="12" rx="2" fill="#98a2b3"/>
+<text x="356.0" y="737.0" class="sub">Unused Perma-Proto rail</text>
+<text x="24" y="766.0" class="note">Draft. All four Perma-Proto rails are unused on the as-built unit. T4/T5 land K1 return contacts (NC1/NO2); motor leads are on K1 COM.</text>
+<text x="24" y="782.0" class="note">As-built: T1/T2/T4/T5 leads are reinforced for motor current; T3 is gate only.</text>
+<text x="24" y="798.0" class="note">Never join MCU_GND to −70V. Q1 tab is live at SW — insulate the heatsink.</text>
+</svg>

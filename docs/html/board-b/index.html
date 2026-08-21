@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Board B — Floating gate driver (draft)</title>
+  <style>
+    :root {
+      --ink: #101828;
+      --muted: #475467;
+      --line: #d0d5dd;
+      --paper: #fff;
+      --wash: #f9fafb;
+      --earth: #175cd3;
+      --warn-bg: #fffaeb;
+      --warn-bd: #dc6803;
+      --draft-bg: #f4f3ff;
+      --draft-bd: #7f56d9;
+      --v5: #b42318;
+      --v5iso: #c11574;
+      --v12: #ca8504;
+      --m70: #78350f;
+      --gnd: #101828;
+    }
+    * { box-sizing: border-box; }
+    html { font: 16px/1.45 system-ui, sans-serif; color: var(--ink); background: #e4e7ec; }
+    body { margin: 0; }
+    .page {
+      max-width: 52rem;
+      margin: 0 auto;
+      padding: 1.5rem 1.75rem 3rem;
+      background: var(--paper);
+    }
+    h1 { font-size: 1.6rem; margin: 0 0 0.35rem; letter-spacing: -0.02em; }
+    h2 { font-size: 1.15rem; margin: 2rem 0 0.6rem; }
+    h3 { font-size: 1rem; margin: 1.25rem 0 0.4rem; }
+    h4 { font-size: 0.95rem; margin: 1rem 0 0.35rem; color: var(--muted); font-weight: 600; }
+    p, li { color: var(--ink); }
+    .lede { color: var(--muted); margin: 0 0 1rem; }
+    .banner {
+      border: 2px solid var(--draft-bd);
+      background: var(--draft-bg);
+      padding: 0.65rem 0.85rem;
+      margin: 0 0 1rem;
+    }
+    .banner strong { color: #42307d; }
+    .warn {
+      border: 2px solid var(--warn-bd);
+      background: var(--warn-bg);
+      padding: 0.65rem 0.85rem;
+      margin: 0 0 1.25rem;
+    }
+    figure { margin: 1rem 0 1.5rem; }
+    figure img, figure object, figure svg { width: 100%; height: auto; display: block; }
+    figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.4rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin: 0.5rem 0 1rem; }
+    th, td { border: 1px solid var(--line); padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; }
+    th { background: var(--wash); }
+    code { font-size: 0.88em; }
+    .swatch {
+      display: inline-block; width: 0.7rem; height: 0.7rem;
+      margin-right: 0.35rem; vertical-align: -0.1rem;
+    }
+    nav.links { font-size: 0.9rem; }
+    nav.links a { color: var(--earth); }
+    footer { margin-top: 2rem; font-size: 0.8rem; color: var(--muted); }
+    @media print {
+      html { background: #fff; font-size: 11pt; }
+      .page { max-width: none; padding: 0; }
+      .banner, .warn { break-inside: avoid; }
+      figure { break-inside: avoid; }
+      a { color: inherit; text-decoration: none; }
+      nav.links a::after { content: " (" attr(href) ")"; font-size: 0.75em; color: var(--muted); }
+    }
+    @media (max-width: 640px) {
+      .page { padding: 1rem; }
+    }
+      /* client-nav */
+    nav.sec { display: flex; flex-wrap: wrap; gap: 0.85rem; margin: 0 0 1.25rem; font-size: 0.9rem; }
+    nav.sec a { color: var(--earth); }
+    nav.sec a[aria-current="page"] { color: var(--ink); font-weight: 600; text-decoration: none; }
+    nav.sec a.pdf-dl { font-weight: 600; }
+    .pdf-all { margin: 0 0 1.25rem; font-size: 0.9rem; }
+    .pdf-all a { color: var(--earth); }
+    .manual-cover { min-height: 18rem; padding: 3rem 0 2rem; break-after: page; }
+    .manual-cover h1 { font-size: 2rem; margin: 0.2rem 0 0.8rem; }
+    .manual-cover .toc { margin-top: 2rem; }
+    .chapter { break-before: page; }
+    @media print {
+      nav.sec, nav.links, .pdf-dl, .pdf-all { display: none !important; }
+      nav.links a::after { content: none; }
+      table { break-inside: avoid; }
+    }
+    /* /client-nav */
+  </style>
+</head>
+<body>
+  <article class="page">
+    <p class="lede">Private Reserve · DIN controller · first draft</p>
+    <h1>Board B — Floating gate driver</h1>
+    <p>Single Adafruit Perma-Proto 1/2 carrier for the 6N137 / 4N35 optocouplers, Q2 fail-off, TC4426 gate driver, and Q3 K1 coil switch. Earth-side LED inputs occupy columns 1–5; the floating gate-driver region occupies columns 6–30. Floating power and inter-board links leave through screw terminals on the board edges.</p>
+
+    <nav class="sec" aria-label="Wiring pages">
+      <a href="../board-a/index.html">Board A</a>
+      <a href="../board-b/index.html" aria-current="page">Board B</a>
+      <a href="../board-c/index.html">Board C</a>
+      <a href="../wiring-guide.html">All boards</a>
+      <a href="../index.html">Software</a>
+      <a class="pdf-dl" href="../../pdf/Wiring_Guide.pdf">Wiring Guide (PDF)</a>
+    </nav>
+
+    <p class="pdf-all"><strong>Wiring Guide.</strong> <a href="../../pdf/Wiring_Guide.pdf">Download PDF</a> · <a href="../wiring-guide.html">Single-page HTML</a></p>
+
+
+    <div class="banner">
+      <strong>Draft.</strong> View with U1 (6N137) on the left and U4 (4N35) on
+      the right, matching the as-built photo. Vertical stacks (<strong>T1–T3</strong>
+      upper left, <strong>T6–T7</strong> lower left) are numbered top → bottom.
+      Horizontal screws (<strong>T4–T5</strong> top edge) are numbered left →
+      right. <strong>T1–T11</strong> are as-built on the populated unit. Float rails: top <strong>+</strong> is <code>+12V_GD</code>,
+      bottom <strong>+</strong> is <code>+5V_ISO</code>, both <strong>−</strong>
+      rails share <code>−70V</code>. On-board jumper paths and pin-by-pin IC
+      wiring stay out of scope here; see
+      Motor_Driver_Wiring.md.
+    </div>
+
+    <div class="warn">
+      <strong>Two galvanic domains.</strong> Columns 1–5 are the earth LED
+      island: <code>PWM</code>, <code>DIR_OR</code>, and <code>MCU_GND</code> from
+      Board A (T-Display-S3 GPIO16 / GPIO21 and earth return). Those nets are
+      earth-referenced only. Columns 6–30 are floating, referenced to
+      <code>−70V</code>. U1 and U4 translate the command signals optically; no
+      copper joins the domains. Never tie <code>MCU_GND</code> to
+      <code>−70V</code>. After HDR-15-5 #2 and HDR-15-12 negatives bond to
+      <code>−70V</code>, treat both floating supplies as hazardous relative to
+      earth. Do not clip an earth-referenced scope ground to <code>−70V</code>,
+      the gate node, or <code>SW</code>.
+    </div>
+
+    <h2>1. Placement</h2>
+    <p>View the board from above with U1 on the left and U4 on the right, as in
+      the as-built photo. U3 (TC4426) sits in the center gutter; Q2 is beside U3;
+      Q3 is beside U4. The isolation barrier falls at approximately column 5: a
+      physical break in the proto buses separates the earth LED island from the
+      floating region. The upper-left corner holds a vertical 3-position block
+      (<strong>T1–T3</strong>). The earth-side Board A cable lands on
+      <strong>T4</strong> (<code>PWM</code>) and <strong>T5</strong>
+      (<code>MCU_GND</code>). The lower-left stack (<strong>T6–T7</strong>)
+      carries HDR-15-5 #2. The upper-right block (<strong>T8–T9</strong>) takes
+      <code>DIR_OR</code> from Board A and drives PWM out to Board C. The
+      lower-right block (<strong>T10–T11</strong>) wires the Phoenix K1 coil.</p>
+
+    <figure>
+      <img src="Board_B_placement.svg" alt="Board B line-art: Perma-Proto 1/2, U1 U3 U4, Q2 Q3, split rails, isolation barrier at column 5, terminals T1–T11">
+      <figcaption>
+        Figure 1. Grid-true placement draft. Left-edge stacks (<strong>T1–T3</strong>,
+        <strong>T6–T7</strong>) sit beside the Perma-Proto outline, matching the
+        physical board. Purple dashed line at column 5 is the isolation barrier.
+        LED resistors, Q2 bias, TC4426 decoupling, and the 100&nbsp;Ω gate
+        resistor are on-board only.
+      </figcaption>
+    </figure>
+
+    <h2>2. Rails</h2>
+    <p>Each Perma-Proto 1/2 has four full-width buses (top −, top +, bottom −,
+      bottom +). A single bus cannot carry two domains; the isolation barrier at
+      column 5 keeps earth-side copper out of the floating region. On the
+      as-built unit, the bottom <strong>−</strong> rail on the earth island
+      (column 5) lands <code>MCU_GND</code>. In the floating region, both
+      <strong>−</strong> rails are <code>−70V</code>, the top <strong>+</strong>
+      rail is <code>+12V_GD</code>, and the bottom <strong>+</strong> rail is
+      <code>+5V_ISO</code>.</p>
+
+    <table>
+      <thead>
+        <tr><th>Rail (U1 left, U4 right)</th><th>Earth island (cols 1–5)</th><th>Floating region (cols 6–30)</th><th>Diagram color</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Top −</td><td>unused</td><td><code>−70V</code> (as-built)</td><td><span class="swatch" style="background:#78350f"></span>−70V</td></tr>
+        <tr><td>Top +</td><td>unused</td><td><code>+12V_GD</code> (as-built)</td><td><span class="swatch" style="background:#ca8504"></span>+12V_GD</td></tr>
+        <tr><td>Bottom −</td><td><code>MCU_GND</code> (as-built @ col 5)</td><td><code>−70V</code> (as-built)</td><td><span class="swatch" style="background:#78350f"></span>−70V / <span class="swatch" style="background:#101828"></span>GND</td></tr>
+        <tr><td>Bottom +</td><td>unused</td><td><code>+5V_ISO</code> (as-built)</td><td><span class="swatch" style="background:#c11574"></span>+5V_ISO</td></tr>
+      </tbody>
+    </table>
+
+    <h2>3. What attaches</h2>
+
+    <h3>Power</h3>
+    <p>Board B draws from two floating DIN supplies whose negatives are bonded
+      only to <code>−70V</code>. The command cable from Board A carries no
+      floating power — only earth-referenced GPIO and <code>MCU_GND</code>.</p>
+    <p>Land Mean Well <strong>HDR-15-12</strong> on the upper-left stack:
+      positive on <strong>T1</strong> (<code>+12V_GD</code>) and negative on
+      <strong>T2</strong> (12&nbsp;V supply return — bonded to
+      <code>−70V</code>, not <code>MCU_GND</code>). That feed drives the top
+      <strong>+</strong> rail (U3 VDD, Q2 bias, K1 coil branch).</p>
+    <p>Land Mean Well <strong>HDR-15-5 #2</strong> on the lower-left stack:
+      positive on <strong>T6</strong> (<code>+5V_ISO</code>, top screw) and
+      negative on <strong>T7</strong> (bottom screw — floating return bonded to
+      <code>−70V</code>, not <code>MCU_GND</code>) → bottom <strong>+</strong>
+      rail → U1 VCC and VE. Do not connect either floating supply negative to
+      <code>MCU_GND</code> or protective earth.</p>
+    <p><strong>T3</strong> (Board B) is the <code>−70V</code> landing for the short
+      harness to Board C (Q1 source / U3 GND return). Do not confuse it with
+      Board C <strong>T3</strong>, which receives PWM from Board B
+      <strong>T9</strong>.</p>
+
+    <h3>Screw terminals</h3>
+    <p>Numbering follows Figure 1. Vertical stacks are top → bottom; horizontal
+      screws are left → right on that edge.</p>
+
+    <h4>Upper left — T1–T3 (top → bottom, as-built)</h4>
+    <table>
+      <thead>
+        <tr><th>Terminal</th><th>Label</th><th>Net</th><th>Attaches</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>T1</strong></td>
+          <td><strong>+12V</strong></td>
+          <td><code>+12V_GD</code></td>
+          <td><strong>Power in.</strong> Mean Well HDR-15-12 (+) → top <strong>+</strong> rail</td>
+        </tr>
+        <tr>
+          <td><strong>T2</strong></td>
+          <td><strong>12V−</strong></td>
+          <td><code>−70V</code></td>
+          <td><strong>Power in.</strong> Mean Well HDR-15-12 (−). Floating supply return bonded to <code>−70V</code>. This is not <code>MCU_GND</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>T3</strong></td>
+          <td><strong>−70V</strong></td>
+          <td><code>−70V</code></td>
+          <td>Board B → Board C shared motor low rail (Q1 source / U3 pin 3). Keep this link short.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h4>Top edge — T4–T5 (left → right, as-built)</h4>
+    <table>
+      <thead>
+        <tr><th>Terminal</th><th>Label</th><th>Net</th><th>Attaches</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>T4</strong></td>
+          <td><strong>PWM</strong></td>
+          <td><code>PWM</code> (GPIO16)</td>
+          <td>Board A <strong>T5</strong> ← T-Display-S3 GPIO16. Earth island only → U1 LED through 220&nbsp;Ω on-board. Optically isolated to the floating domain.</td>
+        </tr>
+        <tr>
+          <td><strong>T5</strong></td>
+          <td><strong>GND</strong></td>
+          <td><code>MCU_GND</code></td>
+          <td>Board A <strong>T12</strong> ← T-Display earth return. U1 / U4 LED cathodes. Never tie to <code>−70V</code> or floating supplies.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h4>Lower left — T6–T7 (top → bottom, as-built)</h4>
+    <table>
+      <thead>
+        <tr><th>Terminal</th><th>Label</th><th>Net</th><th>Attaches</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>T6</strong></td>
+          <td><strong>+5V</strong></td>
+          <td><code>+5V_ISO</code></td>
+          <td><strong>Power in.</strong> Mean Well HDR-15-5 #2 (+) → bottom <strong>+</strong> rail → U1 VCC / VE</td>
+        </tr>
+        <tr>
+          <td><strong>T7</strong></td>
+          <td><strong>5V−</strong></td>
+          <td><code>−70V</code></td>
+          <td><strong>Power in.</strong> Mean Well HDR-15-5 #2 (−). Floating supply return bonded to <code>−70V</code>. Not <code>MCU_GND</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h4>Upper right — T8–T9 (left → right, as-built)</h4>
+    <table>
+      <thead>
+        <tr><th>Terminal</th><th>Label</th><th>Net</th><th>Attaches</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>T8</strong></td>
+          <td><strong>DIR</strong></td>
+          <td><code>DIR_OR</code> (GPIO21)</td>
+          <td>Board A <strong>T6</strong> ← T-Display-S3 GPIO21. Earth island → U4 LED (270&nbsp;Ω on-board). LED return shares <strong>T5</strong> <code>MCU_GND</code> — no separate earth screw for DIR. Optically isolated to Q3 / K1 coil.</td>
+        </tr>
+        <tr>
+          <td><strong>T9</strong></td>
+          <td><strong>PWM out</strong></td>
+          <td><code>PWM</code> / gate</td>
+          <td>TC4426 OUT B through 100&nbsp;Ω (on-board) → Board C <strong>T3</strong>. Floating domain. Return via Board B <strong>T3</strong> <code>−70V</code>. Keep harness short.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h4>Lower right — T10–T11 (left → right, as-built)</h4>
+    <table>
+      <thead>
+        <tr><th>Terminal</th><th>Label</th><th>Net</th><th>Attaches</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>T10</strong></td>
+          <td><strong>Coil−</strong></td>
+          <td>K1 coil (−) / Q3 drain</td>
+          <td>Phoenix <strong>PLC-RSC-12DC/21-21</strong> coil (−) via field wire. Low side switched by Q3 to <code>−70V</code> on-board.</td>
+        </tr>
+        <tr>
+          <td><strong>T11</strong></td>
+          <td><strong>Coil+</strong></td>
+          <td><code>+12V_GD</code></td>
+          <td>Phoenix K1 coil (+) from <code>+12V_GD</code> rail (HDR-15-12 / top <strong>+</strong> bus). D5 flyback (1N4007) is installed across these terminals on the as-built unit; cathode/band toward <strong>T11</strong>.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>K1 coil (on-board driver, DIN relay)</h3>
+    <p>Q3 switches the Phoenix K1 coil low-side on the floating domain. Field
+      wires to the DIN relay coil land on <strong>T10</strong> (Coil−) and
+      <strong>T11</strong> (Coil+). Do not route coil current through the Board B
+      → Board C PWM link (<strong>T9</strong>).</p>
+    <table>
+      <thead>
+        <tr><th>Signal</th><th>Net</th><th>Attaches</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>K1 coil +</td><td><code>+12V_GD</code></td><td><strong>T11</strong> → Phoenix PLC-RSC-12DC/21-21 coil (+)</td></tr>
+        <tr><td>K1 coil −</td><td>Q3 drain</td><td><strong>T10</strong> ← relay coil (−); Q3 source → <code>−70V</code></td></tr>
+        <tr><td>PWM command</td><td><code>PWM</code></td><td>T-Display-S3 GPIO16 → Board A <strong>T5</strong> → Board B <strong>T4</strong> → U1 LED (220&nbsp;Ω on-board); optically isolated to Q2 / U3 / gate</td></tr>
+        <tr><td>Direction command</td><td><code>DIR_OR</code></td><td>T-Display-S3 GPIO21 → Board A <strong>T6</strong> → Board B <strong>T8</strong> → U4 LED; return via <strong>T5</strong> <code>MCU_GND</code></td></tr>
+      </tbody>
+    </table>
+    <p>Coil and contact detail:
+      K1 floating coil option.</p>
+
+    <h3>On-board only (not on screw terminals)</h3>
+    <p>These subsystems stay on the Perma-Proto and are wired per
+      Motor_Driver_Wiring.md:</p>
+    <ul>
+      <li>U1 6N137 — PWM isolation; pin 6 → Q2 base</li>
+      <li>Q2 PN2222A — fail-off inverter (Rb2, Rbe2, Rc2 on-board)</li>
+      <li>U3 TC4426 — dual inverting gate driver; OUT B → 100&nbsp;Ω → Board C gate path</li>
+      <li>U4 4N35 + Q3 2N7000TA — direction opto and coil low-side switch</li>
+      <li>220&nbsp;Ω (U1 LED) and 270&nbsp;Ω (U4 LED) beside the optocouplers</li>
+      <li>U3 decoupling: 100&nbsp;nF, 1&nbsp;µF across pins 6–3; 47&nbsp;µF bulk nearby</li>
+    </ul>
+
+    <h3>Inter-board cables</h3>
+    <table>
+      <thead>
+        <tr><th>Cable</th><th>Board B landing</th><th>Domain</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Board A → Board B</td><td><strong>T4</strong> (<code>PWM</code> in), <strong>T5</strong> (<code>MCU_GND</code>), <strong>T8</strong> (<code>DIR_OR</code>)</td><td>Earth only; translated optically by U1 / U4</td></tr>
+        <tr><td>Board B → Board C</td><td><strong>T3</strong> (<code>−70V</code>) + <strong>T9</strong> (PWM out → Board C <strong>T3</strong>)</td><td>Floating; keep short</td></tr>
+        <tr><td>Board B → DIN K1 coil</td><td><strong>T10</strong> (Coil−), <strong>T11</strong> (Coil+ / <code>+12V_GD</code>)</td><td>Floating</td></tr>
+      </tbody>
+    </table>
+
+    <h2>4. As-built photo</h2>
+    <p>Line art is the labeled figure. The photo shows the unit that was built.</p>
+    <figure>
+      <img src="Board_B_PermaProto.jpg" alt="Board B populated Perma-Proto: U1 left, TC4426 center, U4 right, screw terminals on both long edges">
+      <figcaption>Populated carrier. U1 (6N137) on the left, U3 (TC4426) in the center, U4 (4N35) on the right. Isolation barrier at column 5.</figcaption>
+    </figure>
+
+    <h2>Related</h2>
+    <nav class="links">
+      <ul>
+        <li><a href="../board-a/index.html">Board A</a> — earth-side control (T-Display-S3, EC11, field I/O)</li>
+        <li><a href="../board-b/index.html">Board B</a> — floating gate driver</li>
+        <li><a href="../board-c/index.html">Board C</a> — HV switch stage</li>
+        <li><a href="../wiring-guide.html">Wiring Guide</a> — boards A, B, and C on one page</li>
+        <li><a href="../index.html">Software</a> — operator screens</li>
+      </ul>
+    </nav>
+
+    <footer>This page is a chapter of the <a href="../../pdf/Wiring_Guide.pdf">Wiring Guide</a>. Electrical wiring truth for the motor stack remains the gate-driver schematic, not the placement drawing.</footer>
+  </article>
+</body>
+</html>

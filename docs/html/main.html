@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Software — Main (draft)</title>
+  <link rel="stylesheet" href="page.css">
+</head>
+<body>
+  <article class="page">
+    <p class="lede">Private Reserve · DIN controller · first draft</p>
+    <h1>Main</h1>
+    <p>Live door state. The spec name is Standard Operating Mode. The operator label is <strong>Main</strong>. This is the default screen after boot and after wake from a blanked panel.</p>
+
+    <nav class="sec" aria-label="Software pages">
+      <a href="index.html">Overview</a>
+      <a href="main.html" aria-current="page">Main</a>
+      <a href="calibration.html">Calibration</a>
+      <a href="diagnostics.html">Diagnostics</a>
+      <a href="settings.html">Settings</a>
+      <a href="wiring-guide.html">Wiring</a>
+      <a class="pdf-dl" href="../pdf/Software_User_Manual.pdf">User Manual (PDF)</a>
+      <a class="pdf-dl" href="../pdf/Wiring_Guide.pdf">Wiring Guide (PDF)</a>
+    </nav>
+
+    <div class="banner">
+      <strong>Draft.</strong> Pixel layout:
+      UI/index.html (320 × 170).
+      LCD and web draw the same state tree. The web keypad sits to the right of the panel.
+      Full chrome: <a href="index.html">overview figure 1</a> and figure 9 below.
+    </div>
+
+    <div class="warn">
+      <strong>Needs setup blocks automatic motion.</strong> Until origin, markers,
+      and an armed obstruction table exist, hall and rocker triggers stay off.
+      The header reads <code>NEEDS SETUP</code>. The hero is a red
+      <code>POSITION UNKNOWN</code> banner. Run Calibration.
+    </div>
+
+    <h2>1. Live screen chrome</h2>
+    <p>Every live Main state uses the same regions. A latched fault replaces the hero and the current meter with a red banner. GPIO numbers, duty, phase timers, bin index, and drift live in Diagnostics, not here.</p>
+    <table>
+      <thead>
+        <tr><th>Region</th><th>What it shows</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Header left</td><td><code>MAIN</code> when setup is complete, or <code>NEEDS SETUP</code>.</td></tr>
+        <tr><td>Header right</td><td>Link state. Green pip and <code>STA</code> plus the IP, or amber pip and <code>AP</code> plus the SoftAP name (default <code>PrivateReserve</code>). The join password is not in the header.</td></tr>
+        <tr><td>Hero</td><td>Current action in the largest type. A latched fault replaces this with a red banner.</td></tr>
+        <tr><td>Current</td><td>Live amps against the learned trip for the bin the door is in. The red tick is that bin’s trip. The hard 2.50&nbsp;A ceiling is the right edge. Hidden when a fault banner occupies the hero.</td></tr>
+        <tr><td>Travel</td><td>Share of the measured span in AS5600 counts. Ticks are the two near-end markers. Outer ends are open-seated and closed-seated. The grey line under the bar is percent and counts, or <code>position unknown</code>.</td></tr>
+        <tr><td>Tiles</td><td>Bottle key, open marker, close marker, shaft rev/s. The close-marker title clips to <code>CLOSE MARK…</code> on the 320-pixel panel.</td></tr>
+        <tr><td>Footer</td><td><code>TURN menu</code> · <code>PRESS menu</code>. Either gesture opens the mode menu.</td></tr>
+      </tbody>
+    </table>
+
+    <section class="shot">
+      <h3>1.1 Needs setup — position unknown</h3>
+      <p>Default after power loss until guided calibration finds origin. Automatic hall and rocker triggers stay off.</p>
+      <figure class="lcd">
+        <img src="shots/main-01-needs-setup.png" width="320" alt="Main: NEEDS SETUP, POSITION UNKNOWN, AP PrivateReserve">
+        <figcaption>Figure 1. Main · needs setup. Position unknown. SoftAP serving.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>NEEDS SETUP</code></td><td>Header left. Origin, markers, or the calibration format is invalid. Automatic motion is blocked.</td></tr>
+          <tr><td>Amber pip + <code>AP PrivateReserve</code></td><td>Header right. Station join failed or SSID is empty. Fallback SoftAP is serving. Default name is <code>PrivateReserve</code>. Default join password is <code>reserved</code>. The header does not show the password. Read it on Settings → Network or Diagnostics → Network. Then open <code>http://192.168.4.1/</code>.</td></tr>
+          <tr><td><code>POSITION UNKNOWN</code></td><td>Red banner title. The AS5600 is single-turn. After reset the firmware does not know which turn the door is on.</td></tr>
+          <tr><td><code>Automatic motion blocked · run calibration to find origin</code></td><td>Banner detail. Hall and rocker triggers stay disabled until Calibration finds origin.</td></tr>
+          <tr><td><code>OPEN</code> / <code>CLOSED</code></td><td>Travel ends. Open is the left of the bar. Closed is the right.</td></tr>
+          <tr><td>Empty travel track, grey thumb</td><td>No fill and no marker ticks in this state. Position is not known, so the bar cannot show a share of span.</td></tr>
+          <tr><td><code>position unknown</code></td><td>Left scale under the bar. Replaces percent until origin exists.</td></tr>
+          <tr><td><code>—</code> (right of the scale)</td><td>Count field. Empty because there is no origin to accumulate from.</td></tr>
+          <tr><td><code>BOTTLE KEY</code> · grey pip · <code>ABS</code> · <code>uncal</code></td><td>Hall reads absent. Key levels are not yet captured, so the grey line is <code>uncal</code> instead of an ADC count.</td></tr>
+          <tr><td><code>OPEN MARKER</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Open near-end switch is not made. <code>travel</code> means the door is not at that end (or the end is unknown).</td></tr>
+          <tr><td><code>CLOSE MARK…</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Close near-end switch is not made. Title is Close marker. The tile clips the word.</td></tr>
+          <tr><td><code>SHAFT</code> · <code>0.0 rev/s</code> · <code>—</code></td><td>Motor at rest. Direction dash means no rotation this cycle.</td></tr>
+          <tr><td><code>TURN menu</code> · <code>PRESS menu</code></td><td>Either gesture opens the mode menu. Position Unknown is not an acknowledge-away fault.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h3>1.2 Opening</h3>
+      <p>Setup is complete. The bottle key went absent. The door is in cruise toward open.</p>
+      <figure class="lcd">
+        <img src="shots/main-02-opening.png" width="320" alt="Main: OPENING at 62 percent, 1.42 A, STA 192.168.1.42">
+        <figcaption>Figure 2. Main · opening. Cruise, key removed.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>MAIN</code></td><td>Header left. Setup is complete. Automatic motion is allowed.</td></tr>
+          <tr><td>Green pip + <code>STA 192.168.1.42</code></td><td>Header right. ESP32 joined site Wi-Fi as a station. HTTP is on this address.</td></tr>
+          <tr><td><code>OPENING</code> (amber)</td><td>Hero. Current action. Amber means the motor is moving.</td></tr>
+          <tr><td><code>cruise · key removed</code></td><td>Motion phase and why the move started. Cruise is the middle of the profile. The bottle key is absent.</td></tr>
+          <tr><td><code>1.42 A</code></td><td>Live motor current from the ACS712 after scale.</td></tr>
+          <tr><td>Green fill on the current bar</td><td>Live amps as a share of the 2.50&nbsp;A hard ceiling. Green because 1.42&nbsp;A is under this bin’s trip.</td></tr>
+          <tr><td>Red tick on the current bar</td><td>This bin’s learned trip (1.60&nbsp;A). Not the hard ceiling.</td></tr>
+          <tr><td><code>bin trip 1.60 · max 2.50</code></td><td>Numeric trip for the bin the door is in, then the compile-time ceiling at the right edge of the bar.</td></tr>
+          <tr><td><code>OPEN</code> / <code>CLOSED</code></td><td>Travel ends.</td></tr>
+          <tr><td>Blue fill to 62%, yellow thumb, two marker ticks</td><td>Door is 62% of the measured span toward closed. Marker ticks sit near each end. Neither tick is hot.</td></tr>
+          <tr><td><code>62%</code></td><td>Share of measured span. Percent is the headline. Counts sit on the right.</td></tr>
+          <tr><td><code>12,690 cnt</code></td><td>AS5600 counts from the open origin.</td></tr>
+          <tr><td><code>BOTTLE KEY</code> · grey pip · <code>ABS</code> · <code>adc 1610</code></td><td>Key absent. Raw ADC is the diagnostic value for this tile.</td></tr>
+          <tr><td><code>OPEN MARKER</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Open switch not made. Door is in mid travel.</td></tr>
+          <tr><td><code>CLOSE MARK…</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Close switch not made.</td></tr>
+          <tr><td><code>SHAFT</code> · <code>1.7 rev/s</code> · <code>CCW</code></td><td>Shaft speed and direction. On this build CCW is toward open.</td></tr>
+          <tr><td><code>TURN menu</code> · <code>PRESS menu</code></td><td>Open the mode menu. There is no Stop on Main.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h3>1.3 Idle — closed and seated</h3>
+      <p>Move finished. Seal is loaded. Motor is at rest.</p>
+      <figure class="lcd">
+        <img src="shots/main-03-idle-closed.png" width="320" alt="Main: CLOSED, seated, 0.00 A, 100 percent">
+        <figcaption>Figure 3. Main · idle closed. Seated, snug held.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>MAIN</code></td><td>Header left. Setup complete.</td></tr>
+          <tr><td>Green pip + <code>STA 192.168.1.42</code></td><td>Station Wi-Fi, HTTP on this IP.</td></tr>
+          <tr><td><code>CLOSED</code></td><td>Hero. Door is at the closed-seated end. White, not amber, because the motor is idle.</td></tr>
+          <tr><td><code>seated · snug held 0.9 s</code></td><td>How the stop was held. Snug is current-rise seating past the close marker. 0.9&nbsp;s is hold time this cycle.</td></tr>
+          <tr><td><code>0.00 A</code></td><td>Motor current at rest.</td></tr>
+          <tr><td>Empty current bar, red tick near the right</td><td>Live fill is zero. The tick is this bin’s trip (2.20&nbsp;A).</td></tr>
+          <tr><td><code>bin trip 2.20 · max 2.50</code></td><td>Closed-end bin trip, then the 2.50&nbsp;A ceiling.</td></tr>
+          <tr><td><code>OPEN</code> / <code>CLOSED</code></td><td>Travel ends.</td></tr>
+          <tr><td>Fill to the closed end, close-marker tick hot</td><td>Door is at 100% of span. The close-marker tick is active because the switch is made.</td></tr>
+          <tr><td><code>100%</code> · <code>20,480 cnt</code></td><td>At closed seated. Counts include travel past the close-marker edge.</td></tr>
+          <tr><td><code>BOTTLE KEY</code> · green pip · <code>PRES</code> · <code>adc 2980</code></td><td>Bottle in the recess. Green pip means present on this polarity.</td></tr>
+          <tr><td><code>OPEN MARKER</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Open switch not made.</td></tr>
+          <tr><td><code>CLOSE MARK…</code> · green pip · <code>AT END</code> · <code>active</code></td><td>Close switch is made. <code>AT END</code> is the cooked label. <code>active</code> is the raw switch state.</td></tr>
+          <tr><td><code>SHAFT</code> · <code>0.0 rev/s</code> · <code>—</code></td><td>At rest. No rotation this cycle.</td></tr>
+          <tr><td><code>TURN menu</code> · <code>PRESS menu</code></td><td>Open the mode menu.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h3>1.4 Closing — creep and snug</h3>
+      <p>Past the close marker. The profile has left cruise and is seating the seal.</p>
+      <figure class="lcd">
+        <img src="shots/main-04-snug.png" width="320" alt="Main: SNUG, 1.88 A, 98 percent, close marker at end">
+        <figcaption>Figure 4. Main · snug. Past close marker, seating.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>MAIN</code></td><td>Header left.</td></tr>
+          <tr><td>Green pip + <code>STA 192.168.1.42</code></td><td>Station Wi-Fi.</td></tr>
+          <tr><td><code>SNUG</code> (amber)</td><td>Hero. Creep-and-seat phase after the close marker. Motor is still moving.</td></tr>
+          <tr><td><code>past close marker · seating</code></td><td>Why snug is showing. Operational snug is a current-rise stop, not a home.</td></tr>
+          <tr><td><code>1.88 A</code></td><td>Live current. Seal loading raises amps above cruise.</td></tr>
+          <tr><td>Green fill, red tick near the right</td><td>1.88&nbsp;A is still under this bin’s 2.24&nbsp;A trip.</td></tr>
+          <tr><td><code>bin trip 2.24 · max 2.50</code></td><td>Near-closed bin trip, then the hard ceiling.</td></tr>
+          <tr><td><code>OPEN</code> / <code>CLOSED</code></td><td>Travel ends.</td></tr>
+          <tr><td>Fill at 98%, close-marker tick hot</td><td>Almost seated. Close switch is made.</td></tr>
+          <tr><td><code>98%</code> · <code>20,070 cnt</code></td><td>Share of span and counts from origin.</td></tr>
+          <tr><td><code>BOTTLE KEY</code> · green pip · <code>PRES</code> · <code>adc 2955</code></td><td>Bottle present. Close was commanded with the key in.</td></tr>
+          <tr><td><code>OPEN MARKER</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Open switch not made.</td></tr>
+          <tr><td><code>CLOSE MARK…</code> · green pip · <code>AT END</code> · <code>active</code></td><td>Close switch made.</td></tr>
+          <tr><td><code>SHAFT</code> · <code>0.3 rev/s</code> · <code>CW</code></td><td>Slow creep toward closed. CW is toward closed on this build.</td></tr>
+          <tr><td><code>TURN menu</code> · <code>PRESS menu</code></td><td>Open the mode menu. The move ends at seated, a reverse trigger, a fault, or obstruction handling.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h3>1.5 Obstruction — reversing</h3>
+      <p>Close current crossed the bin trip. Firmware reversed toward open. Obstruction handling outranks ordinary commands.</p>
+      <figure class="lcd">
+        <img src="shots/main-05-reversing.png" width="320" alt="Main: REVERSING, 2.11 A above bin trip 1.66">
+        <figcaption>Figure 5. Main · reversing. Obstruction while closing.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>MAIN</code></td><td>Header left.</td></tr>
+          <tr><td>Green pip + <code>STA 192.168.1.42</code></td><td>Station Wi-Fi.</td></tr>
+          <tr><td><code>REVERSING</code> (amber)</td><td>Hero. Close obstruction. The door is opening to clear the path.</td></tr>
+          <tr><td><code>obstruction while closing · opening</code></td><td>Cause and the commanded direction now.</td></tr>
+          <tr><td><code>2.11 A</code></td><td>Live current. Above this bin’s trip, so the fill is red.</td></tr>
+          <tr><td>Red fill past the red tick</td><td>Live amps exceeded the learned trip (1.66&nbsp;A). That is why reverse started.</td></tr>
+          <tr><td><code>bin trip 1.66 · max 2.50</code></td><td>Mid-travel bin trip, then the hard ceiling. Reverse used the learned trip, not the 2.50&nbsp;A ceiling.</td></tr>
+          <tr><td><code>OPEN</code> / <code>CLOSED</code></td><td>Travel ends.</td></tr>
+          <tr><td>Fill at 48%, neither marker hot</td><td>Mid travel. Both switches clear.</td></tr>
+          <tr><td><code>48%</code> · <code>9,830 cnt</code></td><td>Position when reverse is in progress.</td></tr>
+          <tr><td><code>BOTTLE KEY</code> · green pip · <code>PRES</code> · <code>adc 2971</code></td><td>Bottle still present. Close had been the automatic command.</td></tr>
+          <tr><td><code>OPEN MARKER</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Not yet at the open end.</td></tr>
+          <tr><td><code>CLOSE MARK…</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Not at the close end.</td></tr>
+          <tr><td><code>SHAFT</code> · <code>1.4 rev/s</code> · <code>CCW</code></td><td>Opening. CCW toward open on this build.</td></tr>
+          <tr><td><code>TURN menu</code> · <code>PRESS menu</code></td><td>Open the mode menu. Reverse still owns the motor until it finishes or faults.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h3>1.6 Fault — second close obstruction</h3>
+      <p>A second close obstruction in the retry window latches a fault. The current meter leaves the panel. PRESS acknowledges when firmware allows it.</p>
+      <figure class="lcd">
+        <img src="shots/main-06-fault.png" width="320" alt="Main: OBSTRUCTION times 2 fault banner at 44 percent">
+        <figcaption>Figure 6. Main · latched obstruction fault. Press to acknowledge.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>MAIN</code></td><td>Header left. Setup is still complete. This is a motion fault, not Needs Setup.</td></tr>
+          <tr><td>Green pip + <code>STA 192.168.1.42</code></td><td>Station Wi-Fi.</td></tr>
+          <tr><td><code>OBSTRUCTION ×2</code></td><td>Red banner title. Second close obstruction. The door stopped instead of reversing again.</td></tr>
+          <tr><td><code>Repeated close obstruction · press knob to acknowledge</code></td><td>Banner detail. PRESS clears this banner when the firmware allows it. TURN still opens the mode menu.</td></tr>
+          <tr><td><code>OPEN</code> / <code>CLOSED</code></td><td>Travel ends. The current meter is hidden while the fault banner occupies the hero.</td></tr>
+          <tr><td>Red thumb at 44%</td><td>Position where the second trip stopped the door. Red track because this is a fault state.</td></tr>
+          <tr><td><code>44%</code> · <code>9,010 cnt</code></td><td>Stopped position.</td></tr>
+          <tr><td><code>BOTTLE KEY</code> · green pip · <code>PRES</code> · <code>adc 2969</code></td><td>Bottle still present.</td></tr>
+          <tr><td><code>OPEN MARKER</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Not at the open end.</td></tr>
+          <tr><td><code>CLOSE MARK…</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Not at the close end.</td></tr>
+          <tr><td><code>SHAFT</code> · <code>0.0 rev/s</code> · <code>—</code></td><td>Motor stopped after the fault.</td></tr>
+          <tr><td><code>TURN menu</code> · <code>PRESS menu</code></td><td>On this fault, PRESS acknowledges. TURN opens the mode menu. Position Unknown is the fault that cannot be acknowledged away.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <h2>2. Mode menu</h2>
+    <p>TURN or PRESS on the live Main screen opens this list. Five items. TURN scrolls. PRESS opens. HOLD returns to the live Main screen.</p>
+
+    <section class="shot">
+      <h3>2.1 Five destinations</h3>
+      <figure class="lcd">
+        <img src="shots/main-07-mode-menu.png" width="320" alt="Mode menu: Main, Diagnostics, Calibration needed, Settings, Documentation">
+        <figcaption>Figure 7. Mode menu. Five items. Calibration pip is amber because setup is still needed. Documentation is the fifth row.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>MODE</code></td><td>Header left. Same screen family as Main. Not a fourth operating mode.</td></tr>
+          <tr><td>Green pip + <code>STA 192.168.1.42</code></td><td>Header right. Same link state as Main.</td></tr>
+          <tr><td>Blue highlight + left bracket on <code>Main</code></td><td>Selected row. PRESS opens the live Main screen.</td></tr>
+          <tr><td>Green pip + <code>Main</code> + <code>DOOR</code></td><td>Live door. Value column is the subject of that page.</td></tr>
+          <tr><td>Green pip + <code>Diagnostics</code> + <code>I/O</code></td><td>Opens the <a href="diagnostics.html">diagnostic menu</a>.</td></tr>
+          <tr><td>Amber pip + <code>Calibration</code> + <code>NEEDED</code></td><td>Opens the <a href="calibration.html">stage list</a>. Amber pip and <code>NEEDED</code> mean origin or later stages are missing. After a full save this row shows green and a status such as <code>armed</code>.</td></tr>
+          <tr><td>Green pip + <code>Settings</code> + <code>NVS</code></td><td>Opens <a href="settings.html">settings groups</a>. Value is <code>NVS</code> when stored, or <code>unsaved</code> when staged edits exist. If the motor is running, Settings Locked instead.</td></tr>
+          <tr><td>Green pip + <code>Documentation</code> + <code>GitHub</code></td><td>Opens the <a href="#documentation">Documentation</a> page. QR code for the public project URL.</td></tr>
+          <tr><td><code>TURN scroll</code></td><td>Move the highlight.</td></tr>
+          <tr><td><code>PRESS open</code></td><td>Enter the highlighted item.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to the live Main screen without changing mode.</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <p>Web nav tabs send the same jumps: Main, Calibration, Diagnostics, Settings, Docs. They turn the LCD on if it was blank.</p>
+
+    <section class="shot" id="documentation">
+      <h2>2.2 Documentation</h2>
+      <p>Not an operating mode. A read-only page from the mode menu. Header is <code>DOC</code>. The panel shows a QR code for the public project page and the same path as text. This page does not command the motor. PRESS does nothing. HOLD returns to the mode menu.</p>
+      <figure class="lcd">
+        <img src="shots/main-08-documentation.png" width="320" alt="DOC: QR code, github.com/KopperToolworks, PrivateReserve">
+        <figcaption>Figure 8. DOC. QR and path for the public GitHub page.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>DOC</code></td><td>Header left. Documentation page.</td></tr>
+          <tr><td>Green pip + <code>STA 192.168.1.42</code></td><td>Header right. Same link state as Main. Amber pip and <code>AP</code> when the fallback SoftAP is serving.</td></tr>
+          <tr><td>QR code (left)</td><td>Encodes <a href="https://github.com/KopperToolworks/PrivateReserve">https://github.com/KopperToolworks/PrivateReserve</a>. Scan with a phone camera. The enclosure sticker uses the same URL.</td></tr>
+          <tr><td><code>github.com/KopperToolworks</code></td><td>Host, as text, if the QR is hard to scan.</td></tr>
+          <tr><td><code>PrivateReserve</code></td><td>Repository name.</td></tr>
+          <tr><td><code>source and docs</code></td><td>What the page holds. Source, operator docs, and enclosure notes.</td></tr>
+          <tr><td><code>scan to open</code></td><td>How to use the QR. On the web copy of this screen, a blue link labelled <code>Open GitHub page</code> opens the same URL. The full web chrome (tabs and keypad) is <a href="index.html">overview figure 1</a> and figure 9 below.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to the mode menu.</td></tr>
+          <tr><td><code>SCAN code</code></td><td>Footer hint. Not a knob gesture. PRESS on this page does nothing.</td></tr>
+        </tbody>
+      </table>
+      <p>Pixel source: Main mockup (Documentation state). The enclosure sticker uses the same URL; see DIN/enclosure.md. The repo must stay public or the QR is useless.</p>
+    </section>
+
+    <h2>3. Knob on Main</h2>
+    <table>
+      <thead>
+        <tr><th>Gesture</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>TURN or PRESS (live screen)</td><td>Open the mode menu.</td></tr>
+        <tr><td>PRESS on Documentation</td><td>No-op. The QR is the action.</td></tr>
+        <tr><td>HOLD on Documentation</td><td>Return to the mode menu.</td></tr>
+        <tr><td>PRESS on a latched fault that can be acknowledged</td><td>Clear the banner when the firmware allows it. Position Unknown is not an acknowledge-away fault. It needs calibration.</td></tr>
+        <tr><td>Hall / rocker</td><td>Open or close when setup is ready. Edges, not hold-to-run. Open wins if both rocker throws hit in the same cycle.</td></tr>
+      </tbody>
+    </table>
+    <p>There is no Stop on this screen. A move ends at destination, snug, a reverse trigger, a fault, or obstruction handling.</p>
+
+    <h2>4. Web page</h2>
+    <p>The LCD shows only the 320 × 170 panel. The phone page adds tabs on top and a keypad on the right. Use landscape. The shell scales to the viewport. There is no application login.</p>
+    <figure class="web">
+      <img src="shots/web-01-docs.png" width="1024" alt="Web UI: Docs tab selected, GitHub QR in the panel, keypad on the right">
+      <figcaption>Figure 9. Full web UI on Documentation. Same chrome on every page. Overview figure 1 names every chrome label.</figcaption>
+    </figure>
+    <table>
+      <thead>
+        <tr><th>Chrome</th><th>Command</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Tabs: Main · Calibration · Diagnostics · Settings · Docs</td><td>Jump to that page. Active tab is white. They turn the LCD on if it was blank.</td></tr>
+        <tr><td>Left circular arrow</td><td>TURN − (matches CCW on the physical knob)</td></tr>
+        <tr><td>Right circular arrow</td><td>TURN + (matches CW on the physical knob)</td></tr>
+        <tr><td>Large Return arrow</td><td>PRESS</td></tr>
+        <tr><td>Wide left arrow</td><td>HOLD back</td></tr>
+      </tbody>
+    </table>
+    <p>On Documentation the web panel also shows <code>Open GitHub page</code>. That link is not on the LCD. PRESS on this page does nothing. HOLD returns to the mode menu.</p>
+
+    <h2>5. Related</h2>
+    <nav class="links">
+      <ul>
+        <li><a href="index.html">Software overview</a></li>
+        <li><a href="settings.html">Settings</a> — clear station Wi-Fi and reboot</li>
+        <li><a href="board-a/index.html">Board A</a> — terminals named on the tiles</li>
+      </ul>
+    </nav>
+
+    <footer>This page is a chapter of the <a href="../pdf/Software_User_Manual.pdf">Software User Manual</a>.</footer>
+  </article>
+</body>
+</html>

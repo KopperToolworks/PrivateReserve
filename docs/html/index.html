@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Software — Operator UI (draft)</title>
+  <link rel="stylesheet" href="page.css">
+</head>
+<body>
+  <article class="page">
+    <p class="lede">Private Reserve · DIN controller · first draft</p>
+    <h1>Software — operator UI</h1>
+    <p>Production image <code>tdisplay_s3_prod</code> on the LilyGo T-Display-S3 (Board&nbsp;A). The LCD and the phone web page share one controller state. The EC11 knob, the web keypad, the rockers, and the bottle-door key all go through one command arbiter.</p>
+
+    <nav class="sec" aria-label="Software pages">
+      <a href="index.html" aria-current="page">Overview</a>
+      <a href="main.html">Main</a>
+      <a href="calibration.html">Calibration</a>
+      <a href="diagnostics.html">Diagnostics</a>
+      <a href="settings.html">Settings</a>
+      <a href="wiring-guide.html">Wiring</a>
+      <a class="pdf-dl" href="../pdf/Software_User_Manual.pdf">User Manual (PDF)</a>
+      <a class="pdf-dl" href="../pdf/Wiring_Guide.pdf">Wiring Guide (PDF)</a>
+    </nav>
+
+    <div class="banner">
+      <strong>Draft.</strong> These pages describe the operator screens as built.
+      Each option has a 320&nbsp;×&nbsp;170 panel shot. Every label on that shot
+      is named in a field table on
+      <a href="main.html">Main</a>,
+      <a href="calibration.html">Calibration</a>,
+      <a href="diagnostics.html">Diagnostics</a>, and
+      <a href="settings.html">Settings</a>.
+      The web page adds tabs and a keypad; figure 1 is a full-chrome example.
+      Pixel source:
+      UI mockups.
+      Motion, obstruction, and NVS names remain specified in
+      Production_Software.md
+      and T-Display-S3_Firmware_Config.md.
+    </div>
+
+    <div class="warn">
+      <strong>No application login.</strong> Anyone who can reach the controller
+      on the joined LAN, or join its fallback SoftAP, can monitor, configure,
+      and command the door. HTTP is port 80. Do not expose that network to the
+      public internet.
+    </div>
+
+    <p class="pdf-all"><strong>Software User Manual.</strong> <a href="../pdf/Software_User_Manual.pdf">Download PDF</a> · <a href="software-manual.html">Single-page HTML</a><br>Chapters: <a href="../pdf/software/index.pdf">Overview</a> · <a href="../pdf/software/main.pdf">Main</a> · <a href="../pdf/software/calibration.pdf">Calibration</a> · <a href="../pdf/software/diagnostics.pdf">Diagnostics</a> · <a href="../pdf/software/settings.pdf">Settings</a></p>
+
+    <p class="pdf-all"><strong>Wiring Guide.</strong> <a href="../pdf/Wiring_Guide.pdf">Download PDF</a> · <a href="wiring-guide.html">Single-page HTML</a><br>Boards: <a href="board-a/index.html">Board A</a> · <a href="board-b/index.html">Board B</a> · <a href="board-c/index.html">Board C</a><br>Chapters: <a href="../pdf/wiring/board-a.pdf">Board A</a> · <a href="../pdf/wiring/board-b.pdf">Board B</a> · <a href="../pdf/wiring/board-c.pdf">Board C</a></p>
+
+    <h2>1. Surfaces</h2>
+    <p>View the LCD with USB-C on the left and the EC11 on the right. Firmware uses Arduino_GFX rotation 3. The logical panel is 320 wide by 170 tall. Origin (0,&nbsp;0) is the operator-facing top-left.</p>
+    <p>The web page is the same state tree plus chrome the LCD does not have: tabs across the top, a keypad on the right that maps to the knob. Use it in landscape on a phone. The layout scales to fill the viewport without clipping. STA in the header means the ESP32 joined site Wi-Fi as a station. AP means the fallback SoftAP is serving.</p>
+    <table>
+      <thead>
+        <tr><th>Surface</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>LCD (ST7789)</td><td>In-box operator panel. Off means GPIO38 backlight and GPIO15 panel power only. The MCU stays up.</td></tr>
+        <tr><td>Web (port 80)</td><td>Same screens. Tabs jump to Main, Calibration, Diagnostics, Settings, or Docs. Keypad on the right: turn − / +, press (Return), hold (back). Figure 1.</td></tr>
+        <tr><td>EC11</td><td>TURN scroll or adjust. PRESS open or accept. HOLD back or cancel.</td></tr>
+        <tr><td>GPIO14</td><td>On-board T-Display button. Same PRESS / HOLD window as the knob switch. Does not revert a recent turn.</td></tr>
+      </tbody>
+    </table>
+
+    <section class="shot">
+      <h3>1.1 Full web page</h3>
+      <p>On site Wi-Fi, open <code>http://private-reserve.local</code> or the STA address on port 80. On the fallback AP, join <code>PrivateReserve</code> with password <code>reserved</code>, then open <code>http://192.168.4.1/</code>. The LCD shows only the 320 × 170 panel. The web page adds tabs on top and a keypad on the right. This shot is Documentation. The panel inside the bezel is the same DOC screen as <a href="main.html#documentation">Main figure 8</a>.</p>
+      <figure class="web">
+        <img src="shots/web-01-docs.png" width="1024" alt="Web UI: Docs tab selected, GitHub QR in the 320 by 170 panel, keypad on the right">
+        <figcaption>Figure 1. Full web UI in landscape. Tabs jump modes. The keypad maps to the EC11.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Main</code> · <code>Calibration</code> · <code>Diagnostics</code> · <code>Settings</code> · <code>Docs</code></td><td>Top tabs. Jump to that page. They turn the LCD on if it was blank. Same destinations as the mode menu.</td></tr>
+          <tr><td><code>Docs</code> in white</td><td>Active tab. Other tabs stay blue. The controller is on the Documentation page.</td></tr>
+          <tr><td>Bezel, 320 × 170</td><td>The LCD panel. Same state tree as the physical display. Header here is <code>DOC</code> with <code>STA 172.16.0.68</code>.</td></tr>
+          <tr><td>QR · <code>github.com/</code> · <code>KopperToolworks/PrivateReserve</code></td><td>Public project page. The web copy adds a blue <code>Open GitHub page</code> link the LCD does not have.</td></tr>
+          <tr><td>Top pair, circular arrows</td><td>TURN − (CCW) and TURN + (CW). Same as the knob.</td></tr>
+          <tr><td>Tall Return arrow</td><td>PRESS. On Documentation this does nothing.</td></tr>
+          <tr><td>Wide left arrow</td><td>HOLD back. From Documentation this returns to the mode menu.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <h2>2. Knob map</h2>
+    <p>HOLD fires once when the push has been down for <code>ec11_hold_min_ms</code> (default 400&nbsp;ms). It does not wait for release. A shorter down is PRESS. Staying down past <code>ec11_hold_max_ms</code> does not fire a second HOLD.</p>
+    <p>Pressing the knob can twist CLK/DT. If the highlight moved within <code>ec11_press_revert_ms</code> (100&nbsp;ms) of an EC11 press, firmware restores the previous item, then handles PRESS. Rotation is ignored while SW is down.</p>
+    <p>On bottle key, limit markers, and override rockers, TURN selects one of two choices. The highlight stops at the end instead of wrapping. Extra clicks in that direction do nothing. One click moves once.</p>
+    <table>
+      <thead>
+        <tr><th>Gesture</th><th>Typical meaning</th><th>Web keypad</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>TURN − / +</td><td>Scroll a list or change a pending value</td><td>Top pair, circular arrows</td></tr>
+        <tr><td>PRESS</td><td>Open a screen, start a stage, or accept</td><td>Large Return arrow</td></tr>
+        <tr><td>HOLD</td><td>Back one screen, or cancel a live procedure</td><td>Wide left arrow</td></tr>
+      </tbody>
+    </table>
+
+    <h2>3. Command priority</h2>
+    <p>Hard overcurrent and sensor or limit faults outrank all commands. Obstruction handling outranks ordinary commands. Among ordinary sources the order is <strong>EC11 → web → rocker → hall</strong>. At most one state-changing command runs per control cycle.</p>
+    <p>A live calibration or diagnostic-jog step owns the motor. Hall and rocker events may show on the screen. They cannot preempt that step. Main accepts hall and rocker triggers.</p>
+    <p>There is no operator Stop on Main. Cancel exists only for a running calibration or diagnostic procedure. Cancel removes PWM, waits for current decay, leaves K1 unchanged, discards incomplete results, and returns to that mode’s menu.</p>
+    <p>Never write NVS while the motor runs. Config writes need an idle motor.</p>
+
+    <h2>4. Boot, blanking, Wi-Fi</h2>
+    <p>The screen is on at boot. Default idle timeout is 5 minutes (<code>display_timeout_ms</code> = 300000). Any EC11 turn or press, GPIO14, or web command resets the timer. Wake from a blanked panel returns to Main.</p>
+    <p>Calibration, diagnostics, faults, and any prompt that needs an answer inhibit blanking. A latched <code>PositionUnknown</code> on Main does not hold the panel on forever. That fault is the default boot state until origin is found.</p>
+    <p>STA join uses the stored SSID and password. If the SSID is empty or join fails, firmware starts a SoftAP.</p>
+    <table>
+      <thead>
+        <tr><th>Fallback AP</th><th>Default</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Name (SSID)</td><td><code>PrivateReserve</code></td></tr>
+        <tr><td>Join password</td><td><code>reserved</code> (WPA2, eight characters)</td></tr>
+        <tr><td>Main page</td><td><code>http://192.168.4.1/</code></td></tr>
+        <tr><td>Set site Wi-Fi</td><td><code>http://192.168.4.1/wifi</code></td></tr>
+      </tbody>
+    </table>
+    <p>Type the join password on the phone. Then open the main page. The LCD shows that password on Settings → Network, on Diagnostics → Network while SoftAP is up, and on the Wi-Fi-cleared result. Station (house) password stays masked. When STA joins, HTTP is on the STA address and <code>http://private-reserve.local</code>. The steel lid can block the onboard antenna. That note belongs on the network diagnostic screen.</p>
+    <p>Settings → Service can clear the stored station SSID and password. That write is immediate. The live STA session stays until reboot. After reboot, empty SSID skips STA and starts SoftAP. Fallback AP name and password stay. The same Service list can reboot the controller (PRESS twice). PRESS on the Wi-Fi-cleared result screen also reboots. See <a href="settings.html">Settings</a> figures 11 and 12.</p>
+    <p>No automatic resume after reset. A watchdog, brownout, operator reboot, or power cycle forces PWM off and cancels the prior command.</p>
+
+    <h2>5. Modes</h2>
+    <p>Default after boot is <strong>Main</strong> (Standard Operating Mode in the spec). Settings and Documentation are not extra operating modes. They are menu pages reached the same way as Calibration and Diagnostics. Motion is idle while settings are edited.</p>
+    <table>
+      <thead>
+        <tr><th>Page</th><th>Header</th><th>Panel shots</th><th>What it is</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><a href="main.html">Main</a></td><td><code>MAIN</code> or <code>NEEDS SETUP</code></td><td>8</td><td>Live door. Mode menu: Main, Diagnostics, Calibration, Settings, Documentation.</td></tr>
+        <tr><td><a href="calibration.html">Calibration</a></td><td><code>CAL · …</code></td><td>13</td><td>Guided stages. Path-clear before any move. Save is one NVS write on Review.</td></tr>
+        <tr><td><a href="diagnostics.html">Diagnostics</a></td><td><code>DIAG · …</code></td><td>14</td><td>One screen per input or output. Jog and obstruction test own the motor. Bottle key, limit markers, and override rockers can inject a cooked signal from PRESS.</td></tr>
+        <tr><td><a href="settings.html">Settings</a></td><td><code>SET · …</code></td><td>12</td><td>Staged edits. Review commits. Service actions are destructive and confirm twice, including reboot and clear station Wi-Fi.</td></tr>
+        <tr><td><a href="main.html#documentation">Documentation</a></td><td><code>DOC</code></td><td>1</td><td>QR and URL for the public GitHub page. HOLD returns to the mode menu. PRESS does nothing.</td></tr>
+      </tbody>
+    </table>
+    <div class="shot">
+      <p>Entry screens for each mode:</p>
+      <figure class="lcd">
+        <img src="shots/main-07-mode-menu.png" width="320" alt="Mode menu: Main, Diagnostics, Calibration, Settings, Documentation">
+        <figcaption>Figure 2. Mode menu on Main. PRESS opens the highlighted item.</figcaption>
+      </figure>
+      <figure class="lcd">
+        <img src="shots/cal-01.png" width="320" alt="Calibration stage list">
+        <figcaption>Figure 3. Calibration stage list. See <a href="calibration.html">Calibration</a> for every stage.</figcaption>
+      </figure>
+      <figure class="lcd">
+        <img src="shots/diag-01.png" width="320" alt="Diagnostics menu, items 1 to 8">
+        <figcaption>Figure 4. Diagnostics menu. See <a href="diagnostics.html">Diagnostics</a> for all twelve items.</figcaption>
+      </figure>
+      <figure class="lcd">
+        <img src="shots/set-01.png" width="320" alt="Settings groups">
+        <figcaption>Figure 5. Settings groups. See <a href="settings.html">Settings</a> for edit, review, service, Wi-Fi clear, and reboot.</figcaption>
+      </figure>
+      <figure class="lcd">
+        <img src="shots/main-08-documentation.png" width="320" alt="DOC: GitHub QR for KopperToolworks PrivateReserve">
+        <figcaption>Figure 6. Documentation panel only. See <a href="main.html#documentation">Main · Documentation</a> for every label on this panel. The full web chrome is figure 1.</figcaption>
+      </figure>
+      <p>Every label on these shots is named in the field table on the linked page.</p>
+    </div>
+
+    <h2>6. Field I/O the screens name</h2>
+    <p>Position is AS5600 counts from the open origin. Inches appear only after stroke entry. The three analog sensors stay independent.</p>
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Part</th><th>GPIO / Board A</th><th>Job</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Bottle door key</td><td>49E / SS49E</td><td>GPIO1, T23</td><td>Magnet present or absent. Automatic open/close.</td></tr>
+        <tr><td>Shaft encoder</td><td>AS5600</td><td>GPIO43/44, T10/T9</td><td>Door position as accumulated counts.</td></tr>
+        <tr><td>Current load</td><td>ACS712-05B</td><td>GPIO2, T22</td><td>Motor current. Envelope and snug.</td></tr>
+        <tr><td>Open marker</td><td>NC switch</td><td>GPIO17, T7</td><td>Near-end flag, open side.</td></tr>
+        <tr><td>Close marker</td><td>NC switch</td><td>GPIO3, T21</td><td>Near-end flag, close side.</td></tr>
+        <tr><td>Override rockers</td><td>two paralleled stations</td><td>GPIO10 T20, GPIO18 T8</td><td>Edge-trigger open/close. Centre does nothing.</td></tr>
+        <tr><td>Knob</td><td>EC11</td><td>GPIO11–13, on-board</td><td>Menu, settings, cancel, acknowledge.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>7. Needs setup</h2>
+    <p>If origin, marker spans, or the calibration format is invalid, Main blocks automatic motion. Only guided calibration and limited diagnostic jog may move the motor. Hall and rocker triggers stay disabled.</p>
+    <p>The AS5600 is single-turn. The stroke spans several turns. After power loss the firmware enters <code>PositionUnknown</code> and needs a guided seek to the open marker. Direction verify must pass before any limit seek.</p>
+    <p>With an invalid obstruction table, automatic Main motion stays blocked. Recovery uses the 2.50&nbsp;A hard ceiling until a relearn arms the table.</p>
+
+    <h2>8. Related</h2>
+    <nav class="links">
+      <ul>
+        <li><a href="board-a/index.html">Board A</a> — earth-side terminals the screens name</li>
+        <li><a href="board-b/index.html">Board B</a> — floating gate driver</li>
+        <li><a href="board-c/index.html">Board C</a> — HV switch stage</li>
+        <li><a href="main.html#documentation">Documentation</a> — GitHub QR on the DOC page</li>
+      </ul>
+    </nav>
+
+    <footer>This page is a chapter of the <a href="../pdf/Software_User_Manual.pdf">Software User Manual</a>.</footer>
+  </article>
+</body>
+</html>

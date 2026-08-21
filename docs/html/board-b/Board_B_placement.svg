@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="440"
+     viewBox="0 0 860 440" role="img" aria-labelledby="title desc">
+<title id="title">Board B placement — gate driver Perma-Proto 1/2</title>
+<desc id="desc">U1 left, U4 right. T1–T3 upper-left stack: +12V, 12V return, −70V to Board C.</desc>
+<defs>
+  <style>
+    .title { font: 700 16px system-ui, sans-serif; fill: #101828; }
+    .sub { font: 12px system-ui, sans-serif; fill: #475467; }
+    .col { font: 8px system-ui, sans-serif; fill: #667085; }
+    .gutter-lab { font: 8px system-ui, sans-serif; fill: #667085; }
+    .rail-lab { font: 700 8px system-ui, sans-serif; }
+    .mod { font: 700 11px system-ui, sans-serif; fill: #f2f4f7; }
+    .mod-s { font: 9px system-ui, sans-serif; fill: #d0d5dd; }
+    .note { font: 10px system-ui, sans-serif; fill: #b54708; }
+    .term { font: 700 8px system-ui, sans-serif; fill: #101828; }
+    .term-id { font: 600 7px system-ui, sans-serif; fill: #667085; }
+    .edge { font: 700 10px system-ui, sans-serif; fill: #344054; }
+    .iso { font: 700 9px system-ui, sans-serif; fill: #6941c6; }
+  </style>
+</defs>
+<rect width="860" height="440" fill="#ffffff"/>
+<text x="24" y="28" class="title">Board B — placement (first draft)</text>
+<text x="24" y="46" class="sub">T1–T3 upper-left stack · top + = +12V_GD · bottom + = +5V_ISO · both − = −70V</text>
+
+<rect x="92.0" y="118.0" width="99.0" height="7.0" rx="1" fill="#f2f4f7" stroke="#98a2b3" stroke-width="1" stroke-dasharray="3 2"/><text x="84.0" y="123.2" text-anchor="end" class="rail-lab" fill="#98a2b3">unused</text>
+<rect x="92.0" y="127.0" width="99.0" height="7.0" rx="1" fill="#f2f4f7" stroke="#98a2b3" stroke-width="1" stroke-dasharray="3 2"/><text x="84.0" y="132.2" text-anchor="end" class="rail-lab" fill="#98a2b3">unused</text>
+<rect x="191.0" y="118.0" width="561.0" height="7.0" rx="1" fill="#78350f"/><text x="760.0" y="123.2" text-anchor="start" class="rail-lab" fill="#78350f">−70V</text>
+<rect x="191.0" y="127.0" width="561.0" height="7.0" rx="1" fill="#ca8504"/><text x="760.0" y="132.2" text-anchor="start" class="rail-lab" fill="#ca8504">+12V</text>
+<rect x="92.0" y="138.0" width="660.0" height="96.0" fill="#ffffff" stroke="#344054" stroke-width="1.2"/>
+<text x="103.0" y="149.0" text-anchor="middle" class="col">1</text>
+<line x1="103.0" y1="152.0" x2="103.0" y2="230.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="191.0" y="149.0" text-anchor="middle" class="col">5</text>
+<line x1="191.0" y1="152.0" x2="191.0" y2="230.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="301.0" y="149.0" text-anchor="middle" class="col">10</text>
+<line x1="301.0" y1="152.0" x2="301.0" y2="230.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="411.0" y="149.0" text-anchor="middle" class="col">15</text>
+<line x1="411.0" y1="152.0" x2="411.0" y2="230.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="521.0" y="149.0" text-anchor="middle" class="col">20</text>
+<line x1="521.0" y1="152.0" x2="521.0" y2="230.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="631.0" y="149.0" text-anchor="middle" class="col">25</text>
+<line x1="631.0" y1="152.0" x2="631.0" y2="230.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="741.0" y="149.0" text-anchor="middle" class="col">30</text>
+<line x1="741.0" y1="152.0" x2="741.0" y2="230.0" stroke="#eaecf0" stroke-width="0.6"/>
+<rect x="93.0" y="178.3" width="658.0" height="14" fill="#eaecf0"/>
+<text x="422.0" y="188.3" text-anchor="middle" class="gutter-lab">Adafruit Perma-Proto 1/2</text>
+<rect x="92.0" y="238.0" width="99.0" height="7.0" rx="1" fill="#101828"/><text x="84.0" y="243.2" text-anchor="end" class="rail-lab" fill="#101828">GND</text>
+<rect x="191.0" y="238.0" width="561.0" height="7.0" rx="1" fill="#78350f"/><text x="760.0" y="243.2" text-anchor="start" class="rail-lab" fill="#78350f">−70V</text>
+<rect x="191.0" y="247.0" width="561.0" height="7.0" rx="1" fill="#c11574"/><text x="760.0" y="252.2" text-anchor="start" class="rail-lab" fill="#c11574">+5V</text>
+<rect x="92.0" y="247.0" width="99.0" height="7.0" rx="1" fill="#f2f4f7" stroke="#98a2b3" stroke-width="1" stroke-dasharray="3 2"/><text x="84.0" y="252.2" text-anchor="end" class="rail-lab" fill="#98a2b3">unused</text>
+<line x1="191.0" y1="138.0" x2="191.0" y2="234.0" stroke="#7f56d9" stroke-width="2.5" stroke-dasharray="6 4"/>
+<text x="197.0" y="150.0" class="iso">isolation</text>
+<text x="197.0" y="162.0" class="iso">barrier</text>
+<text x="139.6" y="150.0" text-anchor="middle" class="sub">earth LED island</text>
+<text x="499.6" y="150.0" text-anchor="middle" class="sub">floating gate-driver region</text>
+<rect x="158.0" y="164.0" width="84.0" height="52.0" rx="3" fill="#1d2939" stroke="#344054" stroke-width="1"/>
+<text x="200.0" y="186.0" text-anchor="middle" class="mod">U1</text>
+<text x="200.0" y="200.0" text-anchor="middle" class="mod-s">6N137</text>
+<rect x="378.0" y="164.0" width="84.0" height="52.0" rx="3" fill="#1d2939" stroke="#344054" stroke-width="1"/>
+<text x="420.0" y="186.0" text-anchor="middle" class="mod">U3</text>
+<text x="420.0" y="200.0" text-anchor="middle" class="mod-s">TC4426</text>
+<rect x="532.0" y="164.0" width="62.0" height="52.0" rx="3" fill="#1d2939" stroke="#344054" stroke-width="1"/>
+<text x="563.0" y="186.0" text-anchor="middle" class="mod">U4</text>
+<text x="563.0" y="200.0" text-anchor="middle" class="mod-s">4N35</text>
+<circle cx="367.0" cy="212.0" r="9" fill="#344054" stroke="#667085" stroke-width="1.2"/><text x="367.0" y="216.0" text-anchor="middle" class="mod-s" fill="#f2f4f7">Q2</text>
+<circle cx="653.0" cy="212.0" r="9" fill="#344054" stroke="#667085" stroke-width="1.2"/><text x="653.0" y="216.0" text-anchor="middle" class="mod-s" fill="#f2f4f7">Q3</text>
+<text x="180.0" y="62" class="edge">top edge · left → right</text>
+<rect x="246.0" y="68.0" width="52.0" height="26.0" rx="3" fill="#fff" stroke="#175cd3" stroke-width="1.6"/>
+<text x="272.0" y="78.0" text-anchor="middle" class="term-id">T4</text>
+<text x="272.0" y="90.0" text-anchor="middle" class="term">PWM</text>
+<rect x="304.0" y="68.0" width="52.0" height="26.0" rx="3" fill="#fff" stroke="#101828" stroke-width="1.6"/>
+<text x="330.0" y="78.0" text-anchor="middle" class="term-id">T5</text>
+<text x="330.0" y="90.0" text-anchor="middle" class="term">GND</text>
+<rect x="576.0" y="68.0" width="52.0" height="26.0" rx="3" fill="#fff" stroke="#175cd3" stroke-width="1.6"/>
+<text x="602.0" y="78.0" text-anchor="middle" class="term-id">T8</text>
+<text x="602.0" y="90.0" text-anchor="middle" class="term">DIR</text>
+<rect x="634.0" y="68.0" width="52.0" height="26.0" rx="3" fill="#fff" stroke="#175cd3" stroke-width="1.6"/>
+<text x="660.0" y="78.0" text-anchor="middle" class="term-id">T9</text>
+<text x="660.0" y="90.0" text-anchor="middle" class="term">PWM</text>
+<text x="18.0" y="52.0" text-anchor="end" class="edge">left · top→bottom</text>
+<rect x="24.0" y="58.0" width="52.0" height="26.0" rx="3" fill="#fff" stroke="#ca8504" stroke-width="1.6"/>
+<text x="50.0" y="68.0" text-anchor="middle" class="term-id">T1</text>
+<text x="50.0" y="80.0" text-anchor="middle" class="term">+12V</text>
+<rect x="24.0" y="86.0" width="52.0" height="26.0" rx="3" fill="#fff" stroke="#78350f" stroke-width="1.6"/>
+<text x="50.0" y="96.0" text-anchor="middle" class="term-id">T2</text>
+<text x="50.0" y="108.0" text-anchor="middle" class="term">12V−</text>
+<rect x="24.0" y="114.0" width="52.0" height="26.0" rx="3" fill="#fff" stroke="#78350f" stroke-width="1.6"/>
+<text x="50.0" y="124.0" text-anchor="middle" class="term-id">T3</text>
+<text x="50.0" y="136.0" text-anchor="middle" class="term">−70V</text>
+<text x="18.0" y="258.0" text-anchor="end" class="edge">lower left · top→bottom</text>
+<rect x="24.0" y="264.0" width="52.0" height="26.0" rx="3" fill="#fff" stroke="#c11574" stroke-width="1.6"/>
+<text x="50.0" y="274.0" text-anchor="middle" class="term-id">T6</text>
+<text x="50.0" y="286.0" text-anchor="middle" class="term">+5V</text>
+<rect x="24.0" y="292.0" width="52.0" height="26.0" rx="3" fill="#fff" stroke="#78350f" stroke-width="1.6"/>
+<text x="50.0" y="302.0" text-anchor="middle" class="term-id">T7</text>
+<text x="50.0" y="314.0" text-anchor="middle" class="term">5V−</text>
+<text x="488.0" y="264.0" class="edge">lower right · left → right</text>
+<rect x="576.0" y="272.0" width="52.0" height="26.0" rx="3" fill="#fff" stroke="#78350f" stroke-width="1.6"/>
+<text x="602.0" y="282.0" text-anchor="middle" class="term-id">T10</text>
+<text x="602.0" y="294.0" text-anchor="middle" class="term">Coil−</text>
+<rect x="634.0" y="272.0" width="52.0" height="26.0" rx="3" fill="#fff" stroke="#ca8504" stroke-width="1.6"/>
+<text x="660.0" y="282.0" text-anchor="middle" class="term-id">T11</text>
+<text x="660.0" y="294.0" text-anchor="middle" class="term">Coil+</text>
+<text x="24" y="336" class="edge">Rail and terminal colors</text>
+<rect x="24" y="346" width="12" height="12" rx="2" fill="#c11574"/>
+<text x="42" y="357" class="sub">+5V (float)  +5V_ISO</text>
+<rect x="294" y="346" width="12" height="12" rx="2" fill="#ca8504"/>
+<text x="312" y="357" class="sub">+12V (float)  +12V_GD</text>
+<rect x="564" y="346" width="12" height="12" rx="2" fill="#78350f"/>
+<text x="582" y="357" class="sub">−70V  motor low rail (not MCU_GND)</text>
+<rect x="24" y="368" width="12" height="12" rx="2" fill="#101828"/>
+<text x="42" y="379" class="sub">GND (earth)  MCU_GND</text>
+<rect x="294" y="368" width="12" height="12" rx="2" fill="#175cd3"/>
+<text x="312" y="379" class="sub">Field / inter-board signal</text>
+<rect x="564" y="368" width="12" height="12" rx="2" fill="#7f56d9"/>
+<text x="582" y="379" class="sub">Isolation barrier @ col 5</text>
+<rect x="24" y="390" width="12" height="12" rx="2" fill="#98a2b3"/>
+<text x="42" y="401" class="sub">Unused rail</text>
+<text x="24" y="422" class="note">T1–T11 as-built. Board B T3 = −70V; Board C T3 = GATE in.</text>
+<text x="24" y="436" class="note">Earth island: top rails unused; bottom − = MCU_GND @ col 5. Float: top + = +12V_GD, bottom + = +5V_ISO, both − = −70V.</text>
+</svg>

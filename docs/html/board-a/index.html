@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Board A — Earth-side control (draft)</title>
+  <style>
+    :root {
+      --ink: #101828;
+      --muted: #475467;
+      --line: #d0d5dd;
+      --paper: #fff;
+      --wash: #f9fafb;
+      --earth: #175cd3;
+      --warn-bg: #fffaeb;
+      --warn-bd: #dc6803;
+      --draft-bg: #f4f3ff;
+      --draft-bd: #7f56d9;
+      --v5: #b42318;
+      --v33: #dc6803;
+      --gnd: #101828;
+    }
+    * { box-sizing: border-box; }
+    html { font: 16px/1.45 system-ui, sans-serif; color: var(--ink); background: #e4e7ec; }
+    body { margin: 0; }
+    .page {
+      max-width: 52rem;
+      margin: 0 auto;
+      padding: 1.5rem 1.75rem 3rem;
+      background: var(--paper);
+    }
+    h1 { font-size: 1.6rem; margin: 0 0 0.35rem; letter-spacing: -0.02em; }
+    h2 { font-size: 1.15rem; margin: 2rem 0 0.6rem; }
+    h3 { font-size: 1rem; margin: 1.25rem 0 0.4rem; }
+    h4 { font-size: 0.95rem; margin: 1rem 0 0.35rem; color: var(--muted); font-weight: 600; }
+    p, li { color: var(--ink); }
+    .lede { color: var(--muted); margin: 0 0 1rem; }
+    .banner {
+      border: 2px solid var(--draft-bd);
+      background: var(--draft-bg);
+      padding: 0.65rem 0.85rem;
+      margin: 0 0 1rem;
+    }
+    .banner strong { color: #42307d; }
+    .warn {
+      border: 2px solid var(--warn-bd);
+      background: var(--warn-bg);
+      padding: 0.65rem 0.85rem;
+      margin: 0 0 1.25rem;
+    }
+    figure { margin: 1rem 0 1.5rem; }
+    figure img, figure object, figure svg { width: 100%; height: auto; display: block; }
+    figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.4rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin: 0.5rem 0 1rem; }
+    th, td { border: 1px solid var(--line); padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; }
+    th { background: var(--wash); }
+    code { font-size: 0.88em; }
+    .swatch {
+      display: inline-block; width: 0.7rem; height: 0.7rem;
+      margin-right: 0.35rem; vertical-align: -0.1rem;
+    }
+    .photos { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .photos figure { margin: 0; }
+    nav.links { font-size: 0.9rem; }
+    nav.links a { color: var(--earth); }
+    footer { margin-top: 2rem; font-size: 0.8rem; color: var(--muted); }
+    @media print {
+      html { background: #fff; font-size: 11pt; }
+      .page { max-width: none; padding: 0; }
+      .banner, .warn { break-inside: avoid; }
+      figure { break-inside: avoid; }
+      a { color: inherit; text-decoration: none; }
+      nav.links a::after { content: " (" attr(href) ")"; font-size: 0.75em; color: var(--muted); }
+    }
+    @media (max-width: 640px) {
+      .photos { grid-template-columns: 1fr; }
+      .page { padding: 1rem; }
+    }
+      /* client-nav */
+    nav.sec { display: flex; flex-wrap: wrap; gap: 0.85rem; margin: 0 0 1.25rem; font-size: 0.9rem; }
+    nav.sec a { color: var(--earth); }
+    nav.sec a[aria-current="page"] { color: var(--ink); font-weight: 600; text-decoration: none; }
+    nav.sec a.pdf-dl { font-weight: 600; }
+    .pdf-all { margin: 0 0 1.25rem; font-size: 0.9rem; }
+    .pdf-all a { color: var(--earth); }
+    .manual-cover { min-height: 18rem; padding: 3rem 0 2rem; break-after: page; }
+    .manual-cover h1 { font-size: 2rem; margin: 0.2rem 0 0.8rem; }
+    .manual-cover .toc { margin-top: 2rem; }
+    .chapter { break-before: page; }
+    @media print {
+      nav.sec, nav.links, .pdf-dl, .pdf-all { display: none !important; }
+      nav.links a::after { content: none; }
+      table { break-inside: avoid; }
+    }
+    /* /client-nav */
+  </style>
+</head>
+<body>
+  <article class="page">
+    <p class="lede">Private Reserve · DIN controller · first draft</p>
+    <h1>Board A — Earth-side control</h1>
+    <p>Dual Adafruit Perma-Proto 1/2 carrier for the LilyGo T-Display-S3 and the EC11 menu encoder. Field I/O and power leave through edge screw terminals. This board is earth-referenced only.</p>
+
+    <nav class="sec" aria-label="Wiring pages">
+      <a href="../board-a/index.html" aria-current="page">Board A</a>
+      <a href="../board-b/index.html">Board B</a>
+      <a href="../board-c/index.html">Board C</a>
+      <a href="../wiring-guide.html">All boards</a>
+      <a href="../index.html">Software</a>
+      <a class="pdf-dl" href="../../pdf/Wiring_Guide.pdf">Wiring Guide (PDF)</a>
+    </nav>
+
+    <p class="pdf-all"><strong>Wiring Guide.</strong> <a href="../../pdf/Wiring_Guide.pdf">Download PDF</a> · <a href="../wiring-guide.html">Single-page HTML</a></p>
+
+
+    <div class="banner">
+      <strong>Draft.</strong> Header pin order along each edge is taken from the
+      carrier with the display up and USB-C on the left. The LilyGo pinmap
+      photo is the module bottom, so its LEFT/RIGHT labels are mirrored here.
+      Screw terminals are numbered <strong>T1–T24</strong> left to right on
+      each edge (T1 nearest USB). Outer rails are as-built. Inner rails are
+      proposed. Column span 7–18 is assumed. On-board jumper paths are documented
+      elsewhere.
+    </div>
+
+    <div class="warn">
+      <strong>No floating copper.</strong> Do not land
+      <code>+5V_ISO</code>, <code>+12V_GD</code>, <code>−70V</code>,
+      <code>+70V</code>, or <code>SW</code> on Board A.
+      <code>MCU_GND</code> is not <code>−70V</code>.
+    </div>
+
+    <h2>1. Placement</h2>
+    <p>View with the display facing you. USB-C is on the left. The EC11 is on the right. Pin 12 of each header is nearest USB. Screw terminals are numbered <strong>T1–T12</strong> on the top edge and <strong>T13–T24</strong> on the bottom edge, left to right. The <strong>top</strong> edge starts at T1 (<code>3V</code>, <code>GND</code>, one NC, then PWM, DIR_OR, limits, I²C). The <strong>bottom</strong> edge starts at T13 (<code>5V</code>, <code>GND</code>, five NC including T17–T19, then OPEN, LIM-L, ISENSE, HALL, 3V). The EC11 uses GPIO11–13 on the T-Display header directly; see <a href="EC11_Onboard_Wiring.md">EC11 on-board wiring</a>.</p>
+
+    <figure>
+      <img src="Board_A_placement.svg" alt="Board A line-art: dual Perma-Proto, T-Display-S3, EC11, colored rails, and function labels on each header pin">
+      <figcaption>
+        Figure 1. Grid-true placement. Terminal IDs T1–T24 label each screw
+        block left to right. Dashed gray bars are unused rails (as-built: both
+        upper outer buses, and the lower outer +). Purple dots are T-Display
+        header pins wired to the on-board EC11 (GPIO11–13). T17–T19 are NC;
+        the encoder does not use those terminals.
+      </figcaption>
+    </figure>
+
+    <h2>2. Rails</h2>
+    <p>Each half has four full-width buses. On the as-built unit both <strong>upper outer</strong> rails are unused, and the <strong>lower outer +</strong> rail is unused. The <strong>lower outer −</strong> rail is <code>MCU_GND</code>. Inner-rail nets below are still proposed. <code>+5V_EARTH</code> lands on the <strong>5V</strong> screw terminal and the T-Display <strong>5V</strong> pin; it is not on a proto + bus. Sensors / EC11 <code>+</code> should see <code>+3V3_TDISPLAY</code> from the module <strong>3V</strong> pin. Do not back-feed 3.3 V into the module.</p>
+
+    <table>
+      <thead>
+        <tr><th>Rail</th><th>Net</th><th>Diagram color</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Upper outer −</td><td>unused (as-built; no jumper)</td><td><span class="swatch" style="background:#98a2b3"></span>unused</td></tr>
+        <tr><td>Upper outer +</td><td>unused (as-built; no jumper)</td><td><span class="swatch" style="background:#98a2b3"></span>unused</td></tr>
+        <tr><td>Upper inner +</td><td><code>+3V3_TDISPLAY</code> (proposed)</td><td><span class="swatch" style="background:#dc6803"></span>+3.3V (earth)</td></tr>
+        <tr><td>Upper inner −</td><td><code>MCU_GND</code> (proposed)</td><td><span class="swatch" style="background:#101828"></span>GND (earth)</td></tr>
+        <tr><td>Lower inner −</td><td><code>MCU_GND</code> (proposed)</td><td><span class="swatch" style="background:#101828"></span>GND (earth)</td></tr>
+        <tr><td>Lower inner +</td><td><code>+3V3_TDISPLAY</code> (proposed)</td><td><span class="swatch" style="background:#dc6803"></span>+3.3V (earth)</td></tr>
+        <tr><td>Lower outer +</td><td>unused (as-built; no jumper)</td><td><span class="swatch" style="background:#98a2b3"></span>unused</td></tr>
+        <tr><td>Lower outer −</td><td><code>MCU_GND</code> (as-built)</td><td><span class="swatch" style="background:#101828"></span>GND (earth)</td></tr>
+      </tbody>
+    </table>
+
+    <h2>3. What attaches</h2>
+
+    <h3>Power</h3>
+    <p>Board A runs from the earth-side Mean Well <strong>HDR-15-5 #1</strong> supply
+      (<code>+5V_EARTH</code> / <code>MCU_GND</code>). Land the PSU positive on
+      <strong>T13</strong> (<code>5V</code>) and the PSU negative on
+      <strong>T14</strong> (<code>GND</code>). Those terminals feed the T-Display
+      <strong>5V</strong> pin and the board <code>MCU_GND</code> reference. USB-C
+      on the module remains for bench programming. Do not back-feed 3.3 V into the
+      module <strong>3V</strong> pin.</p>
+
+    <h3>Screw terminals</h3>
+    <p>Numbering follows Figure 1: left to right with the display facing you and
+      USB-C on the left. T1 and T13 are nearest USB.</p>
+
+    <h4>Top edge — T1–T12</h4>
+    <table>
+      <thead>
+        <tr><th>Terminal</th><th>Label</th><th>GPIO / net</th><th>Attaches</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>T1</strong></td><td><strong>3V</strong></td><td><code>+3V3_TDISPLAY</code></td><td>SS49E VCC, AS5600 VCC (from module <strong>3V</strong>)</td></tr>
+        <tr><td><strong>T2</strong></td><td><strong>GND</strong></td><td><code>MCU_GND</code></td><td>Sensor, limit, and rocker returns</td></tr>
+        <tr><td><strong>T3</strong></td><td><strong>GND</strong></td><td><code>MCU_GND</code></td><td>Sensor, limit, and rocker returns</td></tr>
+        <tr><td><strong>T4</strong></td><td><strong>NC</strong></td><td>—</td><td>Module NC. Unassigned. May be jumpered to <code>MCU_GND</code>.</td></tr>
+        <tr><td><strong>T5</strong></td><td><strong>PWM</strong></td><td>GPIO16</td><td>Board B 6N137 LED</td></tr>
+        <tr><td><strong>T6</strong></td><td><strong>DIR_OR</strong></td><td>GPIO21</td><td>Board B U4 LED</td></tr>
+        <tr><td><strong>T7</strong></td><td><strong>LIM-U</strong></td><td>GPIO17</td><td>Upper NC limit to GND</td></tr>
+        <tr><td><strong>T8</strong></td><td><strong>CLOSE</strong></td><td>GPIO18</td><td>Close rocker (active-low, paralleled pair)</td></tr>
+        <tr><td><strong>T9</strong></td><td><strong>SCL</strong></td><td>GPIO44</td><td>AS5600 SCL</td></tr>
+        <tr><td><strong>T10</strong></td><td><strong>SDA</strong></td><td>GPIO43</td><td>AS5600 SDA</td></tr>
+        <tr><td><strong>T11</strong></td><td><strong>GND</strong></td><td><code>MCU_GND</code></td><td>Sensor, limit, and rocker returns; Board B LED return</td></tr>
+        <tr><td><strong>T12</strong></td><td><strong>GND</strong></td><td><code>MCU_GND</code></td><td>Sensor, limit, and rocker returns</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Bottom edge — T13–T24</h4>
+    <table>
+      <thead>
+        <tr><th>Terminal</th><th>Label</th><th>GPIO / net</th><th>Attaches</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>T13</strong></td><td><strong>5V</strong></td><td><code>+5V_EARTH</code></td><td><strong>Power in.</strong> Mean Well HDR-15-5 #1 (+) → T-Display <strong>5V</strong></td></tr>
+        <tr><td><strong>T14</strong></td><td><strong>GND</strong></td><td><code>MCU_GND</code></td><td><strong>Power in.</strong> Mean Well HDR-15-5 #1 (−) / earth-side return</td></tr>
+        <tr><td><strong>T15</strong></td><td><strong>NC</strong></td><td>—</td><td>Module NC. Unassigned.</td></tr>
+        <tr><td><strong>T16</strong></td><td><strong>NC</strong></td><td>—</td><td>Module NC. Unassigned.</td></tr>
+        <tr><td><strong>T17</strong></td><td><strong>NC</strong></td><td>—</td><td>Unassigned. Same index as GPIO13; EC11 SW is on-board from the header (<a href="EC11_Onboard_Wiring.md">EC11 wiring</a>).</td></tr>
+        <tr><td><strong>T18</strong></td><td><strong>NC</strong></td><td>—</td><td>Unassigned. Same index as GPIO12; EC11 DT is on-board from the header.</td></tr>
+        <tr><td><strong>T19</strong></td><td><strong>NC</strong></td><td>—</td><td>Unassigned. Same index as GPIO11; EC11 CLK is on-board from the header.</td></tr>
+        <tr><td><strong>T20</strong></td><td><strong>OPEN</strong></td><td>GPIO10</td><td>Open rocker (active-low, paralleled pair)</td></tr>
+        <tr><td><strong>T21</strong></td><td><strong>LIM-L</strong></td><td>GPIO3</td><td>Lower NC limit to GND</td></tr>
+        <tr><td><strong>T22</strong></td><td><strong>ISENSE</strong></td><td>GPIO2</td><td>ACS712-05B OUT after 10 kΩ/20 kΩ (≤ 3.3 V)</td></tr>
+        <tr><td><strong>T23</strong></td><td><strong>HALL</strong></td><td>GPIO1</td><td>SS49E OUT</td></tr>
+        <tr><td><strong>T24</strong></td><td><strong>3V</strong></td><td><code>+3V3_TDISPLAY</code></td><td>SS49E VCC, AS5600 VCC (from module <strong>3V</strong>)</td></tr>
+      </tbody>
+    </table>
+    <h3>EC11 (on-board)</h3>
+    <p>The menu encoder wires directly to T-Display-S3 header pins. It does not
+      use screw terminals. Terminals <strong>T17–T19</strong> are NC on the
+      as-built unit.</p>
+    <table>
+      <thead>
+        <tr><th>EC11 breakout</th><th>T-Display pin</th><th>GPIO / net</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>CLK</td><td>LEFT GPIO11</td><td>GPIO11</td></tr>
+        <tr><td>DT</td><td>LEFT GPIO12</td><td>GPIO12</td></tr>
+        <tr><td>SW</td><td>LEFT GPIO13</td><td>GPIO13</td></tr>
+        <tr><td><code>+</code></td><td><strong>3V</strong></td><td><code>+3V3_TDISPLAY</code></td></tr>
+        <tr><td>GND</td><td><strong>GND</strong></td><td><code>MCU_GND</code></td></tr>
+      </tbody>
+    </table>
+    <p>Full notes, terminal clarification, and links:
+      <a href="EC11_Onboard_Wiring.md">EC11 on-board wiring</a>.</p>
+
+    <h3>Board A → Board B</h3>
+    <p>Keyed 3-pin earth-side cable from <strong>T5</strong> (<code>PWM</code>),
+      <strong>T6</strong> (<code>DIR_OR</code>), and a <code>MCU_GND</code> terminal
+      (for example <strong>T11</strong> or <strong>T14</strong>). LED resistors stay
+      on Board B.</p>
+
+    <h2>4. As-built photo</h2>
+    <p>Line art is the labeled figure. The photo shows the unit that was built.</p>
+    <figure>
+      <img src="T-Display-S3_PermaProto_wired.jpg" alt="Board A after jumpers: T-Display-S3, EC11, screw terminals, USB-C on the left">
+      <figcaption>Wired carrier. USB-C on the left, EC11 on the right.</figcaption>
+    </figure>
+
+    <h2>Related</h2>
+    <nav class="links">
+      <ul>
+        <li><a href="../board-a/index.html">Board A</a> — earth-side control (T-Display-S3, EC11, field I/O)</li>
+        <li><a href="../board-b/index.html">Board B</a> — floating gate driver</li>
+        <li><a href="../board-c/index.html">Board C</a> — HV switch stage</li>
+        <li><a href="EC11_Onboard_Wiring.md">EC11 on-board wiring</a> — GPIO11–13; T17–T19 are NC</li>
+        <li><a href="../wiring-guide.html">Wiring Guide</a> — boards A, B, and C on one page</li>
+        <li><a href="../index.html">Software</a> — operator screens</li>
+      </ul>
+    </nav>
+
+    <footer>This page is a chapter of the <a href="../../pdf/Wiring_Guide.pdf">Wiring Guide</a>. Electrical wiring truth for the motor stack remains the gate-driver schematic, not the placement drawing.</footer>
+  </article>
+</body>
+</html>

@@ -1,0 +1,1680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Private Reserve — Software User Manual</title>
+  <link rel="stylesheet" href="page.css">
+</head>
+<body>
+  <article class="page">
+    <section class="manual-cover">
+      <p class="lede">Private Reserve · DIN controller</p>
+      <h1>Software User Manual</h1>
+      <p>Operator screens for production image <code>tdisplay_s3_prod</code> on the LilyGo T-Display-S3 (Board&nbsp;A).</p>
+      <p>The LCD and the phone web page share one controller state.</p>
+      <ol class="toc">
+          <li>Overview</li>
+          <li>Main</li>
+          <li>Calibration</li>
+          <li>Diagnostics</li>
+          <li>Settings</li>
+      </ol>
+    </section>
+    <section class="chapter" id="index">
+<p class="lede">Private Reserve · DIN controller · first draft</p>
+    <h1>Software — operator UI</h1>
+    <p>Production image <code>tdisplay_s3_prod</code> on the LilyGo T-Display-S3 (Board&nbsp;A). The LCD and the phone web page share one controller state. The EC11 knob, the web keypad, the rockers, and the bottle-door key all go through one command arbiter.</p>
+
+    
+
+    <div class="banner">
+      <strong>Draft.</strong> These pages describe the operator screens as built.
+      Each option has a 320&nbsp;×&nbsp;170 panel shot. Every label on that shot
+      is named in a field table on
+      <a href="main.html">Main</a>,
+      <a href="calibration.html">Calibration</a>,
+      <a href="diagnostics.html">Diagnostics</a>, and
+      <a href="settings.html">Settings</a>.
+      The web page adds tabs and a keypad; figure 1 is a full-chrome example.
+      Pixel source:
+      UI mockups.
+      Motion, obstruction, and NVS names remain specified in
+      Production_Software.md
+      and T-Display-S3_Firmware_Config.md.
+    </div>
+
+    <div class="warn">
+      <strong>No application login.</strong> Anyone who can reach the controller
+      on the joined LAN, or join its fallback SoftAP, can monitor, configure,
+      and command the door. HTTP is port 80. Do not expose that network to the
+      public internet.
+    </div>
+
+    
+
+    
+
+    <h2>1. Surfaces</h2>
+    <p>View the LCD with USB-C on the left and the EC11 on the right. Firmware uses Arduino_GFX rotation 3. The logical panel is 320 wide by 170 tall. Origin (0,&nbsp;0) is the operator-facing top-left.</p>
+    <p>The web page is the same state tree plus chrome the LCD does not have: tabs across the top, a keypad on the right that maps to the knob. Use it in landscape on a phone. The layout scales to fill the viewport without clipping. STA in the header means the ESP32 joined site Wi-Fi as a station. AP means the fallback SoftAP is serving.</p>
+    <table>
+      <thead>
+        <tr><th>Surface</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>LCD (ST7789)</td><td>In-box operator panel. Off means GPIO38 backlight and GPIO15 panel power only. The MCU stays up.</td></tr>
+        <tr><td>Web (port 80)</td><td>Same screens. Tabs jump to Main, Calibration, Diagnostics, Settings, or Docs. Keypad on the right: turn − / +, press (Return), hold (back). Figure 1.</td></tr>
+        <tr><td>EC11</td><td>TURN scroll or adjust. PRESS open or accept. HOLD back or cancel.</td></tr>
+        <tr><td>GPIO14</td><td>On-board T-Display button. Same PRESS / HOLD window as the knob switch. Does not revert a recent turn.</td></tr>
+      </tbody>
+    </table>
+
+    <section class="shot">
+      <h3>1.1 Full web page</h3>
+      <p>On site Wi-Fi, open <code>http://private-reserve.local</code> or the STA address on port 80. On the fallback AP, join <code>PrivateReserve</code> with password <code>reserved</code>, then open <code>http://192.168.4.1/</code>. The LCD shows only the 320 × 170 panel. The web page adds tabs on top and a keypad on the right. This shot is Documentation. The panel inside the bezel is the same DOC screen as <a href="main.html#documentation">Main figure 8</a>.</p>
+      <figure class="web">
+        <img src="shots/web-01-docs.png" width="1024" alt="Web UI: Docs tab selected, GitHub QR in the 320 by 170 panel, keypad on the right">
+        <figcaption>Figure 1. Full web UI in landscape. Tabs jump modes. The keypad maps to the EC11.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Main</code> · <code>Calibration</code> · <code>Diagnostics</code> · <code>Settings</code> · <code>Docs</code></td><td>Top tabs. Jump to that page. They turn the LCD on if it was blank. Same destinations as the mode menu.</td></tr>
+          <tr><td><code>Docs</code> in white</td><td>Active tab. Other tabs stay blue. The controller is on the Documentation page.</td></tr>
+          <tr><td>Bezel, 320 × 170</td><td>The LCD panel. Same state tree as the physical display. Header here is <code>DOC</code> with <code>STA 172.16.0.68</code>.</td></tr>
+          <tr><td>QR · <code>github.com/</code> · <code>KopperToolworks/PrivateReserve</code></td><td>Public project page. The web copy adds a blue <code>Open GitHub page</code> link the LCD does not have.</td></tr>
+          <tr><td>Top pair, circular arrows</td><td>TURN − (CCW) and TURN + (CW). Same as the knob.</td></tr>
+          <tr><td>Tall Return arrow</td><td>PRESS. On Documentation this does nothing.</td></tr>
+          <tr><td>Wide left arrow</td><td>HOLD back. From Documentation this returns to the mode menu.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <h2>2. Knob map</h2>
+    <p>HOLD fires once when the push has been down for <code>ec11_hold_min_ms</code> (default 400&nbsp;ms). It does not wait for release. A shorter down is PRESS. Staying down past <code>ec11_hold_max_ms</code> does not fire a second HOLD.</p>
+    <p>Pressing the knob can twist CLK/DT. If the highlight moved within <code>ec11_press_revert_ms</code> (100&nbsp;ms) of an EC11 press, firmware restores the previous item, then handles PRESS. Rotation is ignored while SW is down.</p>
+    <p>On bottle key, limit markers, and override rockers, TURN selects one of two choices. The highlight stops at the end instead of wrapping. Extra clicks in that direction do nothing. One click moves once.</p>
+    <table>
+      <thead>
+        <tr><th>Gesture</th><th>Typical meaning</th><th>Web keypad</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>TURN − / +</td><td>Scroll a list or change a pending value</td><td>Top pair, circular arrows</td></tr>
+        <tr><td>PRESS</td><td>Open a screen, start a stage, or accept</td><td>Large Return arrow</td></tr>
+        <tr><td>HOLD</td><td>Back one screen, or cancel a live procedure</td><td>Wide left arrow</td></tr>
+      </tbody>
+    </table>
+
+    <h2>3. Command priority</h2>
+    <p>Hard overcurrent and sensor or limit faults outrank all commands. Obstruction handling outranks ordinary commands. Among ordinary sources the order is <strong>EC11 → web → rocker → hall</strong>. At most one state-changing command runs per control cycle.</p>
+    <p>A live calibration or diagnostic-jog step owns the motor. Hall and rocker events may show on the screen. They cannot preempt that step. Main accepts hall and rocker triggers.</p>
+    <p>There is no operator Stop on Main. Cancel exists only for a running calibration or diagnostic procedure. Cancel removes PWM, waits for current decay, leaves K1 unchanged, discards incomplete results, and returns to that mode’s menu.</p>
+    <p>Never write NVS while the motor runs. Config writes need an idle motor.</p>
+
+    <h2>4. Boot, blanking, Wi-Fi</h2>
+    <p>The screen is on at boot. Default idle timeout is 5 minutes (<code>display_timeout_ms</code> = 300000). Any EC11 turn or press, GPIO14, or web command resets the timer. Wake from a blanked panel returns to Main.</p>
+    <p>Calibration, diagnostics, faults, and any prompt that needs an answer inhibit blanking. A latched <code>PositionUnknown</code> on Main does not hold the panel on forever. That fault is the default boot state until origin is found.</p>
+    <p>STA join uses the stored SSID and password. If the SSID is empty or join fails, firmware starts a SoftAP.</p>
+    <table>
+      <thead>
+        <tr><th>Fallback AP</th><th>Default</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Name (SSID)</td><td><code>PrivateReserve</code></td></tr>
+        <tr><td>Join password</td><td><code>reserved</code> (WPA2, eight characters)</td></tr>
+        <tr><td>Main page</td><td><code>http://192.168.4.1/</code></td></tr>
+        <tr><td>Set site Wi-Fi</td><td><code>http://192.168.4.1/wifi</code></td></tr>
+      </tbody>
+    </table>
+    <p>Type the join password on the phone. Then open the main page. The LCD shows that password on Settings → Network, on Diagnostics → Network while SoftAP is up, and on the Wi-Fi-cleared result. Station (house) password stays masked. When STA joins, HTTP is on the STA address and <code>http://private-reserve.local</code>. The steel lid can block the onboard antenna. That note belongs on the network diagnostic screen.</p>
+    <p>Settings → Service can clear the stored station SSID and password. That write is immediate. The live STA session stays until reboot. After reboot, empty SSID skips STA and starts SoftAP. Fallback AP name and password stay. The same Service list can reboot the controller (PRESS twice). PRESS on the Wi-Fi-cleared result screen also reboots. See <a href="settings.html">Settings</a> figures 11 and 12.</p>
+    <p>No automatic resume after reset. A watchdog, brownout, operator reboot, or power cycle forces PWM off and cancels the prior command.</p>
+
+    <h2>5. Modes</h2>
+    <p>Default after boot is <strong>Main</strong> (Standard Operating Mode in the spec). Settings and Documentation are not extra operating modes. They are menu pages reached the same way as Calibration and Diagnostics. Motion is idle while settings are edited.</p>
+    <table>
+      <thead>
+        <tr><th>Page</th><th>Header</th><th>Panel shots</th><th>What it is</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><a href="main.html">Main</a></td><td><code>MAIN</code> or <code>NEEDS SETUP</code></td><td>8</td><td>Live door. Mode menu: Main, Diagnostics, Calibration, Settings, Documentation.</td></tr>
+        <tr><td><a href="calibration.html">Calibration</a></td><td><code>CAL · …</code></td><td>13</td><td>Guided stages. Path-clear before any move. Save is one NVS write on Review.</td></tr>
+        <tr><td><a href="diagnostics.html">Diagnostics</a></td><td><code>DIAG · …</code></td><td>14</td><td>One screen per input or output. Jog and obstruction test own the motor. Bottle key, limit markers, and override rockers can inject a cooked signal from PRESS.</td></tr>
+        <tr><td><a href="settings.html">Settings</a></td><td><code>SET · …</code></td><td>12</td><td>Staged edits. Review commits. Service actions are destructive and confirm twice, including reboot and clear station Wi-Fi.</td></tr>
+        <tr><td><a href="main.html#documentation">Documentation</a></td><td><code>DOC</code></td><td>1</td><td>QR and URL for the public GitHub page. HOLD returns to the mode menu. PRESS does nothing.</td></tr>
+      </tbody>
+    </table>
+    <div class="shot">
+      <p>Entry screens for each mode:</p>
+      <figure class="lcd">
+        <img src="shots/main-07-mode-menu.png" width="320" alt="Mode menu: Main, Diagnostics, Calibration, Settings, Documentation">
+        <figcaption>Figure 2. Mode menu on Main. PRESS opens the highlighted item.</figcaption>
+      </figure>
+      <figure class="lcd">
+        <img src="shots/cal-01.png" width="320" alt="Calibration stage list">
+        <figcaption>Figure 3. Calibration stage list. See <a href="calibration.html">Calibration</a> for every stage.</figcaption>
+      </figure>
+      <figure class="lcd">
+        <img src="shots/diag-01.png" width="320" alt="Diagnostics menu, items 1 to 8">
+        <figcaption>Figure 4. Diagnostics menu. See <a href="diagnostics.html">Diagnostics</a> for all twelve items.</figcaption>
+      </figure>
+      <figure class="lcd">
+        <img src="shots/set-01.png" width="320" alt="Settings groups">
+        <figcaption>Figure 5. Settings groups. See <a href="settings.html">Settings</a> for edit, review, service, Wi-Fi clear, and reboot.</figcaption>
+      </figure>
+      <figure class="lcd">
+        <img src="shots/main-08-documentation.png" width="320" alt="DOC: GitHub QR for KopperToolworks PrivateReserve">
+        <figcaption>Figure 6. Documentation panel only. See <a href="main.html#documentation">Main · Documentation</a> for every label on this panel. The full web chrome is figure 1.</figcaption>
+      </figure>
+      <p>Every label on these shots is named in the field table on the linked page.</p>
+    </div>
+
+    <h2>6. Field I/O the screens name</h2>
+    <p>Position is AS5600 counts from the open origin. Inches appear only after stroke entry. The three analog sensors stay independent.</p>
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Part</th><th>GPIO / Board A</th><th>Job</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Bottle door key</td><td>49E / SS49E</td><td>GPIO1, T23</td><td>Magnet present or absent. Automatic open/close.</td></tr>
+        <tr><td>Shaft encoder</td><td>AS5600</td><td>GPIO43/44, T10/T9</td><td>Door position as accumulated counts.</td></tr>
+        <tr><td>Current load</td><td>ACS712-05B</td><td>GPIO2, T22</td><td>Motor current. Envelope and snug.</td></tr>
+        <tr><td>Open marker</td><td>NC switch</td><td>GPIO17, T7</td><td>Near-end flag, open side.</td></tr>
+        <tr><td>Close marker</td><td>NC switch</td><td>GPIO3, T21</td><td>Near-end flag, close side.</td></tr>
+        <tr><td>Override rockers</td><td>two paralleled stations</td><td>GPIO10 T20, GPIO18 T8</td><td>Edge-trigger open/close. Centre does nothing.</td></tr>
+        <tr><td>Knob</td><td>EC11</td><td>GPIO11–13, on-board</td><td>Menu, settings, cancel, acknowledge.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>7. Needs setup</h2>
+    <p>If origin, marker spans, or the calibration format is invalid, Main blocks automatic motion. Only guided calibration and limited diagnostic jog may move the motor. Hall and rocker triggers stay disabled.</p>
+    <p>The AS5600 is single-turn. The stroke spans several turns. After power loss the firmware enters <code>PositionUnknown</code> and needs a guided seek to the open marker. Direction verify must pass before any limit seek.</p>
+    <p>With an invalid obstruction table, automatic Main motion stays blocked. Recovery uses the 2.50&nbsp;A hard ceiling until a relearn arms the table.</p>
+    </section>
+    <section class="chapter" id="main">
+<p class="lede">Private Reserve · DIN controller · first draft</p>
+    <h1>Main</h1>
+    <p>Live door state. The spec name is Standard Operating Mode. The operator label is <strong>Main</strong>. This is the default screen after boot and after wake from a blanked panel.</p>
+
+    
+
+    <div class="banner">
+      <strong>Draft.</strong> Pixel layout:
+      UI/index.html (320 × 170).
+      LCD and web draw the same state tree. The web keypad sits to the right of the panel.
+      Full chrome: <a href="index.html">overview figure 1</a> and figure 9 below.
+    </div>
+
+    <div class="warn">
+      <strong>Needs setup blocks automatic motion.</strong> Until origin, markers,
+      and an armed obstruction table exist, hall and rocker triggers stay off.
+      The header reads <code>NEEDS SETUP</code>. The hero is a red
+      <code>POSITION UNKNOWN</code> banner. Run Calibration.
+    </div>
+
+    <h2>1. Live screen chrome</h2>
+    <p>Every live Main state uses the same regions. A latched fault replaces the hero and the current meter with a red banner. GPIO numbers, duty, phase timers, bin index, and drift live in Diagnostics, not here.</p>
+    <table>
+      <thead>
+        <tr><th>Region</th><th>What it shows</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Header left</td><td><code>MAIN</code> when setup is complete, or <code>NEEDS SETUP</code>.</td></tr>
+        <tr><td>Header right</td><td>Link state. Green pip and <code>STA</code> plus the IP, or amber pip and <code>AP</code> plus the SoftAP name (default <code>PrivateReserve</code>). The join password is not in the header.</td></tr>
+        <tr><td>Hero</td><td>Current action in the largest type. A latched fault replaces this with a red banner.</td></tr>
+        <tr><td>Current</td><td>Live amps against the learned trip for the bin the door is in. The red tick is that bin’s trip. The hard 2.50&nbsp;A ceiling is the right edge. Hidden when a fault banner occupies the hero.</td></tr>
+        <tr><td>Travel</td><td>Share of the measured span in AS5600 counts. Ticks are the two near-end markers. Outer ends are open-seated and closed-seated. The grey line under the bar is percent and counts, or <code>position unknown</code>.</td></tr>
+        <tr><td>Tiles</td><td>Bottle key, open marker, close marker, shaft rev/s. The close-marker title clips to <code>CLOSE MARK…</code> on the 320-pixel panel.</td></tr>
+        <tr><td>Footer</td><td><code>TURN menu</code> · <code>PRESS menu</code>. Either gesture opens the mode menu.</td></tr>
+      </tbody>
+    </table>
+
+    <section class="shot">
+      <h3>1.1 Needs setup — position unknown</h3>
+      <p>Default after power loss until guided calibration finds origin. Automatic hall and rocker triggers stay off.</p>
+      <figure class="lcd">
+        <img src="shots/main-01-needs-setup.png" width="320" alt="Main: NEEDS SETUP, POSITION UNKNOWN, AP PrivateReserve">
+        <figcaption>Figure 1. Main · needs setup. Position unknown. SoftAP serving.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>NEEDS SETUP</code></td><td>Header left. Origin, markers, or the calibration format is invalid. Automatic motion is blocked.</td></tr>
+          <tr><td>Amber pip + <code>AP PrivateReserve</code></td><td>Header right. Station join failed or SSID is empty. Fallback SoftAP is serving. Default name is <code>PrivateReserve</code>. Default join password is <code>reserved</code>. The header does not show the password. Read it on Settings → Network or Diagnostics → Network. Then open <code>http://192.168.4.1/</code>.</td></tr>
+          <tr><td><code>POSITION UNKNOWN</code></td><td>Red banner title. The AS5600 is single-turn. After reset the firmware does not know which turn the door is on.</td></tr>
+          <tr><td><code>Automatic motion blocked · run calibration to find origin</code></td><td>Banner detail. Hall and rocker triggers stay disabled until Calibration finds origin.</td></tr>
+          <tr><td><code>OPEN</code> / <code>CLOSED</code></td><td>Travel ends. Open is the left of the bar. Closed is the right.</td></tr>
+          <tr><td>Empty travel track, grey thumb</td><td>No fill and no marker ticks in this state. Position is not known, so the bar cannot show a share of span.</td></tr>
+          <tr><td><code>position unknown</code></td><td>Left scale under the bar. Replaces percent until origin exists.</td></tr>
+          <tr><td><code>—</code> (right of the scale)</td><td>Count field. Empty because there is no origin to accumulate from.</td></tr>
+          <tr><td><code>BOTTLE KEY</code> · grey pip · <code>ABS</code> · <code>uncal</code></td><td>Hall reads absent. Key levels are not yet captured, so the grey line is <code>uncal</code> instead of an ADC count.</td></tr>
+          <tr><td><code>OPEN MARKER</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Open near-end switch is not made. <code>travel</code> means the door is not at that end (or the end is unknown).</td></tr>
+          <tr><td><code>CLOSE MARK…</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Close near-end switch is not made. Title is Close marker. The tile clips the word.</td></tr>
+          <tr><td><code>SHAFT</code> · <code>0.0 rev/s</code> · <code>—</code></td><td>Motor at rest. Direction dash means no rotation this cycle.</td></tr>
+          <tr><td><code>TURN menu</code> · <code>PRESS menu</code></td><td>Either gesture opens the mode menu. Position Unknown is not an acknowledge-away fault.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h3>1.2 Opening</h3>
+      <p>Setup is complete. The bottle key went absent. The door is in cruise toward open.</p>
+      <figure class="lcd">
+        <img src="shots/main-02-opening.png" width="320" alt="Main: OPENING at 62 percent, 1.42 A, STA 192.168.1.42">
+        <figcaption>Figure 2. Main · opening. Cruise, key removed.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>MAIN</code></td><td>Header left. Setup is complete. Automatic motion is allowed.</td></tr>
+          <tr><td>Green pip + <code>STA 192.168.1.42</code></td><td>Header right. ESP32 joined site Wi-Fi as a station. HTTP is on this address.</td></tr>
+          <tr><td><code>OPENING</code> (amber)</td><td>Hero. Current action. Amber means the motor is moving.</td></tr>
+          <tr><td><code>cruise · key removed</code></td><td>Motion phase and why the move started. Cruise is the middle of the profile. The bottle key is absent.</td></tr>
+          <tr><td><code>1.42 A</code></td><td>Live motor current from the ACS712 after scale.</td></tr>
+          <tr><td>Green fill on the current bar</td><td>Live amps as a share of the 2.50&nbsp;A hard ceiling. Green because 1.42&nbsp;A is under this bin’s trip.</td></tr>
+          <tr><td>Red tick on the current bar</td><td>This bin’s learned trip (1.60&nbsp;A). Not the hard ceiling.</td></tr>
+          <tr><td><code>bin trip 1.60 · max 2.50</code></td><td>Numeric trip for the bin the door is in, then the compile-time ceiling at the right edge of the bar.</td></tr>
+          <tr><td><code>OPEN</code> / <code>CLOSED</code></td><td>Travel ends.</td></tr>
+          <tr><td>Blue fill to 62%, yellow thumb, two marker ticks</td><td>Door is 62% of the measured span toward closed. Marker ticks sit near each end. Neither tick is hot.</td></tr>
+          <tr><td><code>62%</code></td><td>Share of measured span. Percent is the headline. Counts sit on the right.</td></tr>
+          <tr><td><code>12,690 cnt</code></td><td>AS5600 counts from the open origin.</td></tr>
+          <tr><td><code>BOTTLE KEY</code> · grey pip · <code>ABS</code> · <code>adc 1610</code></td><td>Key absent. Raw ADC is the diagnostic value for this tile.</td></tr>
+          <tr><td><code>OPEN MARKER</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Open switch not made. Door is in mid travel.</td></tr>
+          <tr><td><code>CLOSE MARK…</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Close switch not made.</td></tr>
+          <tr><td><code>SHAFT</code> · <code>1.7 rev/s</code> · <code>CCW</code></td><td>Shaft speed and direction. On this build CCW is toward open.</td></tr>
+          <tr><td><code>TURN menu</code> · <code>PRESS menu</code></td><td>Open the mode menu. There is no Stop on Main.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h3>1.3 Idle — closed and seated</h3>
+      <p>Move finished. Seal is loaded. Motor is at rest.</p>
+      <figure class="lcd">
+        <img src="shots/main-03-idle-closed.png" width="320" alt="Main: CLOSED, seated, 0.00 A, 100 percent">
+        <figcaption>Figure 3. Main · idle closed. Seated, snug held.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>MAIN</code></td><td>Header left. Setup complete.</td></tr>
+          <tr><td>Green pip + <code>STA 192.168.1.42</code></td><td>Station Wi-Fi, HTTP on this IP.</td></tr>
+          <tr><td><code>CLOSED</code></td><td>Hero. Door is at the closed-seated end. White, not amber, because the motor is idle.</td></tr>
+          <tr><td><code>seated · snug held 0.9 s</code></td><td>How the stop was held. Snug is current-rise seating past the close marker. 0.9&nbsp;s is hold time this cycle.</td></tr>
+          <tr><td><code>0.00 A</code></td><td>Motor current at rest.</td></tr>
+          <tr><td>Empty current bar, red tick near the right</td><td>Live fill is zero. The tick is this bin’s trip (2.20&nbsp;A).</td></tr>
+          <tr><td><code>bin trip 2.20 · max 2.50</code></td><td>Closed-end bin trip, then the 2.50&nbsp;A ceiling.</td></tr>
+          <tr><td><code>OPEN</code> / <code>CLOSED</code></td><td>Travel ends.</td></tr>
+          <tr><td>Fill to the closed end, close-marker tick hot</td><td>Door is at 100% of span. The close-marker tick is active because the switch is made.</td></tr>
+          <tr><td><code>100%</code> · <code>20,480 cnt</code></td><td>At closed seated. Counts include travel past the close-marker edge.</td></tr>
+          <tr><td><code>BOTTLE KEY</code> · green pip · <code>PRES</code> · <code>adc 2980</code></td><td>Bottle in the recess. Green pip means present on this polarity.</td></tr>
+          <tr><td><code>OPEN MARKER</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Open switch not made.</td></tr>
+          <tr><td><code>CLOSE MARK…</code> · green pip · <code>AT END</code> · <code>active</code></td><td>Close switch is made. <code>AT END</code> is the cooked label. <code>active</code> is the raw switch state.</td></tr>
+          <tr><td><code>SHAFT</code> · <code>0.0 rev/s</code> · <code>—</code></td><td>At rest. No rotation this cycle.</td></tr>
+          <tr><td><code>TURN menu</code> · <code>PRESS menu</code></td><td>Open the mode menu.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h3>1.4 Closing — creep and snug</h3>
+      <p>Past the close marker. The profile has left cruise and is seating the seal.</p>
+      <figure class="lcd">
+        <img src="shots/main-04-snug.png" width="320" alt="Main: SNUG, 1.88 A, 98 percent, close marker at end">
+        <figcaption>Figure 4. Main · snug. Past close marker, seating.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>MAIN</code></td><td>Header left.</td></tr>
+          <tr><td>Green pip + <code>STA 192.168.1.42</code></td><td>Station Wi-Fi.</td></tr>
+          <tr><td><code>SNUG</code> (amber)</td><td>Hero. Creep-and-seat phase after the close marker. Motor is still moving.</td></tr>
+          <tr><td><code>past close marker · seating</code></td><td>Why snug is showing. Operational snug is a current-rise stop, not a home.</td></tr>
+          <tr><td><code>1.88 A</code></td><td>Live current. Seal loading raises amps above cruise.</td></tr>
+          <tr><td>Green fill, red tick near the right</td><td>1.88&nbsp;A is still under this bin’s 2.24&nbsp;A trip.</td></tr>
+          <tr><td><code>bin trip 2.24 · max 2.50</code></td><td>Near-closed bin trip, then the hard ceiling.</td></tr>
+          <tr><td><code>OPEN</code> / <code>CLOSED</code></td><td>Travel ends.</td></tr>
+          <tr><td>Fill at 98%, close-marker tick hot</td><td>Almost seated. Close switch is made.</td></tr>
+          <tr><td><code>98%</code> · <code>20,070 cnt</code></td><td>Share of span and counts from origin.</td></tr>
+          <tr><td><code>BOTTLE KEY</code> · green pip · <code>PRES</code> · <code>adc 2955</code></td><td>Bottle present. Close was commanded with the key in.</td></tr>
+          <tr><td><code>OPEN MARKER</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Open switch not made.</td></tr>
+          <tr><td><code>CLOSE MARK…</code> · green pip · <code>AT END</code> · <code>active</code></td><td>Close switch made.</td></tr>
+          <tr><td><code>SHAFT</code> · <code>0.3 rev/s</code> · <code>CW</code></td><td>Slow creep toward closed. CW is toward closed on this build.</td></tr>
+          <tr><td><code>TURN menu</code> · <code>PRESS menu</code></td><td>Open the mode menu. The move ends at seated, a reverse trigger, a fault, or obstruction handling.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h3>1.5 Obstruction — reversing</h3>
+      <p>Close current crossed the bin trip. Firmware reversed toward open. Obstruction handling outranks ordinary commands.</p>
+      <figure class="lcd">
+        <img src="shots/main-05-reversing.png" width="320" alt="Main: REVERSING, 2.11 A above bin trip 1.66">
+        <figcaption>Figure 5. Main · reversing. Obstruction while closing.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>MAIN</code></td><td>Header left.</td></tr>
+          <tr><td>Green pip + <code>STA 192.168.1.42</code></td><td>Station Wi-Fi.</td></tr>
+          <tr><td><code>REVERSING</code> (amber)</td><td>Hero. Close obstruction. The door is opening to clear the path.</td></tr>
+          <tr><td><code>obstruction while closing · opening</code></td><td>Cause and the commanded direction now.</td></tr>
+          <tr><td><code>2.11 A</code></td><td>Live current. Above this bin’s trip, so the fill is red.</td></tr>
+          <tr><td>Red fill past the red tick</td><td>Live amps exceeded the learned trip (1.66&nbsp;A). That is why reverse started.</td></tr>
+          <tr><td><code>bin trip 1.66 · max 2.50</code></td><td>Mid-travel bin trip, then the hard ceiling. Reverse used the learned trip, not the 2.50&nbsp;A ceiling.</td></tr>
+          <tr><td><code>OPEN</code> / <code>CLOSED</code></td><td>Travel ends.</td></tr>
+          <tr><td>Fill at 48%, neither marker hot</td><td>Mid travel. Both switches clear.</td></tr>
+          <tr><td><code>48%</code> · <code>9,830 cnt</code></td><td>Position when reverse is in progress.</td></tr>
+          <tr><td><code>BOTTLE KEY</code> · green pip · <code>PRES</code> · <code>adc 2971</code></td><td>Bottle still present. Close had been the automatic command.</td></tr>
+          <tr><td><code>OPEN MARKER</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Not yet at the open end.</td></tr>
+          <tr><td><code>CLOSE MARK…</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Not at the close end.</td></tr>
+          <tr><td><code>SHAFT</code> · <code>1.4 rev/s</code> · <code>CCW</code></td><td>Opening. CCW toward open on this build.</td></tr>
+          <tr><td><code>TURN menu</code> · <code>PRESS menu</code></td><td>Open the mode menu. Reverse still owns the motor until it finishes or faults.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h3>1.6 Fault — second close obstruction</h3>
+      <p>A second close obstruction in the retry window latches a fault. The current meter leaves the panel. PRESS acknowledges when firmware allows it.</p>
+      <figure class="lcd">
+        <img src="shots/main-06-fault.png" width="320" alt="Main: OBSTRUCTION times 2 fault banner at 44 percent">
+        <figcaption>Figure 6. Main · latched obstruction fault. Press to acknowledge.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>MAIN</code></td><td>Header left. Setup is still complete. This is a motion fault, not Needs Setup.</td></tr>
+          <tr><td>Green pip + <code>STA 192.168.1.42</code></td><td>Station Wi-Fi.</td></tr>
+          <tr><td><code>OBSTRUCTION ×2</code></td><td>Red banner title. Second close obstruction. The door stopped instead of reversing again.</td></tr>
+          <tr><td><code>Repeated close obstruction · press knob to acknowledge</code></td><td>Banner detail. PRESS clears this banner when the firmware allows it. TURN still opens the mode menu.</td></tr>
+          <tr><td><code>OPEN</code> / <code>CLOSED</code></td><td>Travel ends. The current meter is hidden while the fault banner occupies the hero.</td></tr>
+          <tr><td>Red thumb at 44%</td><td>Position where the second trip stopped the door. Red track because this is a fault state.</td></tr>
+          <tr><td><code>44%</code> · <code>9,010 cnt</code></td><td>Stopped position.</td></tr>
+          <tr><td><code>BOTTLE KEY</code> · green pip · <code>PRES</code> · <code>adc 2969</code></td><td>Bottle still present.</td></tr>
+          <tr><td><code>OPEN MARKER</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Not at the open end.</td></tr>
+          <tr><td><code>CLOSE MARK…</code> · grey pip · <code>CLEAR</code> · <code>travel</code></td><td>Not at the close end.</td></tr>
+          <tr><td><code>SHAFT</code> · <code>0.0 rev/s</code> · <code>—</code></td><td>Motor stopped after the fault.</td></tr>
+          <tr><td><code>TURN menu</code> · <code>PRESS menu</code></td><td>On this fault, PRESS acknowledges. TURN opens the mode menu. Position Unknown is the fault that cannot be acknowledged away.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <h2>2. Mode menu</h2>
+    <p>TURN or PRESS on the live Main screen opens this list. Five items. TURN scrolls. PRESS opens. HOLD returns to the live Main screen.</p>
+
+    <section class="shot">
+      <h3>2.1 Five destinations</h3>
+      <figure class="lcd">
+        <img src="shots/main-07-mode-menu.png" width="320" alt="Mode menu: Main, Diagnostics, Calibration needed, Settings, Documentation">
+        <figcaption>Figure 7. Mode menu. Five items. Calibration pip is amber because setup is still needed. Documentation is the fifth row.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>MODE</code></td><td>Header left. Same screen family as Main. Not a fourth operating mode.</td></tr>
+          <tr><td>Green pip + <code>STA 192.168.1.42</code></td><td>Header right. Same link state as Main.</td></tr>
+          <tr><td>Blue highlight + left bracket on <code>Main</code></td><td>Selected row. PRESS opens the live Main screen.</td></tr>
+          <tr><td>Green pip + <code>Main</code> + <code>DOOR</code></td><td>Live door. Value column is the subject of that page.</td></tr>
+          <tr><td>Green pip + <code>Diagnostics</code> + <code>I/O</code></td><td>Opens the <a href="diagnostics.html">diagnostic menu</a>.</td></tr>
+          <tr><td>Amber pip + <code>Calibration</code> + <code>NEEDED</code></td><td>Opens the <a href="calibration.html">stage list</a>. Amber pip and <code>NEEDED</code> mean origin or later stages are missing. After a full save this row shows green and a status such as <code>armed</code>.</td></tr>
+          <tr><td>Green pip + <code>Settings</code> + <code>NVS</code></td><td>Opens <a href="settings.html">settings groups</a>. Value is <code>NVS</code> when stored, or <code>unsaved</code> when staged edits exist. If the motor is running, Settings Locked instead.</td></tr>
+          <tr><td>Green pip + <code>Documentation</code> + <code>GitHub</code></td><td>Opens the <a href="#documentation">Documentation</a> page. QR code for the public project URL.</td></tr>
+          <tr><td><code>TURN scroll</code></td><td>Move the highlight.</td></tr>
+          <tr><td><code>PRESS open</code></td><td>Enter the highlighted item.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to the live Main screen without changing mode.</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <p>Web nav tabs send the same jumps: Main, Calibration, Diagnostics, Settings, Docs. They turn the LCD on if it was blank.</p>
+
+    <section class="shot" id="documentation">
+      <h2>2.2 Documentation</h2>
+      <p>Not an operating mode. A read-only page from the mode menu. Header is <code>DOC</code>. The panel shows a QR code for the public project page and the same path as text. This page does not command the motor. PRESS does nothing. HOLD returns to the mode menu.</p>
+      <figure class="lcd">
+        <img src="shots/main-08-documentation.png" width="320" alt="DOC: QR code, github.com/KopperToolworks, PrivateReserve">
+        <figcaption>Figure 8. DOC. QR and path for the public GitHub page.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>DOC</code></td><td>Header left. Documentation page.</td></tr>
+          <tr><td>Green pip + <code>STA 192.168.1.42</code></td><td>Header right. Same link state as Main. Amber pip and <code>AP</code> when the fallback SoftAP is serving.</td></tr>
+          <tr><td>QR code (left)</td><td>Encodes <a href="https://github.com/KopperToolworks/PrivateReserve">https://github.com/KopperToolworks/PrivateReserve</a>. Scan with a phone camera. The enclosure sticker uses the same URL.</td></tr>
+          <tr><td><code>github.com/KopperToolworks</code></td><td>Host, as text, if the QR is hard to scan.</td></tr>
+          <tr><td><code>PrivateReserve</code></td><td>Repository name.</td></tr>
+          <tr><td><code>source and docs</code></td><td>What the page holds. Source, operator docs, and enclosure notes.</td></tr>
+          <tr><td><code>scan to open</code></td><td>How to use the QR. On the web copy of this screen, a blue link labelled <code>Open GitHub page</code> opens the same URL. The full web chrome (tabs and keypad) is <a href="index.html">overview figure 1</a> and figure 9 below.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to the mode menu.</td></tr>
+          <tr><td><code>SCAN code</code></td><td>Footer hint. Not a knob gesture. PRESS on this page does nothing.</td></tr>
+        </tbody>
+      </table>
+      <p>Pixel source: Main mockup (Documentation state). The enclosure sticker uses the same URL; see DIN/enclosure.md. The repo must stay public or the QR is useless.</p>
+    </section>
+
+    <h2>3. Knob on Main</h2>
+    <table>
+      <thead>
+        <tr><th>Gesture</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>TURN or PRESS (live screen)</td><td>Open the mode menu.</td></tr>
+        <tr><td>PRESS on Documentation</td><td>No-op. The QR is the action.</td></tr>
+        <tr><td>HOLD on Documentation</td><td>Return to the mode menu.</td></tr>
+        <tr><td>PRESS on a latched fault that can be acknowledged</td><td>Clear the banner when the firmware allows it. Position Unknown is not an acknowledge-away fault. It needs calibration.</td></tr>
+        <tr><td>Hall / rocker</td><td>Open or close when setup is ready. Edges, not hold-to-run. Open wins if both rocker throws hit in the same cycle.</td></tr>
+      </tbody>
+    </table>
+    <p>There is no Stop on this screen. A move ends at destination, snug, a reverse trigger, a fault, or obstruction handling.</p>
+
+    <h2>4. Web page</h2>
+    <p>The LCD shows only the 320 × 170 panel. The phone page adds tabs on top and a keypad on the right. Use landscape. The shell scales to the viewport. There is no application login.</p>
+    <figure class="web">
+      <img src="shots/web-01-docs.png" width="1024" alt="Web UI: Docs tab selected, GitHub QR in the panel, keypad on the right">
+      <figcaption>Figure 9. Full web UI on Documentation. Same chrome on every page. Overview figure 1 names every chrome label.</figcaption>
+    </figure>
+    <table>
+      <thead>
+        <tr><th>Chrome</th><th>Command</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Tabs: Main · Calibration · Diagnostics · Settings · Docs</td><td>Jump to that page. Active tab is white. They turn the LCD on if it was blank.</td></tr>
+        <tr><td>Left circular arrow</td><td>TURN − (matches CCW on the physical knob)</td></tr>
+        <tr><td>Right circular arrow</td><td>TURN + (matches CW on the physical knob)</td></tr>
+        <tr><td>Large Return arrow</td><td>PRESS</td></tr>
+        <tr><td>Wide left arrow</td><td>HOLD back</td></tr>
+      </tbody>
+    </table>
+    <p>On Documentation the web panel also shows <code>Open GitHub page</code>. That link is not on the LCD. PRESS on this page does nothing. HOLD returns to the mode menu.</p>
+    </section>
+    <section class="chapter" id="calibration">
+<p class="lede">Private Reserve · DIN controller · first draft</p>
+    <h1>Calibration</h1>
+    <p>Initial setup and later recals. A full first run does every stage. A later run can open one process. Header prefix is <code>CAL ·</code>.</p>
+
+    
+
+    <div class="banner">
+      <strong>Draft.</strong> Pixel layout:
+      UI/calibration.html.
+      Hardware procedures:
+      Limit_Marker_And_Snug.md,
+      Load_Bin_Obstruction_Calibration.md.
+    </div>
+
+    <div class="warn">
+      <strong>The door will move.</strong> Path-clear must pass before any stage
+      that commands the motor. There is no physical E-stop. HOLD cancels: PWM
+      off, wait for current decay, leave K1 unchanged, discard the partial
+      result, return to the stage list. Never write NVS mid-motion. Review
+      is the single save.
+    </div>
+
+    <section class="shot">
+      <h2>1. Stage list</h2>
+      <p>Entry for a full setup and for a single recalibration. Status words name stale or missing work so you do not run a later stage on a bad earlier one. Six compact rows fit. TURN windows the list. All eight stages are on this shot.</p>
+      <figure class="lcd">
+        <img src="shots/cal-01.png" width="320" alt="CAL stages list with stroke entry selected, needed">
+        <figcaption>Figure 1. CAL · stages. Stroke entry selected. Stages 7–8 blocked until stroke exists.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · stages</code></td><td>Header left. Calibration mode, stage list.</td></tr>
+          <tr><td><code>8 stages</code></td><td>Header right. Count of guided processes. Review is a ninth screen after these, not a stage.</td></tr>
+          <tr><td>Green pip + <code>1 · Baselines (current, shaft, key)</code> + <code>DONE</code></td><td>Stage 1 complete. Three rest captures: ACS712 zero, AS5600 jitter, 49E levels.</td></tr>
+          <tr><td>Green pip + <code>2 · Direction verify</code> + <code>MATCH</code></td><td>Commanded direction agreed with the shaft. Invert flag is good. Gates all seeks.</td></tr>
+          <tr><td>Green pip + <code>3 · Open marker → origin</code> + <code>± 6 CNT</code></td><td>Open-edge probes accepted. Spread across repeats is 6 counts. That edge is count 0.</td></tr>
+          <tr><td>Green pip + <code>4 · Close marker → span</code> + <code>± 9 CNT</code></td><td>Close-edge probes accepted. Spread 9 counts. Edge minus origin is the measured span.</td></tr>
+          <tr><td>Green pip + <code>5 · Closed seated</code> + <code>BY CURRENT</code></td><td>Seated found by current rise, not stall. Confirmation, not a home.</td></tr>
+          <tr><td>Amber pip + highlight + <code>6 · Stroke entry</code> + <code>NEEDED</code></td><td>Selected row. Operator inches are missing. Required before learn runs, not before marker seeks.</td></tr>
+          <tr><td>Grey pip + <code>7 · Obstruction table — empty</code> + <code>BLOCKED</code></td><td>Cannot start until stroke exists. Empty-rack learn.</td></tr>
+          <tr><td>Grey pip + <code>8 · Obstruction table — loaded</code> + <code>OPTIONAL</code></td><td>Second table with racks at max expected load. Skip is allowed.</td></tr>
+          <tr><td><code>TURN scroll</code></td><td>Move the highlight. Window the list if more rows exist than fit.</td></tr>
+          <tr><td><code>PRESS open</code></td><td>Enter the highlighted stage. Moving stages show path-clear first.</td></tr>
+          <tr><td><code>HOLD exit</code></td><td>Return to Main. Incomplete RAM results stay until Review saves or you discard them there.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>2. Path-clear gate</h2>
+      <p>Shown before any stage that commands the motor. A checklist, not a single OK. The door does not move until every line is ticked.</p>
+      <figure class="lcd">
+        <img src="shots/cal-02.png" width="320" alt="CAL confirm: THE DOOR WILL MOVE, three checklist lines">
+        <figcaption>Figure 2. CAL · confirm, before stage 3. Third line still unticked.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · confirm</code></td><td>Header left. Gate, not a capture screen.</td></tr>
+          <tr><td><code>before stage 3</code></td><td>Header right. This shot is the gate for open-marker seek. Other moving stages show their own number.</td></tr>
+          <tr><td><code>THE DOOR WILL MOVE</code></td><td>Amber banner title. Condition before command.</td></tr>
+          <tr><td><code>140 V motor · no physical E-stop installed</code></td><td>Banner detail. HOLD is the only cancel. There is no E-stop on this build.</td></tr>
+          <tr><td>Green pip + <code>Travel path clear of tools and people</code></td><td>Ticked. Operator has acknowledged a clear path.</td></tr>
+          <tr><td>Green pip + <code>Both marker switches wired and reading LOW</code></td><td>Ticked. NC markers at rest read LOW on this polarity. A HIGH rest would mean a cut wire or a made switch.</td></tr>
+          <tr><td>Grey pip + highlight + <code>Racks empty for this stage</code></td><td>Not yet ticked. Selected line. TURN moves among lines. This line appears when the stage requires empty racks.</td></tr>
+          <tr><td><code>TURN tick</code></td><td>Toggle the highlighted checklist line.</td></tr>
+          <tr><td><code>PRESS start</code></td><td>Start the stage when every line is ticked. Does nothing while a line is still grey.</td></tr>
+          <tr><td><code>HOLD cancel</code></td><td>Return to the stage list. No motion.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>3. Stage 1a — current zero</h2>
+      <p>Captured with PWM at zero. ACS712 offset only. It shares nothing with the shaft or key baselines.</p>
+      <figure class="lcd">
+        <img src="shots/cal-03.png" width="320" alt="CAL baseline current: 1.650 V, 1a of 8">
+        <figcaption>Figure 3. CAL · baseline · current. Motor at rest.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · baseline · current</code></td><td>Header left. First of three baseline captures.</td></tr>
+          <tr><td><code>1a of 8</code></td><td>Header right. Stage 1, first sensor, of eight stages.</td></tr>
+          <tr><td><code>1.650 V</code> (green)</td><td>Hero. Mean ACS712 output at PWM 0. Green means the spread is acceptable.</td></tr>
+          <tr><td><code>16 samples at PWM 0 · spread 3 counts</code></td><td>How the mean was taken. Spread is ADC counts, not amps.</td></tr>
+          <tr><td><code>raw adc mean · implies</code> · <code>2 046 / 4095 · 0.00 A</code></td><td>Raw mean of 4095, and the cooked amp reading that offset implies (zero at rest).</td></tr>
+          <tr><td><code>scale (fixed)</code> · <code>185 mV/A · 10k/20k</code></td><td>ACS712-05B sensitivity and the Board A divider. Not an operator edit.</td></tr>
+          <tr><td><code>previous capture</code> · <code>1.648 V · 41 boots ago</code></td><td>Last stored zero, for comparison. No RTC. Age is boot count.</td></tr>
+          <tr><td>Progress bar, first segment amber, <code>baselines</code> · <code>1 of 3</code></td><td>Three baseline screens. This is the first. Green segments are done. Amber is now. Grey is remaining.</td></tr>
+          <tr><td><code>PRESS accept</code></td><td>Keep this zero in RAM and go to shaft jitter.</td></tr>
+          <tr><td><code>HOLD cancel</code></td><td>Discard this capture. Return to the stage list.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>4. Stage 1b — shaft jitter band</h2>
+      <p>Measured at rest. This band sets stall minimum progress and the accumulation deadband.</p>
+      <figure class="lcd">
+        <img src="shots/cal-04.png" width="320" alt="CAL baseline shaft: plus or minus 3 counts peak to peak">
+        <figcaption>Figure 4. CAL · baseline · shaft. Rest jitter over 2.0 s.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · baseline · shaft</code></td><td>Header left. Second baseline.</td></tr>
+          <tr><td><code>1b of 8</code></td><td>Header right.</td></tr>
+          <tr><td><code>± 3 cnt</code> (green)</td><td>Hero. Peak-to-peak AS5600 counts at rest.</td></tr>
+          <tr><td><code>peak-to-peak at rest · 2.0 s window</code></td><td>How long the band was watched.</td></tr>
+          <tr><td><code>samples · magnet</code> · <code>200 at 10 ms · OK</code></td><td>Sample count and magnet status from the AS5600.</td></tr>
+          <tr><td><code>sets stall minimum progress</code> · <code>8 cnt / 500 ms</code></td><td>Stall check needs more motion than rest jitter. Derived from this band, not guessed.</td></tr>
+          <tr><td><code>sets accumulation deadband</code> · <code>3 cnt</code></td><td>Counts inside this band do not walk idle position.</td></tr>
+          <tr><td>Progress, two green + one amber, <code>baselines</code> · <code>2 of 3</code></td><td>Current zero accepted. Shaft is now. Key remains.</td></tr>
+          <tr><td><code>PRESS accept</code> · <code>HOLD cancel</code></td><td>Keep the band, or discard and return to the list.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>5. Stage 1c — bottle key levels</h2>
+      <p>Two captures: bottle out, then bottle in. Enter and exit thresholds are derived from the gap.</p>
+      <figure class="lcd">
+        <img src="shots/cal-05.png" width="320" alt="CAL baseline key: 2980 present, absent 1605">
+        <figcaption>Figure 5. CAL · baseline · key. Second capture, bottle in the recess.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · baseline · key</code></td><td>Header left. Third baseline.</td></tr>
+          <tr><td><code>1c of 8</code></td><td>Header right.</td></tr>
+          <tr><td><code>2 980</code> (green)</td><td>Hero. Present-level ADC this capture.</td></tr>
+          <tr><td><code>capture 2 of 2 — bottle IN the recess</code></td><td>Operator has placed the bottle. Capture 1 was absent.</td></tr>
+          <tr><td><code>absent 1 605</code></td><td>Right of the hero. First capture, bottle out.</td></tr>
+          <tr><td><code>captured 00:41 ago</code></td><td>Age of the absent capture this session.</td></tr>
+          <tr><td><code>gap between levels</code> · <code>1 375 counts</code></td><td>Present minus absent. A small gap means a weak magnet or a bad placement.</td></tr>
+          <tr><td><code>derived enter / exit · dead zone</code> · <code>2 400 / 2 100 · 300</code></td><td>Hysteresis pair and the dead zone between them. Not a single threshold.</td></tr>
+          <tr><td><code>polarity for this build</code> · <code>absent → OPEN</code></td><td>Default handbook polarity. Place the bottle to close. Change it in Settings if this cabinet is wired the other way.</td></tr>
+          <tr><td>Progress, three green + one amber, <code>baselines</code> · <code>3 of 3</code></td><td>Last baseline. Amber segment is this capture.</td></tr>
+          <tr><td><code>PRESS accept</code> · <code>HOLD cancel</code></td><td>Keep both levels, or discard.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>6. Stage 2 — direction verify</h2>
+      <p>Runs before any seek. A wrong invert flag would send the first seek at the far end of travel. Slow duty, short move. The operator confirms the door went the way the screen says.</p>
+      <figure class="lcd">
+        <img src="shots/cal-06.png" width="320" alt="CAL direction: MATCH, commanded OPEN, shaft CCW">
+        <figcaption>Figure 6. CAL · direction. Match. Invert is unchanged.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · direction</code></td><td>Header left.</td></tr>
+          <tr><td><code>2 of 8</code></td><td>Header right.</td></tr>
+          <tr><td><code>MATCH</code> (green)</td><td>Hero. Commanded OPEN and the shaft turned the expected way.</td></tr>
+          <tr><td><code>commanded OPEN · shaft turned CCW</code></td><td>What firmware asked and what the encoder saw.</td></tr>
+          <tr><td><code>+412 cnt</code></td><td>Net counts during the short move.</td></tr>
+          <tr><td><code>duty 96 · 1.4 s</code></td><td>Creep duty and how long the probe ran.</td></tr>
+          <tr><td><code>invert flag</code> · <code>false (unchanged)</code></td><td>Mapping of K1 to shaft sense. False means the compiled default already matches this cabinet.</td></tr>
+          <tr><td><code>current during move</code> · <code>0.62 A peak</code></td><td>Peak amps on this short move. A stall here is a wiring or bind problem, not a direction problem.</td></tr>
+          <tr><td><code>door moved toward</code> · <code>OPEN — confirm on the door</code></td><td>Look at the physical door. The encoder can match a wrong invert if you never look.</td></tr>
+          <tr><td>Amber line: <code>If the door moved to CLOSE, press to set the invert flag and repeat.</code></td><td>Mismatch path. PRESS sets invert and runs the probe again.</td></tr>
+          <tr><td><code>PRESS invert</code></td><td>Flip the invert flag and repeat the short move.</td></tr>
+          <tr><td><code>TURN accept</code></td><td>Keep MATCH (or the new invert after a repeat).</td></tr>
+          <tr><td><code>HOLD cancel</code></td><td>Discard. Return to the stage list.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>7. Stage 3 — open marker and origin</h2>
+      <p>Repeat probes of the same edge from the same direction. The spread is the pass criterion. The accepted actuation edge becomes count zero.</p>
+      <figure class="lcd">
+        <img src="shots/cal-07.png" width="320" alt="CAL open marker: PROBE 3 of 3, three actuate and release pairs">
+        <figcaption>Figure 7. CAL · open marker. Third probe complete. Spread 6 counts.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · open marker</code></td><td>Header left.</td></tr>
+          <tr><td><code>3 of 8</code></td><td>Header right.</td></tr>
+          <tr><td><code>PROBE 3 / 3</code> (amber)</td><td>Hero. Last of three approaches. Amber because the motor just moved.</td></tr>
+          <tr><td><code>creep · back off 400 cnt · re-approach</code></td><td>Probe method. Operational snug does not apply during calibration seeks.</td></tr>
+          <tr><td><code>probe 1 — actuate / release</code> · <code>402 / 361 cnt</code></td><td>First pair. Actuation and release differ because the switch has hysteresis. Approach from the same direction each time.</td></tr>
+          <tr><td><code>probe 2 — actuate / release</code> · <code>398 / 358 cnt</code></td><td>Second pair.</td></tr>
+          <tr><td><code>probe 3 — actuate / release</code> · <code>404 / 363 cnt</code></td><td>Third pair.</td></tr>
+          <tr><td><code>spread · tolerance</code> · <code>6 · 20 cnt</code></td><td>Actuate spread across repeats versus the allowed band. 6 is inside 20.</td></tr>
+          <tr><td><code>origin will be set at</code> · <code>actuate edge → 0</code></td><td>Accepted open actuation becomes count zero for everything downstream.</td></tr>
+          <tr><td><code>PRESS accept origin</code></td><td>Keep the origin in RAM.</td></tr>
+          <tr><td><code>HOLD cancel</code></td><td>Discard a half-probed edge. Partial marker data is not usable.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>8. Stage 4 — close marker and span</h2>
+      <p>Same probe method at the other end. The accepted edge minus origin is the measured span. Obstruction bins divide this span.</p>
+      <figure class="lcd">
+        <img src="shots/cal-08.png" width="320" alt="CAL close marker: 20180 counts measured span">
+        <figcaption>Figure 8. CAL · close marker. Measured span accepted if you press.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · close marker</code></td><td>Header left.</td></tr>
+          <tr><td><code>4 of 8</code></td><td>Header right.</td></tr>
+          <tr><td><code>20 180 cnt</code> (green)</td><td>Hero. Measured span from origin to close actuation.</td></tr>
+          <tr><td><code>measured span · origin to close actuate</code></td><td>What the hero number is. Not seated. Seated is stage 5, past this edge.</td></tr>
+          <tr><td><code>probe 1 / 2 / 3 actuate</code> · <code>20 174 / 20 183 / 20 180</code></td><td>Three actuation edges. Release edges were captured. This row shows actuate only.</td></tr>
+          <tr><td><code>spread · tolerance</code> · <code>9 · 20 cnt</code></td><td>Spread inside tolerance.</td></tr>
+          <tr><td><code>implies shaft revolutions</code> · <code>4.93 rev</code></td><td>Span divided by 4096 counts/rev. Sanity check against the mechanical stroke.</td></tr>
+          <tr><td><code>bin width at 81 bins</code> · <code>249 cnt</code></td><td>Span divided into 81 obstruction bins.</td></tr>
+          <tr><td>Progress, three green, <code>close probes</code> · <code>3 of 3</code></td><td>All three close probes done.</td></tr>
+          <tr><td><code>PRESS accept span</code> · <code>HOLD cancel</code></td><td>Keep the span, or discard the half-probed edge.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>9. Stage 5 — closed seated</h2>
+      <p>Past the close marker on creep. How the stop was found is stored: a current rise means the seal is loading. A stall without one means the door hit something solid.</p>
+      <figure class="lcd">
+        <img src="shots/cal-09.png" width="320" alt="CAL closed seated: SEATED by current rise at 1.90 A">
+        <figcaption>Figure 9. CAL · closed seated. Found by current rise, 168 counts past the marker.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · closed seated</code></td><td>Header left.</td></tr>
+          <tr><td><code>5 of 8</code></td><td>Header right.</td></tr>
+          <tr><td><code>SEATED</code> (green)</td><td>Hero. Physical closed stop found.</td></tr>
+          <tr><td><code>found by CURRENT RISE at 1.90 A</code></td><td>Method. Prefer current-draw rise (snug). Else record stall.</td></tr>
+          <tr><td><code>+168 cnt</code></td><td>Counts past the close-marker actuation.</td></tr>
+          <tr><td><code>past close marker</code></td><td>Seated is beyond the near-end flag, not at it.</td></tr>
+          <tr><td><code>method stored</code> · <code>current rise (not stall)</code></td><td>Written with the capture so Diagnostics can show why seated was accepted.</td></tr>
+          <tr><td><code>creep duty · timeout</code> · <code>96 · 1.4 s of 2.0 s</code></td><td>Duty used and how much of the seek timeout was consumed.</td></tr>
+          <tr><td><code>overtravel cap</code> · <code>220 cnt — not reached</code></td><td>Hard cap past the marker. A hit here is a fault, not a seated capture.</td></tr>
+          <tr><td><code>seated position</code> · <code>20 348 cnt</code></td><td>Origin-relative counts of the seated stop.</td></tr>
+          <tr><td>Green line: <code>Seated is a confirmation, not a position reference. Re-homing uses the marker edges.</code></td><td>Do not treat seated as a home. Power-loss recovery seeks the open marker.</td></tr>
+          <tr><td><code>PRESS accept</code> · <code>HOLD cancel</code></td><td>Keep seated, or discard.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>10. Stage 6 — stroke entry</h2>
+      <p>The only operator-typed number, and the only place inches enter the system. It gates learn runs because bin widths are reported in centimetres. It never widens a safety limit.</p>
+      <figure class="lcd">
+        <img src="shots/cal-10.png" width="320" alt="CAL stroke entry: 32.0 inches, 631 counts per inch">
+        <figcaption>Figure 10. CAL · stroke. 32.0 in, derived 631 cnt/in.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · stroke</code></td><td>Header left.</td></tr>
+          <tr><td><code>6 of 8</code></td><td>Header right.</td></tr>
+          <tr><td><code>32.0</code> with caret</td><td>Pending inches, open marker to closed seated. TURN adjusts.</td></tr>
+          <tr><td><code>inches, open marker → closed seated</code></td><td>What the number measures. Not overall cabinet width.</td></tr>
+          <tr><td><code>derived 631 cnt/in from 20 348 cnt</code></td><td>Seated counts divided by the typed inches. Display only.</td></tr>
+          <tr><td><code>geometric estimate</code> · <code>640 cnt/in (unverified)</code></td><td>Independent estimate from the mechanical drawing. Unverified means it is not a measured fact.</td></tr>
+          <tr><td><code>difference</code> · <code>1.4% — plausible</code></td><td>Typed stroke versus the geometric estimate. A large disagreement warns. It does not block.</td></tr>
+          <tr><td><code>used for</code> · <code>display and warnings only</code></td><td>Inches and counts-per-inch never feed a seek cap.</td></tr>
+          <tr><td><code>never used for</code> · <code>seek caps, snug window, bins</code></td><td>Those limits stay in counts from stages 3–5.</td></tr>
+          <tr><td>Green line: <code>Warns on a large disagreement. It does not block, and it can be re-entered later.</code></td><td>You can fix a typo without repeating marker probes.</td></tr>
+          <tr><td><code>TURN adjust</code></td><td>Change the pending inches.</td></tr>
+          <tr><td><code>PRESS accept</code></td><td>Keep the stroke in RAM. Unblocks stage 7.</td></tr>
+          <tr><td><code>HOLD cancel</code></td><td>Leave the previous stroke (or none).</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>11. Stage 7 — obstruction table, empty racks</h2>
+      <p>Three clear runs each way at the production profile. Obstruction reverse is off. The 2.50&nbsp;A ceiling stays on. A trip discards that run instead of teaching it.</p>
+      <figure class="lcd">
+        <img src="shots/cal-11.png" width="320" alt="CAL learn empty: CLOSE RUN 2, bin 44 of 81">
+        <figcaption>Figure 11. CAL · learn · empty. Second close run in cruise.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · learn · empty</code></td><td>Header left. Empty-rack table.</td></tr>
+          <tr><td><code>7 of 8</code></td><td>Header right.</td></tr>
+          <tr><td><code>CLOSE RUN 2</code> (amber)</td><td>Hero. Second of three close strokes. Motor live.</td></tr>
+          <tr><td><code>cruise · bin 44 of 81 · 1.38 A</code></td><td>Profile phase, current bin, live amps.</td></tr>
+          <tr><td><code>74 / 81</code></td><td>Bins that already have a valid sample this run set.</td></tr>
+          <tr><td><code>bins valid</code></td><td>Learn runs stop at the marker, so some end bins stay unvisited.</td></tr>
+          <tr><td>Open-run pips, two green + one amber, <code>open runs</code> · <code>2 of 3</code></td><td>Open-direction progress. This shot is mid close-run, so the open bar may already be ahead.</td></tr>
+          <tr><td>Close-run pips, one green + one amber + one grey, <code>close runs</code> · <code>1 of 3</code></td><td>Close-direction progress. Run 2 is live.</td></tr>
+          <tr><td><code>profile identity</code> · <code>512 · 3000/6000/3000 ms</code></td><td>Cruise duty and accel / cruise / decel times. Stored with the table so a later profile change can invalidate it.</td></tr>
+          <tr><td><code>reverse off · ceiling armed</code> · <code>learn mode · 2.50 A</code></td><td>Obstruction reverse is off so a bind is not taught as load. The hard ceiling still trips and discards the run.</td></tr>
+          <tr><td><code>HOLD cancel run set</code></td><td>PWM off, current decay, K1 unchanged, discard the incomplete table. Return to the stage list. There is no PRESS on this live run.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>12. Stage 8 — obstruction table, loaded racks</h2>
+      <p>Optional second table with racks at maximum expected load. Which table arms in service is still an open spec decision, so the screen states it.</p>
+      <figure class="lcd">
+        <img src="shots/cal-12.png" width="320" alt="CAL learn loaded: LOAD THE RACKS banner">
+        <figcaption>Figure 12. CAL · learn · loaded. Gate before the loaded run set.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · learn · loaded</code></td><td>Header left.</td></tr>
+          <tr><td><code>8 of 8</code></td><td>Header right.</td></tr>
+          <tr><td><code>LOAD THE RACKS</code></td><td>Amber banner title. Do not start this set empty.</td></tr>
+          <tr><td><code>Fill to maximum expected capacity before starting this set</code></td><td>Banner detail. Max expected load, not an overload test.</td></tr>
+          <tr><td><code>empty table</code> · <code>stored · armed</code></td><td>Stage 7 already produced a usable empty-rack envelope.</td></tr>
+          <tr><td><code>loaded table</code> · <code>not yet learned</code></td><td>This stage has not run.</td></tr>
+          <tr><td><code>arming rule</code> · <code>undecided — see spec</code></td><td>Which table Main uses in service is not chosen on this panel. See Production_Software.md.</td></tr>
+          <tr><td><code>runs required</code> · <code>3 open · 3 close</code></td><td>Same run count as the empty table.</td></tr>
+          <tr><td><code>PRESS start</code></td><td>After racks are loaded, start the run set (path-clear still applies).</td></tr>
+          <tr><td><code>HOLD skip</code></td><td>Leave the loaded table unlearned. Review will show it as optional skipped.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>13. Review and save</h2>
+      <p>Single NVS write. Everything above lived in RAM until this screen. The blob carries the profile identity that will later invalidate it. Motor must be idle.</p>
+      <figure class="lcd">
+        <img src="shots/cal-13.png" width="320" alt="CAL review: READY TO SAVE, eight stages complete">
+        <figcaption>Figure 13. CAL · review. One optional stage skipped. Motor idle.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAL · review</code></td><td>Header left.</td></tr>
+          <tr><td><code>save</code></td><td>Header right. This is the write point.</td></tr>
+          <tr><td><code>READY TO SAVE</code> (green)</td><td>Hero. Completeness check passed.</td></tr>
+          <tr><td><code>8 stages complete · 1 optional skipped</code></td><td>Loaded-rack table was skipped. Empty table is enough to leave Needs Setup.</td></tr>
+          <tr><td><code>origin · span · seated</code> · <code>0 · 20 180 · 20 348 cnt</code></td><td>The three count references from stages 3–5.</td></tr>
+          <tr><td><code>marker spread (open / close)</code> · <code>6 / 9 cnt</code></td><td>Probe quality from stages 3 and 4.</td></tr>
+          <tr><td><code>stroke → derived</code> · <code>32.0 in → 631 cnt/in</code></td><td>Typed stroke and the display-only scale.</td></tr>
+          <tr><td><code>tables · blob</code> · <code>empty armed · v3 3.6 kB</code></td><td>Which envelope is armed, format version, and blob size.</td></tr>
+          <tr><td>Green line: <code>Motor is idle and current has decayed. NVS is never written while the motor runs.</code></td><td>If the motor is still spinning, this screen will not write.</td></tr>
+          <tr><td><code>PRESS save</code></td><td>One NVS write. Then return toward Main.</td></tr>
+          <tr><td><code>HOLD discard</code></td><td>Drop the RAM results. Stored NVS is unchanged.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <h2>14. Knob on a live stage</h2>
+    <table>
+      <thead>
+        <tr><th>Gesture</th><th>Typical meaning</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>TURN</td><td>Jog or adjust where the stage allows it (stroke entry, direction accept, checklist tick).</td></tr>
+        <tr><td>PRESS</td><td>Capture, accept, or start the next sample.</td></tr>
+        <tr><td>HOLD</td><td>Cancel the live procedure. Return to the stage list.</td></tr>
+      </tbody>
+    </table>
+    <p>When an earlier value changes, mark dependent later steps stale. There is no RTC. Metadata uses run count and relative millis only. Never reverse K1 without PWM blanking.</p>
+    </section>
+    <section class="chapter" id="diagnostics">
+<p class="lede">Private Reserve · DIN controller · first draft</p>
+    <h1>Diagnostics</h1>
+    <p>One screen per input or output. Focused content is large. Every detail page names the GPIO and Board A terminal and shows the live level. Supporting values stay small. Header prefix is <code>DIAG ·</code>.</p>
+
+    
+
+    <div class="banner">
+      <strong>Draft.</strong> Pixel layout:
+      UI/diagnostics.html.
+      Terminal numbers match <a href="board-a/index.html">Board A</a>.
+    </div>
+
+    <div class="warn">
+      <strong>Jog and the obstruction test own the motor.</strong> They carry an
+      amber banner while live. Hall and rocker cannot preempt them. HOLD
+      cancels: PWM off, current decay, K1 unchanged. A web jog needs a repeating
+      heartbeat. A closed tab must not leave the motor latched.
+    </div>
+
+    <section class="shot">
+      <h2>1. Menu</h2>
+      <p>Twelve items. Eight fit. TURN windows the list. Pips flag anything already unhealthy. PRESS opens. HOLD exits to Main. Items 9–12 are off this shot. Each has its own figure below.</p>
+      <figure class="lcd">
+        <img src="shots/diag-01.png" width="320" alt="DIAG menu, items 1 to 8 of 12, bottle key selected">
+        <figcaption>Figure 1. DIAG · menu. First window, bottle key selected.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>DIAG · menu</code></td><td>Header left.</td></tr>
+          <tr><td><code>1–8 of 12 ▾</code></td><td>Header right. This window is the first eight rows. The triangle means more items below.</td></tr>
+          <tr><td>Green pip + highlight + <code>Bottle door key — 49E</code> + <code>PRESENT</code></td><td>Selected. Hall sensor. Value is live cooked state.</td></tr>
+          <tr><td>Green pip + <code>Motor rotary encoder — AS5600</code> + <code>OK</code></td><td>Shaft magnet detected, I²C good.</td></tr>
+          <tr><td>Green pip + <code>Limit switches</code> + <code>CLEAR</code></td><td>Neither marker is made.</td></tr>
+          <tr><td>Green pip + <code>Override rockers</code> + <code>CLOSE HELD</code></td><td>Close throw is made right now. Centre does nothing. PRESS on that page pulses a throw through the same path as the hardware.</td></tr>
+          <tr><td>Green pip + <code>Motor current load — ACS712</code> + <code>0.00 A</code></td><td>Live amps at rest.</td></tr>
+          <tr><td>Grey pip + <code>Motor PWM and direction</code> + <code>IDLE</code></td><td>Duty zero. Grey pip is idle, not a fault.</td></tr>
+          <tr><td>Amber pip + <code>Jog to position</code> + <code>MOVES MOTOR</code></td><td>Amber because opening this page can command the motor.</td></tr>
+          <tr><td>Amber pip + <code>Obstruction test</code> + <code>MOVES MOTOR</code></td><td>Same warning. Plastic-bottle test. Does not write the learned table.</td></tr>
+          <tr><td><code>TURN scroll</code> · <code>PRESS open</code> · <code>HOLD exit</code></td><td>Window the list, enter the highlighted item, or return to Main.</td></tr>
+        </tbody>
+      </table>
+      <p>TURN past item 8 to reach:</p>
+      <table>
+        <thead>
+          <tr><th>#</th><th>Menu item</th><th>Value column</th><th>Opens</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>9</td><td>Obstruction table</td><td>graphs</td><td>Close-direction graph first. TURN swaps to open.</td></tr>
+          <tr><td>10</td><td>EC11 knob and button</td><td>live detents</td><td>Quadrature, detent scale, display timeout remaining.</td></tr>
+          <tr><td>11</td><td>Network and OTA</td><td>STA or AP</td><td>Address, mDNS, antenna note.</td></tr>
+          <tr><td>12</td><td>Stored calibration</td><td>armed / stale</td><td>Which steps are valid and why a stale one failed.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <p>Every detail page keeps a pin strip: GPIO, terminal, function, live level or raw value. HOLD back returns to this menu. Bottle key, limit markers, and override rockers can inject a cooked signal from PRESS. The pin strip stays the real GPIO.</p>
+
+    <section class="shot">
+      <h2>2. Bottle door key — 49E</h2>
+      <p>Present and absent are two calibrated levels with separate enter and exit thresholds. Polarity is stated in words because it is configurable. PRESS can pulse the cooked state without moving the bottle.</p>
+      <figure class="lcd">
+        <img src="shots/diag-02.png" width="320" alt="DIAG bottle key: PRESENT, ADC sparkline, GPIO01 T23">
+        <figcaption>Figure 2. DIAG · bottle key. Present, last edge 3 min 11 s ago.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>DIAG · bottle key</code></td><td>Header left.</td></tr>
+          <tr><td><code>1 / 13</code></td><td>Header right. First of thirteen detail screens. The menu is not numbered here.</td></tr>
+          <tr><td><code>PRESENT</code> (green)</td><td>Hero. Cooked state after hysteresis. Amber plus <code>SIM</code> when PRESS has forced the state.</td></tr>
+          <tr><td><code>pulse · adc 2971 · last edge …</code></td><td>Selected action (pulse or recapture), live ADC, and age of the last cooked edge. Sparkline is the real ADC, newest at the right.</td></tr>
+          <tr><td>Sparkline + <code>adc · 8 s</code></td><td>Raw ADC, newest at the right (dot). About 8 seconds once the strip is full. The trace scrolls left. The step up is the bottle going in.</td></tr>
+          <tr><td><code>absent level (calibrated)</code> · <code>1 605</code></td><td>Stage 1c absent capture.</td></tr>
+          <tr><td><code>present level (calibrated)</code> · <code>2 980</code></td><td>Stage 1c present capture.</td></tr>
+          <tr><td><code>enter / exit threshold</code> · <code>2 400 / 2 100</code></td><td>Hysteresis pair derived from those levels.</td></tr>
+          <tr><td><code>trigger polarity</code> · <code>absent → OPEN</code></td><td>Automatic Main command when the key leaves the recess.</td></tr>
+          <tr><td>Pin strip: <code>GPIO01</code> · <code>T23</code> · <code>ADC1_CH0</code> · <code>49E OUT</code></td><td>MCU pin, Board A terminal, ADC channel, sensor output name. Always the real pin, even during a pulse.</td></tr>
+          <tr><td><code>2 971 / 4095 · 2.39 V</code></td><td>Live raw and volts at the pin.</td></tr>
+          <tr><td><code>TURN action</code></td><td>Pulse the key, or recapture levels. Pulse is the default. The highlight stops at each end. Extra clicks do not wrap.</td></tr>
+          <tr><td><code>PRESS pulse</code></td><td>Toggle cooked present/absent. Fires the same open/close edge as the hall sensor. Does not fake the ADC.</td></tr>
+          <tr><td><code>PRESS recapture</code></td><td>After TURN: capture absent, then PRESS again with the bottle in. Same two-step as Calibration 1c.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to the diagnostic menu. Clears a simulated key state.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>3. Motor rotary encoder — AS5600</h2>
+      <p>The only source of door position. It also carries the jitter band and the drift from the last marker re-sync.</p>
+      <figure class="lcd">
+        <img src="shots/diag-03.png" width="320" alt="DIAG shaft encoder: 12690 counts, 148.3 degrees, 1.7 rev/s CCW">
+        <figcaption>Figure 3. DIAG · shaft encoder. 62% of span, magnet OK.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>DIAG · shaft encoder</code></td><td>Header left.</td></tr>
+          <tr><td><code>2 / 13</code></td><td>Header right.</td></tr>
+          <tr><td><code>12 690 cnt</code></td><td>Hero. Accumulated counts from the open origin.</td></tr>
+          <tr><td><code>62% of span · 3.10 rev from origin</code></td><td>Share of measured span, and shaft revolutions since origin.</td></tr>
+          <tr><td>Angle dial</td><td>Single-turn AS5600 angle inside the current revolution. Not the multi-turn door position.</td></tr>
+          <tr><td><code>148.3°</code></td><td>That single-turn angle in degrees.</td></tr>
+          <tr><td><code>1.7 rev/s CCW</code></td><td>Live shaft speed and direction.</td></tr>
+          <tr><td><code>raw angle · magnet</code> · <code>1 687 · OK</code></td><td>12-bit raw angle (0–4095) and magnet quality.</td></tr>
+          <tr><td><code>AGC · status</code> · <code>128 · detected</code></td><td>Automatic gain and magnet-detected flag from the chip.</td></tr>
+          <tr><td><code>jitter band at rest</code> · <code>± 3 cnt</code></td><td>Stage 1b capture. Growing band is an early warning for a weak magnet.</td></tr>
+          <tr><td><code>drift last re-sync (open / close)</code> · <code>−12 / +7 cnt</code></td><td>Correction applied the last time each marker was seen. Growing drift means lost turns or a slipping magnet.</td></tr>
+          <tr><td>Pin strip: <code>GPIO43/44</code> · <code>T10/T9</code> · <code>I²C 0x36</code> · <code>12-bit</code></td><td>SCL/SDA, terminals, bus address, resolution.</td></tr>
+          <tr><td><code>4096 cnt/rev · 100 kHz</code></td><td>Counts per mechanical revolution and I²C clock.</td></tr>
+          <tr><td><code>PRESS zero drift log</code></td><td>Clear the displayed per-marker drift totals. Does not change origin.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to the menu.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>4. Limit switches</h2>
+      <p>HIGH is the marker state. A cut wire is indistinguishable from a made switch, so the screen says so. Both markers active is a fault, shown here rather than as a silent refusal to start. PRESS can force a marker without blocking the optical path.</p>
+      <figure class="lcd">
+        <img src="shots/diag-04.png" width="320" alt="DIAG limit markers: both CLEAR LOW, position 12690 cnt">
+        <figcaption>Figure 4. DIAG · limit markers. Both clear, mid travel.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>DIAG · limit markers</code></td><td>Header left.</td></tr>
+          <tr><td><code>3 / 13</code></td><td>Header right.</td></tr>
+          <tr><td><code>Open marker · GPIO17 · T7</code></td><td>Left tile title. Pin and Board A terminal.</td></tr>
+          <tr><td>Grey pip + <code>CLEAR LOW</code></td><td>Open switch not made. Electrical level is LOW.</td></tr>
+          <tr><td><code>band 0 – 410 cnt · debounce 3</code></td><td>Count window where an open-marker actuation is accepted, and debounce samples.</td></tr>
+          <tr><td><code>Close marker · GPIO03 · T21</code></td><td>Right tile title.</td></tr>
+          <tr><td>Grey pip + <code>CLEAR LOW</code></td><td>Close switch not made.</td></tr>
+          <tr><td><code>band 19 770 – 20 180 · deb 3</code></td><td>Close-marker acceptance window and debounce.</td></tr>
+          <tr><td><code>polarity</code> · <code>HIGH = marker or cut wire</code></td><td>NC to GND with pull-up. HIGH means the loop is open: at the end, or the wire is cut.</td></tr>
+          <tr><td><code>both active check</code> · <code>pass</code></td><td>Both markers made at once is a fault. Pass means that is not happening.</td></tr>
+          <tr><td><code>position now</code> · <code>12 690 cnt · mid travel</code></td><td>Live counts and a cooked region name.</td></tr>
+          <tr><td><code>overtravel cap past marker</code> · <code>220 cnt</code></td><td>Hard cap after a marker. A seek that passes this is a fault.</td></tr>
+          <tr><td>Pin strip: <code>NC → GND</code> · <code>INPUT_PULLUP</code> · <code>kLimitActiveLow = false</code></td><td>Wiring and the firmware polarity constant.</td></tr>
+          <tr><td><code>17: LOW · 03: LOW</code></td><td>Live GPIO17 and GPIO3 levels. Stays the real pin during a force.</td></tr>
+          <tr><td><code>TURN select</code> · <code>PRESS force</code></td><td>Highlight open or close. The highlight stops at each end. Extra clicks do not wrap. PRESS latches that marker as if the switch were made. Amber pip and <code>SIM</code> on the tile. PRESS again clears that force. A forced destination marker will stop a move already in progress.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to the menu. Clears a forced marker.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>5. Override rockers</h2>
+      <p>Two paralleled stations act as one logical switch. Each throw is shown separately. A stuck throw is invisible if you only display the combined result. Both throws at once is a defined tie-break, not a fault. PRESS pulses the selected throw through the same path as the hardware.</p>
+      <figure class="lcd">
+        <img src="shots/diag-05.png" width="320" alt="DIAG override rockers: open OFF, close MADE">
+        <figcaption>Figure 5. DIAG · override rockers. Close throw held.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>DIAG · override rockers</code></td><td>Header left.</td></tr>
+          <tr><td><code>4 / 13</code></td><td>Header right.</td></tr>
+          <tr><td><code>Open throw · GPIO10 · T20</code></td><td>Left tile. Open side of both paralleled stations.</td></tr>
+          <tr><td>Grey pip + <code>OFF HIGH</code></td><td>Open throw not made. Pulled up.</td></tr>
+          <tr><td><code>edges 14 · last 00:02:41</code></td><td>Accepted edges since boot, and age of the last open edge.</td></tr>
+          <tr><td><code>Close throw · GPIO18 · T8</code></td><td>Right tile.</td></tr>
+          <tr><td>Green pip + <code>MADE LOW</code></td><td>Close throw is held to ground right now.</td></tr>
+          <tr><td><code>edges 11 · last 00:00:03</code></td><td>Close-edge count and the edge three seconds ago.</td></tr>
+          <tr><td><code>command model</code> · <code>edge trigger · centre does nothing</code></td><td>Rocker centre is idle. Hold-to-run is not the model.</td></tr>
+          <tr><td><code>both throws made</code> · <code>tie-break: OPEN wins</code></td><td>If both throws hit in the same cycle, firmware commands open.</td></tr>
+          <tr><td><code>debounce</code> · <code>25 ms</code></td><td>Switch debounce. Same family as Settings → Triggers.</td></tr>
+          <tr><td><code>last accepted command</code> · <code>CLOSE · ignored, already closed</code></td><td>Last edge that passed debounce, and why it did not start a move.</td></tr>
+          <tr><td>Pin strip: <code>active-low → GND</code> · <code>INPUT_PULLUP</code> · <code>2 stations</code></td><td>Wiring. Two stations in parallel hide a stuck mate unless this page splits the throws.</td></tr>
+          <tr><td><code>10: HIGH · 18: LOW</code></td><td>Live GPIO10 and GPIO18. Stays the real pin during a pulse.</td></tr>
+          <tr><td><code>TURN select</code> · <code>PRESS pulse</code></td><td>Highlight open or close. The highlight stops at each end. Extra clicks do not wrap. PRESS injects a short made-edge on that throw, the same command as the physical rocker. It can start a move. Amber pip and <code>SIM</code> while the pulse is live.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to the menu. Drops a pulse that has not expired.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>6. Motor current load — ACS712-05B</h2>
+      <p>Live amps against the learned envelope for the bin the door is in. Trip is a time-plus-threshold decision, so inrush skip and hold time are on the same page.</p>
+      <figure class="lcd">
+        <img src="shots/diag-06.png" width="320" alt="DIAG current load: 1.42 A, cruise bin 38 of 81">
+        <figcaption>Figure 6. DIAG · current load. Live 1.42 A in cruise.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>DIAG · current load</code></td><td>Header left.</td></tr>
+          <tr><td><code>5 / 13</code></td><td>Header right.</td></tr>
+          <tr><td><code>1.42 A</code></td><td>Hero. Cooked motor current.</td></tr>
+          <tr><td><code>cruise · bin 38 of 81</code></td><td>Motion phase and which obstruction bin the door is in.</td></tr>
+          <tr><td>Sparkline + <code>|I| · 8 s</code></td><td>Absolute current, newest at the right (dot). About 8 seconds once the strip is full. The trace scrolls left. The step up is the start of cruise.</td></tr>
+          <tr><td><code>bin envelope mean / peak</code> · <code>1.23 / 1.38 A</code></td><td>Learned mean and peak for bin 38.</td></tr>
+          <tr><td><code>bin trip · hard ceiling</code> · <code>1.66 A · 2.50 A</code></td><td>This bin’s trip, then the compile-time ceiling.</td></tr>
+          <tr><td><code>trip hold · inrush skip</code> · <code>150 ms · 400 ms</code></td><td>How long current must stay over trip, and how long after PWM-on the envelope is ignored.</td></tr>
+          <tr><td><code>zero · scale</code> · <code>1.650 V · 185 mV/A</code></td><td>Stage 1a zero and the fixed ACS712-05B scale.</td></tr>
+          <tr><td>Pin strip: <code>GPIO02</code> · <code>T22</code> · <code>ADC1_CH1</code> · <code>10k/20k divider</code></td><td>Pin, terminal, ADC channel, Board A divider.</td></tr>
+          <tr><td><code>2 044 / 4095 · 1.65 V</code></td><td>Live raw and volts. Near the rest zero, plus load.</td></tr>
+          <tr><td><code>PRESS recapture zero</code></td><td>Jump to Calibration stage 1a. Motor must be at rest.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to the menu.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>7. Motor PWM and direction</h2>
+      <p>Duty and K1 are separate blocks. Duty must reach zero and current must decay before the relay moves, so the blank timers are on this page.</p>
+      <figure class="lcd">
+        <img src="shots/diag-07.png" width="320" alt="DIAG pwm direction: 512 of 1023, K1 OPEN">
+        <figcaption>Figure 7. DIAG · pwm · direction. 50% duty, K1 open.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>DIAG · pwm · direction</code></td><td>Header left.</td></tr>
+          <tr><td><code>6 / 13</code></td><td>Header right.</td></tr>
+          <tr><td><code>512 / 1023</code></td><td>Hero. Live duty in 10-bit counts.</td></tr>
+          <tr><td><code>50% duty · 15 kHz · 10-bit</code></td><td>Percent, carrier, resolution. Carrier is compile-time. It is not a setting.</td></tr>
+          <tr><td><code>K1 OPEN</code> (amber)</td><td>Direction relay commanded open. Amber because the coil is energised.</td></tr>
+          <tr><td><code>coil energised · settled 4.2 s</code></td><td>K1 has been in this state long enough to be settled.</td></tr>
+          <tr><td><code>phase</code> · <code>cruise · 2.8 s of 6.0 s</code></td><td>Profile phase and how much of cruise time has elapsed.</td></tr>
+          <tr><td><code>blank before / after direction</code> · <code>100 / 100 ms</code></td><td>PWM-off windows around a K1 change. Never reverse K1 without this blanking.</td></tr>
+          <tr><td><code>relay settle</code> · <code>25 ms</code></td><td>Wait after K1 before PWM may rise.</td></tr>
+          <tr><td><code>shaft (supporting)</code> · <code>1.7 rev/s CCW · 12 690 cnt</code></td><td>Encoder as a supporting signal on this page. The focused page is PWM.</td></tr>
+          <tr><td>Pin strip: <code>GPIO16 → PWM → 6N137</code> · <code>GPIO21 → DIR_OR → U4</code></td><td>PWM path onto Board B, and direction OR into U4.</td></tr>
+          <tr><td><code>16: PWM · 21: HIGH</code></td><td>GPIO16 is toggling. GPIO21 is HIGH for open on this build.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to the menu. This page does not command the motor.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>8. Jog to position</h2>
+      <p>Owns the motor. Amber banner and a heartbeat. A web client that goes away must not leave the motor latched, so the timeout is shown.</p>
+      <figure class="lcd">
+        <img src="shots/diag-08.png" width="320" alt="DIAG jog: MOTOR LIVE, 62 percent, duty 96 CLOSE">
+        <figcaption>Figure 8. DIAG · jog. Motor live, envelope and markers armed.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>DIAG · jog</code></td><td>Header left.</td></tr>
+          <tr><td><code>7 / 13</code></td><td>Header right.</td></tr>
+          <tr><td><code>MOTOR LIVE — JOG</code></td><td>Amber banner title. This page owns the motor. Hall and rocker cannot preempt it.</td></tr>
+          <tr><td><code>Envelope and markers armed · release knob to stop</code></td><td>Banner detail. Learned trip and markers still apply. Releasing TURN stops PWM.</td></tr>
+          <tr><td><code>OPEN</code> / <code>CLOSED</code></td><td>Travel ends.</td></tr>
+          <tr><td>Blue fill to 62%, yellow thumb, two marker ticks</td><td>Same travel widget as Main. Door is at 62% of span.</td></tr>
+          <tr><td><code>62%</code> · <code>12 690 cnt</code></td><td>Share of span and counts from origin.</td></tr>
+          <tr><td><code>jog duty · direction</code> · <code>96 · CLOSE</code></td><td>Creep-level duty and K1 for this jog.</td></tr>
+          <tr><td><code>step per detent · heartbeat</code> · <code>256 cnt · 1.2 s</code></td><td>Counts added per TURN click, and how soon a missing web heartbeat drops PWM.</td></tr>
+          <tr><td>Pin strip: <code>GPIO16</code> · <code>GPIO21</code> · <code>T5 / T6</code></td><td>PWM and direction pins, Board A motor terminals.</td></tr>
+          <tr><td><code>duty 96 · K1 CLOSE</code></td><td>Live command this instant.</td></tr>
+          <tr><td><code>TURN jog</code></td><td>Move while the detent is held or stepped. Direction follows turn sense.</td></tr>
+          <tr><td><code>PRESS stop</code></td><td>Drop PWM now. Stay on this page.</td></tr>
+          <tr><td><code>HOLD exit</code></td><td>Stop if moving, then return to the menu.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>9. Obstruction test</h2>
+      <p>Plastic bottle between the doors. Same envelope rules as Main. Does not write the learned table. Learn runs assume a clear path. This test is not a substitute for them.</p>
+      <figure class="lcd">
+        <img src="shots/diag-09.png" width="320" alt="DIAG obstruction test: TRIPPED REVERSED at bin 41">
+        <figcaption>Figure 9. DIAG · obstruction test. Close trip, reversed, opening.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>DIAG · obstruction test</code></td><td>Header left.</td></tr>
+          <tr><td><code>8 / 13</code></td><td>Header right.</td></tr>
+          <tr><td><code>TRIPPED — REVERSED</code></td><td>Amber banner title. Close obstruction fired. Reverse is in progress or just finished.</td></tr>
+          <tr><td><code>Close obstruction at bin 41 · 2.11 A vs trip 1.65 A</code></td><td>Where and how far over trip.</td></tr>
+          <tr><td><code>test load</code> · <code>plastic bottle between doors</code></td><td>Specified test article. Not a body part, not a tool.</td></tr>
+          <tr><td><code>expected close / open</code> · <code>reverse once / fault first trip</code></td><td>Close reverses once. Open faults on the first trip. Same as Main.</td></tr>
+          <tr><td><code>result this run</code> · <code>reversed, then opened to marker</code></td><td>What this test actually did.</td></tr>
+          <tr><td><code>table writes · hard ceiling</code> · <code>disabled · 2.50 A armed</code></td><td>A deliberate obstruction cannot be taught as load. The ceiling stays on.</td></tr>
+          <tr><td>Pin strip: <code>GPIO02 current</code> · <code>GPIO16 pwm</code> · <code>GPIO21 dir</code></td><td>Signals this test uses.</td></tr>
+          <tr><td><code>1.02 A · opening</code></td><td>Live current and direction after reverse.</td></tr>
+          <tr><td><code>PRESS run again</code></td><td>Start another close into the bottle.</td></tr>
+          <tr><td><code>HOLD exit</code></td><td>Cancel if live, then return to the menu.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>10. Obstruction table — close direction</h2>
+      <p>Learned envelope as a curve. Breakaway at the open end and seal loading at the close end are the shape you want. A bump in the middle is a bind. The grey block past the close marker is travel the learn runs never enter, because snug is a separate window.</p>
+      <figure class="lcd">
+        <img src="shots/diag-10.png" width="320" alt="DIAG table close graph: mean, sigma, trip, peak, position">
+        <figcaption>Figure 10. DIAG · table · close. Empty-rack table, live at bin 44.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>DIAG · table · close</code></td><td>Header left. Close-direction envelope.</td></tr>
+          <tr><td><code>9 / 13</code></td><td>Header right. Menu item 9 is this pair of graphs.</td></tr>
+          <tr><td><code>1A</code> / <code>2A</code> on the Y axis</td><td>Current scale. The window is 0.7–2.6&nbsp;A so the curve is readable on 170 pixels.</td></tr>
+          <tr><td>Dashed red line + <code>2.50 max</code></td><td>Compile-time hard ceiling. Not a learned value.</td></tr>
+          <tr><td>Blue <code>mean</code> curve</td><td>Merged mean current per bin from the learn runs.</td></tr>
+          <tr><td>Grey band <code>±σ</code></td><td>One-sigma band around the mean.</td></tr>
+          <tr><td>Dashed red <code>trip</code> curve</td><td>Per-bin trip used on Main.</td></tr>
+          <tr><td>Thin grey <code>peak</code> curve</td><td>Highest sample merged into that bin.</td></tr>
+          <tr><td>Vertical amber <code>position</code> line</td><td>Live door position on this graph.</td></tr>
+          <tr><td>Dark block near <code>CLOSED</code></td><td>Bins past the close marker. Learn runs never visit them. Snug is a separate window.</td></tr>
+          <tr><td>Legend: <code>OPEN</code> · <code>mean</code> · <code>±σ</code> · <code>trip</code> · <code>peak</code> · <code>position</code> · <code>y 0.7–2.6 A</code> · <code>CLOSED</code></td><td>X ends and the plotted series. Y window is stated so the clipped axis is not mistaken for 0–2.50&nbsp;A.</td></tr>
+          <tr><td><code>valid bins · runs merged</code> · <code>77 of 81 · 3</code></td><td>Bins with data, and how many strokes were merged.</td></tr>
+          <tr><td><code>worst trip · margin to 2.50 A</code> · <code>2.24 A at bin 0 · 0.26 A</code></td><td>Highest trip on this table (breakaway at the open end) and room left to the ceiling.</td></tr>
+          <tr><td>Pin strip: <code>GPIO02 live</code> · <code>empty-rack table</code> · <code>81 bins · 249 cnt</code></td><td>Which table is drawn, bin count, and bin width in counts.</td></tr>
+          <tr><td><code>1.21 A · bin 44</code></td><td>Live current and the bin under the position line.</td></tr>
+          <tr><td><code>TURN direction</code></td><td>Swap to the open-direction graph.</td></tr>
+          <tr><td><code>PRESS bin detail</code></td><td>Numeric values for the bin under the cursor (not a separate mockup in this set).</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to the menu.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>11. Obstruction table — open direction</h2>
+      <p>Same table, other direction. Breakaway is now at the closed end, where the door pulls out of the seal. The unvisited block moves to the open end. Two independent tables are why both views exist.</p>
+      <figure class="lcd">
+        <img src="shots/diag-11.png" width="320" alt="DIAG table open graph">
+        <figcaption>Figure 11. DIAG · table · open. Breakaway at the closed end.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>DIAG · table · open</code></td><td>Header left.</td></tr>
+          <tr><td><code>10 / 13</code></td><td>Header right.</td></tr>
+          <tr><td>Graph, Y labels, <code>2.50 max</code>, legend</td><td>Same series as the close graph. Shape differs: peak at the closed end.</td></tr>
+          <tr><td>Dark block near <code>OPEN</code></td><td>Bins before the open marker. Open-direction learn runs never visit them.</td></tr>
+          <tr><td><code>valid bins · runs merged</code> · <code>78 of 81 · 3</code></td><td>Open-direction bins with data (bins at and after the open marker) and merged run count.</td></tr>
+          <tr><td><code>worst trip · margin to 2.50 A</code> · <code>2.30 A at bin 80 · 0.20 A</code></td><td>Highest open-direction trip (breakaway at the closed end) and room left to the ceiling.</td></tr>
+          <tr><td>Pin strip: <code>GPIO02 live</code> · <code>empty-rack table</code> · <code>81 bins · 249 cnt</code></td><td>Same table family as the close view.</td></tr>
+          <tr><td><code>1.20 A · bin 44</code></td><td>Live current and the bin under the position line, read against the open envelope.</td></tr>
+          <tr><td><code>TURN direction</code> · <code>PRESS bin detail</code> · <code>HOLD back</code></td><td>Same gestures as the close graph.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>12. EC11 knob and button</h2>
+      <p>An input with no other home. Detent scale is bench-calibrated, so raw quadrature and the scaled count sit side by side.</p>
+      <figure class="lcd">
+        <img src="shots/diag-12.png" width="320" alt="DIAG ec11: plus 37 detents, SW released, timeout 5 min">
+        <figcaption>Figure 12. DIAG · ec11. Detent scale 100 / 400. Display timeout 5 min.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>DIAG · ec11</code></td><td>Header left.</td></tr>
+          <tr><td><code>11 / 13</code></td><td>Header right.</td></tr>
+          <tr><td><code>+37</code></td><td>Hero. Scaled detents since reset. Sign is CW positive on this shot.</td></tr>
+          <tr><td><code>detents since reset · CW</code></td><td>What the hero counts, and last turn sense.</td></tr>
+          <tr><td><code>SW released</code></td><td>Knob switch is up.</td></tr>
+          <tr><td><code>last press 180 ms</code></td><td>Duration of the last PRESS (under the HOLD threshold).</td></tr>
+          <tr><td><code>raw quadrature</code> · <code>134 counts</code></td><td>Unscaled CLK/DT edges. Compare with the detent hero to check the scale.</td></tr>
+          <tr><td><code>detent scale</code> · <code>100 / 400</code></td><td>Quadrature-to-detent fraction from <code>ec11_calibration.h</code> (<code>kEc11DetentScaleNumerator</code> / <code>kEc11DetentScaleDenominator</code>). 100/400 is one detent per four edges.</td></tr>
+          <tr><td><code>debounce</code> · <code>25 ms</code></td><td>SW debounce.</td></tr>
+          <tr><td><code>display timeout</code> · <code>5 min · 3:41 remaining</code></td><td>Idle blanking setting and time left until GPIO38 backlight and GPIO15 panel power drop. Default is 5 minutes.</td></tr>
+          <tr><td>Pin strip: <code>GPIO11 CLK</code> · <code>GPIO12 DT</code> · <code>GPIO13 SW</code> · <code>on-board</code></td><td>EC11 on the T-Display-S3, not a Board A terminal.</td></tr>
+          <tr><td><code>1 · 0 · HIGH</code></td><td>Live CLK, DT, SW. SW HIGH is released with pull-up.</td></tr>
+          <tr><td><code>PRESS zero count</code></td><td>Reset the detent hero to 0. Does not change calibration constants.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to the menu.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>13. Network and OTA</h2>
+      <p>Setup surface. The steel lid can block the onboard antenna, so that note is on the screen, not only in the build docs. When SoftAP is serving, this page shows the join password in clear (default <code>reserved</code>). The AP name defaults to <code>PrivateReserve</code>. After join, open <code>http://192.168.4.1/</code>. PRESS rejoin retries the stored STA SSID. To drop that SSID, use Settings → Service → Clear station Wi-Fi, then reboot.</p>
+      <figure class="lcd">
+        <img src="shots/diag-13.png" width="320" alt="DIAG network: 192.168.1.42 STA house-iot">
+        <figcaption>Figure 13. DIAG · network. STA joined, OTA idle-only.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>DIAG · network</code></td><td>Header left.</td></tr>
+          <tr><td><code>12 / 13</code></td><td>Header right.</td></tr>
+          <tr><td><code>192.168.1.42</code> (green)</td><td>Hero. Station address when STA joined.</td></tr>
+          <tr><td><code>STA · house-iot · −63 dBm</code></td><td>Role, stored SSID, RSSI.</td></tr>
+          <tr><td><code>mDNS</code> · <code>private-reserve.local</code></td><td>mDNS name for HTTP on the joined LAN.</td></tr>
+          <tr><td><code>fallback AP · web clients</code> · <code>PrivateReserve idle · 1</code></td><td>SoftAP name, idle because STA joined, and one HTTP client. If SoftAP is the live link, this row is <code>join password</code> and the WPA2 PSK (default <code>reserved</code>) instead.</td></tr>
+          <tr><td><code>OTA</code> · <code>idle only · armed</code></td><td>OTA is allowed only while the motor is idle. Armed means the endpoint is listening.</td></tr>
+          <tr><td><code>antenna</code> · <code>onboard · lid must be open</code></td><td>No external SMA. Close the steel lid and RSSI can collapse.</td></tr>
+          <tr><td>Pin strip: <code>onboard radio</code> · <code>no external SMA</code> · <code>0 Ω jumper not moved</code></td><td>Antenna path as shipped. Do not move the 0&nbsp;Ω jumper unless you fit an external antenna.</td></tr>
+          <tr><td><code>STA joined</code></td><td>Live radio role.</td></tr>
+          <tr><td><code>PRESS rejoin</code></td><td>Retry STA join with the stored SSID. If join fails, SoftAP starts. This does not clear the stored password. To wipe station credentials, use <a href="settings.html">Settings</a> → Service → Clear station Wi-Fi, then reboot from that result screen or from Reboot controller.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to the menu.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>14. Stored calibration</h2>
+      <p>Answers whether this controller may run automatically, and why not. Stale entries name the value that invalidated them.</p>
+      <figure class="lcd">
+        <img src="shots/diag-14.png" width="320" alt="DIAG calibration status: loaded table stale since cruise duty change">
+        <figcaption>Figure 14. DIAG · calibration. Loaded table stale after cruise duty 512 → 544.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>DIAG · calibration</code></td><td>Header left.</td></tr>
+          <tr><td><code>13 / 13</code></td><td>Header right. Last detail screen.</td></tr>
+          <tr><td>Green pip + <code>Direction · origin · span</code> + <code>OK</code></td><td>Stages 2–4 stored and valid.</td></tr>
+          <tr><td>Green pip + <code>Marker edges (both)</code> + <code>± 6 CNT</code></td><td>Open/close probe spread still inside tolerance. The value column shows the open-side figure on this shot.</td></tr>
+          <tr><td>Green pip + <code>Closed seated · by current</code> + <code>OK</code></td><td>Stage 5 method still current-rise.</td></tr>
+          <tr><td>Green pip + <code>Stroke 32.0 in → 631 cnt/in</code> + <code>OK</code></td><td>Stage 6 still matches the stored span.</td></tr>
+          <tr><td>Green pip + <code>Obstruction table — empty racks</code> + <code>ARMED</code></td><td>Empty envelope is in service.</td></tr>
+          <tr><td>Amber pip + highlight + <code>Obstruction table — loaded racks</code> + <code>STALE</code></td><td>Selected. Loaded table is not usable.</td></tr>
+          <tr><td>Grey pip + <code>stale since cruise duty 512 → 544</code></td><td>Why. A motion-profile change invalidates both tables. This row names the field that did it.</td></tr>
+          <tr><td>Pin strip: <code>NVS</code> · <code>format v3</code> · <code>written 41 boots ago</code></td><td>Where the blob lives, format, age in boots (no RTC).</td></tr>
+          <tr><td><code>3.6 kB blob</code></td><td>Stored size.</td></tr>
+          <tr><td><code>PRESS open</code></td><td>Jump to the matching Calibration stage for the highlighted row.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to the menu.</td></tr>
+        </tbody>
+      </table>
+    </section>
+    </section>
+    <section class="chapter" id="settings">
+<p class="lede">Private Reserve · DIN controller · first draft</p>
+    <h1>Settings</h1>
+    <p>Not a fourth operating mode. A menu reached from Main, the same way as Calibration and Diagnostics. Header prefix is <code>SET ·</code>. Motion is idle while values are edited. Service holds the destructive actions: erase tables, restore defaults, clear calibration, <strong>clear station Wi-Fi</strong>, and <strong>reboot the controller</strong>.</p>
+
+    
+
+    <div class="banner">
+      <strong>Draft.</strong> Pixel layout:
+      UI/settings.html.
+      NVS names and defaults:
+      T-Display-S3_Firmware_Config.md.
+    </div>
+
+    <div class="warn">
+      <strong>Never write NVS while the motor runs.</strong> If you open Settings
+      during a move, the panel shows <code>SETTINGS LOCKED</code>. Pending edits
+      stay in RAM. Retry when idle. A profile or travel change that invalidates
+      learned tables says so on its own screen and again on confirm.
+    </div>
+
+    <section class="shot">
+      <h2>1. Groups</h2>
+      <p>Grouped by effect, not by NVS layout. The count on the right is how many values sit in each group. An amber pip marks a group that holds an unsaved change. Six rows fit. Service is the seventh row, off this shot until you TURN.</p>
+      <figure class="lcd">
+        <img src="shots/set-01.png" width="320" alt="SET groups: Motion profile selected, 3 unsaved">
+        <figcaption>Figure 1. SET · groups. Three unsaved changes. Motion profile selected.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · groups</code></td><td>Header left. Settings root.</td></tr>
+          <tr><td><code>3 unsaved ▾</code></td><td>Header right. Three staged field edits. The triangle means more groups below.</td></tr>
+          <tr><td>Amber pip + highlight + <code>Motion profile</code> + <code>7 VALUES</code></td><td>Selected. Cruise, floors, creep, jog, accel, cruise time, decel. Amber because cruise duty is staged 512 → 544.</td></tr>
+          <tr><td>Green pip + <code>Travel and markers</code> + <code>6 VALUES</code></td><td>Caps, probe tolerance, resync drift. Some rows open a locked derived page.</td></tr>
+          <tr><td>Amber pip + <code>Obstruction detection</code> + <code>5 VALUES</code></td><td>Inrush skip, snug amps, envelope knobs. Amber because this group also holds a staged edit in this example.</td></tr>
+          <tr><td>Green pip + <code>Triggers and debounce</code> + <code>3 VALUES</code></td><td>Bottle-key polarity and switch debounce. Saving polarity re-arms from the current sensor level. It does not command a move.</td></tr>
+          <tr><td>Green pip + <code>Display and knob</code> + <code>3 VALUES</code></td><td>Display timeout (minutes, default 5), HOLD min ms, HOLD max ms.</td></tr>
+          <tr><td>Green pip + <code>Network</code> + <code>5 VALUES</code></td><td>STA SSID, STA password, join timeout, AP name, AP password. Station password is web-only. Fallback AP password is shown in clear (default <code>reserved</code>). This row is clipped at the bottom of the panel.</td></tr>
+          <tr><td><code>Service and defaults</code> + <code>5 ACTIONS</code> (off-screen)</td><td>Seventh group. TURN to it. Destructive. Figure 11. Clear station Wi-Fi is the fourth action; Reboot controller is the fifth. PRESS twice.</td></tr>
+          <tr><td><code>TURN scroll</code></td><td>Move the highlight. Window the list.</td></tr>
+          <tr><td><code>PRESS open</code></td><td>Enter the highlighted group.</td></tr>
+          <tr><td><code>HOLD exit</code></td><td>Return to Main. Staged edits stay in RAM until Review saves or discards them.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>2. Motion profile group</h2>
+      <p>A value list, not a form. Pending edits show the new value in amber next to the stored one. Decelerate is the seventh row, off this shot.</p>
+      <figure class="lcd">
+        <img src="shots/set-02.png" width="320" alt="SET motion: Cruise duty 512 to 544 selected">
+        <figcaption>Figure 2. SET · motion. Cruise duty staged 512 → 544.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · motion</code></td><td>Header left.</td></tr>
+          <tr><td><code>7 values</code></td><td>Header right. Count in this group.</td></tr>
+          <tr><td>Highlight + <code>Cruise duty</code> + <code>512 → 544</code> (544 amber)</td><td>Selected. Stored 512, pending 544. Changing this invalidates both learned tables.</td></tr>
+          <tr><td><code>Minimum moving duty</code> · <code>64</code></td><td>Floor while the profile is moving. Below this the motor may not break away.</td></tr>
+          <tr><td><code>Creep duty</code> · <code>96</code></td><td>Duty for marker seeks, snug, and short calibration moves.</td></tr>
+          <tr><td><code>Jog duty</code> · <code>96</code></td><td>Duty for the diagnostic jog page.</td></tr>
+          <tr><td><code>Accelerate</code> · <code>3000 MS</code></td><td>Time to climb from moving floor to cruise. Changing it invalidates tables.</td></tr>
+          <tr><td><code>Cruise time</code> · <code>6000 MS</code></td><td>Time at cruise duty. Changing it invalidates tables. Clipped at the bottom of this shot.</td></tr>
+          <tr><td><code>Decelerate</code> · <code>3000 MS</code> (off-screen)</td><td>Seventh value. TURN to it. Time to drop from cruise to creep. Changing it invalidates tables.</td></tr>
+          <tr><td><code>TURN scroll</code> · <code>PRESS edit</code> · <code>HOLD back</code></td><td>Move, open the edit screen, or return to groups.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>3. Edit — cruise duty</h2>
+      <p>The sharpest setting on the controller. Range, default, and step are on the panel. The consequence line is stated before the edit is accepted.</p>
+      <figure class="lcd">
+        <img src="shots/set-03.png" width="320" alt="SET cruise duty: 544, min 128, default 512, max 768">
+        <figcaption>Figure 3. SET · cruise duty. Pending 544. Invalidates both tables.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · cruise duty</code></td><td>Header left. Field name.</td></tr>
+          <tr><td><code>motion 1/7</code></td><td>Header right. First field in the motion group.</td></tr>
+          <tr><td><code>544</code> with caret, blue box</td><td>Pending value. TURN changes it.</td></tr>
+          <tr><td><code>duty counts, 10-bit</code></td><td>Unit. Same 0–1023 scale as the PWM diagnostic.</td></tr>
+          <tr><td><code>was 512 · 53% of 1023 · 15 kHz fixed</code></td><td>Stored value, percent of full scale, and the compile-time carrier. 15&nbsp;kHz is not editable.</td></tr>
+          <tr><td>Blue fill on the range bar, white tick</td><td>Fill is the pending value. The tick is the default (512).</td></tr>
+          <tr><td><code>min 128</code> · <code>default 512</code> · <code>max 768</code></td><td>Allowed range and factory default. Max is below 1023 so cruise cannot sit on the rail.</td></tr>
+          <tr><td><code>step per detent</code> · <code>8 counts</code></td><td>How much TURN changes the pending value.</td></tr>
+          <tr><td><code>estimated stroke time</code> · <code>12.0 s → 11.4 s</code></td><td>Advisory. Faster cruise shortens the move. Not a safety limit.</td></tr>
+          <tr><td><code>invalidates</code> · <code>both learned tables</code> (amber)</td><td>Accepting this drop both envelopes to stale. Until a relearn, trip is the 2.50&nbsp;A ceiling only.</td></tr>
+          <tr><td><code>TURN adjust</code> · <code>PRESS accept</code> · <code>HOLD cancel</code></td><td>Change, keep the pending value (then confirm), or restore 512.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>4. Confirm — consequence of the edit</h2>
+      <p>Shown when an accepted edit invalidates learned data. Dropping to the hard ceiling is a real reduction in protection, so it is spelled out and needs a second press.</p>
+      <figure class="lcd">
+        <img src="shots/set-04.png" width="320" alt="SET confirm: RELEARN REQUIRED, tables go stale">
+        <figcaption>Figure 4. SET · confirm. Cruise duty will stale both obstruction tables.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · confirm</code></td><td>Header left.</td></tr>
+          <tr><td><code>cruise duty</code></td><td>Header right. Which field triggered this gate.</td></tr>
+          <tr><td><code>RELEARN REQUIRED</code></td><td>Amber banner title.</td></tr>
+          <tr><td><code>Changing the profile invalidates both obstruction tables</code></td><td>Banner detail. Cruise duty, accel, cruise time, and decel all do this.</td></tr>
+          <tr><td>Amber pip + <code>Empty-rack table</code> + <code>ARMED → STALE</code></td><td>Empty envelope is in service now. After this save it will not be.</td></tr>
+          <tr><td>Amber pip + <code>Loaded-rack table</code> + <code>STALE → STALE</code></td><td>Already stale. Stays stale.</td></tr>
+          <tr><td>Red pip + <code>Until relearn, trip is</code> + <code>2.50 A CEILING ONLY</code></td><td>Protection drops to the hard ceiling. Main still runs, with less discrimination.</td></tr>
+          <tr><td><code>PRESS accept change</code></td><td>Keep the pending cruise duty. Tables mark stale on Review save, not on this press alone.</td></tr>
+          <tr><td><code>HOLD keep 512</code></td><td>Drop the pending edit. Stored 512 stays.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>5. Edit — display timeout</h2>
+      <p>A benign value, shown for contrast. No consequence line, no confirm step. Units are minutes because that is how an operator thinks about a screen going dark.</p>
+      <figure class="lcd">
+        <img src="shots/set-05.png" width="320" alt="SET display timeout: 5 minutes, default 5, max 60">
+        <figcaption>Figure 5. SET · display timeout. Default 5 minutes. Invalidates nothing.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · display timeout</code></td><td>Header left.</td></tr>
+          <tr><td><code>display 1/3</code></td><td>Header right. First of three Display and knob fields.</td></tr>
+          <tr><td><code>5</code> with caret</td><td>Pending minutes of idle before blanking.</td></tr>
+          <tr><td><code>minutes of idle</code></td><td>Unit on the panel. Firmware stores milliseconds.</td></tr>
+          <tr><td><code>stored 300 000 ms · 0 disables blanking</code></td><td>NVS value for 5 minutes. Zero means the panel stays on.</td></tr>
+          <tr><td>Range bar, <code>min 1</code> · <code>default 5</code> · <code>max 60</code></td><td>Allowed minutes. Default matches the factory 300000&nbsp;ms.</td></tr>
+          <tr><td><code>step per detent</code> · <code>1 minute</code></td><td>TURN step.</td></tr>
+          <tr><td><code>wakes on</code> · <code>knob turn · knob press · GPIO14</code></td><td>What resets the timer and what wakes a blanked panel. Web commands also reset it. Wake returns to Main.</td></tr>
+          <tr><td><code>invalidates</code> · <code>nothing</code></td><td>This field does not stale calibration or tables. Dim on purpose.</td></tr>
+          <tr><td><code>TURN adjust</code> · <code>PRESS accept</code> · <code>HOLD cancel</code></td><td>Same edit gestures as cruise duty. No confirm step after PRESS.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>6. Edit — trigger polarity</h2>
+      <p>An enumerated choice, so it is a two-item pick list rather than a number. Saving re-arms the trigger from the level the sensor is reading now, which is why that line is on the screen.</p>
+      <figure class="lcd">
+        <img src="shots/set-06.png" width="320" alt="SET key polarity: Bottle absent opens the door, default selected">
+        <figcaption>Figure 6. SET · key polarity. Default: absent opens. Key reads PRESENT now.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · key polarity</code></td><td>Header left.</td></tr>
+          <tr><td><code>triggers 1/3</code></td><td>Header right. First of three Triggers and debounce fields.</td></tr>
+          <tr><td>Green pip + highlight + <code>Bottle absent opens the door</code> + <code>DEFAULT</code></td><td>Selected choice. Handbook polarity. Place the bottle to close.</td></tr>
+          <tr><td>Grey pip + <code>Bottle present opens the door</code></td><td>Inverted polarity. Use only if this cabinet is wired that way.</td></tr>
+          <tr><td><code>key reads now</code> · <code>PRESENT · adc 2 971</code></td><td>Live cooked state and raw ADC, so you can see what re-arm will start from.</td></tr>
+          <tr><td><code>on save</code> · <code>re-arm from current level, no move</code></td><td>Firmware adopts the new polarity from the present reading. It does not command open or close.</td></tr>
+          <tr><td><code>client handbook says</code> · <code>place the bottle to open</code> (amber)</td><td>Published client instruction. Compare it with the selected row before you accept. Absent-opens means remove the bottle to open. Present-opens means place the bottle to open.</td></tr>
+          <tr><td><code>TURN choose</code> · <code>PRESS accept</code> · <code>HOLD cancel</code></td><td>Move the highlight, stage the choice, or keep the previous polarity.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>7. Network group</h2>
+      <p>Text entry through one knob is a trap, so the LCD shows the values and points at the web page. The station password is masked. The fallback AP password is shown in clear (default <code>reserved</code>) so a phone can join <code>PrivateReserve</code> before <code>/wifi</code> exists. Then open <code>http://192.168.4.1/</code>. The web View of this screen adds a clickable <code>Set SSID and password</code> link, the same idea as Docs adding <code>Open GitHub page</code>. That form is hosted by the controller at <code>/wifi</code> and is not drawn on the LCD. Scan takes a few seconds. The page stays live. The screen states that the web interface has no login. To drop the stored STA network, do not edit this list: use Service → Clear station Wi-Fi, then reboot.</p>
+      <figure class="lcd">
+        <img src="shots/set-07.png" width="320" alt="SET network: house-iot SSID, masked station password, fallback AP password reserved">
+        <figcaption>Figure 7. SET · network. Station password masked. Fallback AP password in clear. No application login.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · network</code></td><td>Header left.</td></tr>
+          <tr><td><code>5 values</code></td><td>Header right.</td></tr>
+          <tr><td><code>Station SSID</code> · <code>house-iot</code></td><td>Stored STA network name. Shown in clear.</td></tr>
+          <tr><td><code>Station password</code> · <code>******** (web only)</code></td><td>Masked. The LCD cannot edit it. On the web View of this screen, open <code>Set SSID and password</code>. That is a separate page at <code>/wifi</code> on the controller, with a phone keyboard and a Scan list. Scan takes a few seconds; the page stays live. It is not on the LCD.</td></tr>
+          <tr><td><code>Join timeout</code> · <code>15 000 ms</code></td><td>How long STA join may run before SoftAP starts. This is a number. PRESS can edit it from the knob.</td></tr>
+          <tr><td><code>Fallback AP name</code> · <code>PrivateReserve</code></td><td>SoftAP SSID when STA is empty or join fails. Default name is <code>PrivateReserve</code>.</td></tr>
+          <tr><td><code>Fallback AP password</code> · <code>reserved</code></td><td>Shown in clear. You need this before the web page exists. Default is <code>reserved</code>. Empty means an open AP. Change it later on <code>/wifi</code>.</td></tr>
+          <tr><td>Amber line: <code>No login on the web page. Anyone on this network can move the door.</code></td><td>HTTP is port 80 with no application login. Do not expose that LAN.</td></tr>
+          <tr><td><code>TURN scroll</code></td><td>Move among rows.</td></tr>
+          <tr><td><code>PRESS edit numbers</code></td><td>Edit join timeout (and other numeric fields). SSID and passwords do not open a knob editor. On the web, a blue <code>Set SSID and password</code> link opens <code>/wifi</code>. To drop the stored STA network, use Service → Clear station Wi-Fi.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to groups.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>8. Derived and locked values</h2>
+      <p>Read-only by design. Counts-per-inch came from a measured span and a typed stroke. The ceiling and the PWM carrier are hardware facts. Showing them with a lock stops somebody hunting for an edit screen.</p>
+      <figure class="lcd">
+        <img src="shots/set-08.png" width="320" alt="SET derived locked: span, counts per inch, 2.50 A, 15 kHz">
+        <figcaption>Figure 8. SET · derived · locked. Recalibrate to change these.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · derived · locked</code></td><td>Header left.</td></tr>
+          <tr><td><code>read only</code></td><td>Header right. No edit affordance.</td></tr>
+          <tr><td><code>Measured span</code> · <code>20 180 cnt · from stage 4</code></td><td>Close-marker actuation minus origin. Dim because it is not editable here.</td></tr>
+          <tr><td><code>Counts per inch</code> · <code>631 · derived from stroke</code></td><td>Display scale only. Never a seek cap.</td></tr>
+          <tr><td><code>Seated position</code> · <code>20 348 cnt · stage 5</code></td><td>Closed seated counts.</td></tr>
+          <tr><td><code>Hard current ceiling</code> · <code>2.50 A · compile-time</code></td><td>Not an NVS setting. Firmware constant.</td></tr>
+          <tr><td><code>PWM carrier</code> · <code>15 kHz · 10-bit</code></td><td>Not an NVS setting. Hardware/firmware fact.</td></tr>
+          <tr><td>Green line: <code>Recalibrate to change these. No settings screen can adjust them.</code></td><td>Span and seated change only through Calibration. Ceiling and carrier do not change in the field.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return. There is no PRESS.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>9. Review and save pending changes</h2>
+      <p>The single write point, mirroring Calibration review. It lists every staged change with old and new value. It will not write while the motor is running.</p>
+      <figure class="lcd">
+        <img src="shots/set-09.png" width="320" alt="SET review: READY TO SAVE, three changes, tables stale side effect">
+        <figcaption>Figure 9. SET · review. Three field edits plus the table-stale side effect.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · review</code></td><td>Header left.</td></tr>
+          <tr><td><code>3 changes</code></td><td>Header right. Three field writes in this set. The side-effect row is extra.</td></tr>
+          <tr><td><code>READY TO SAVE</code> (green)</td><td>Hero. Motor idle, current decayed.</td></tr>
+          <tr><td><code>motor idle · current decayed</code></td><td>Write precondition. Same rule as Calibration review.</td></tr>
+          <tr><td>Amber pip + <code>Cruise duty</code> + <code>512 → 544</code></td><td>First staged write. Amber because it invalidates tables.</td></tr>
+          <tr><td>Green pip + <code>Display timeout</code> + <code>5 → 8 MIN</code></td><td>Second staged write. Benign.</td></tr>
+          <tr><td>Green pip + <code>Switch debounce</code> + <code>25 → 30 MS</code></td><td>Third staged write.</td></tr>
+          <tr><td>Amber pip + <code>Side effect: both tables → stale</code></td><td>Not a field you typed. Consequence of cruise duty. Named so it cannot be missed.</td></tr>
+          <tr><td><code>PRESS save all</code></td><td>One NVS write of the remaining rows.</td></tr>
+          <tr><td><code>TURN drop one</code></td><td>Remove the highlighted row from this set. It stays at the stored value.</td></tr>
+          <tr><td><code>HOLD discard</code></td><td>Drop the whole set. Stored NVS is unchanged.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>10. Edit blocked — motor busy</h2>
+      <p>A defined refusal, not an error. Configuration cannot change under a running profile or an active calibration stage. The screen names which one is holding the lock.</p>
+      <figure class="lcd">
+        <img src="shots/set-10.png" width="320" alt="SET blocked: SETTINGS LOCKED, door is closing">
+        <figcaption>Figure 10. SET · blocked. Door closing. Three pending edits kept in RAM.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · blocked</code></td><td>Header left.</td></tr>
+          <tr><td><code>no write</code></td><td>Header right. This screen will not commit NVS.</td></tr>
+          <tr><td><code>SETTINGS LOCKED</code></td><td>Red banner title.</td></tr>
+          <tr><td><code>Door is closing · configuration writes need an idle motor</code></td><td>Banner detail. Why, and the rule.</td></tr>
+          <tr><td><code>holder</code> · <code>automatic close · cruise</code></td><td>Which activity owns the motor. Could also name a calibration or jog step.</td></tr>
+          <tr><td><code>pending changes</code> · <code>3 kept in memory</code></td><td>Staged edits survive. They are not discarded by the lock.</td></tr>
+          <tr><td><code>retry</code> · <code>when motion completes or faults</code></td><td>Open Settings again after idle. Review can then save.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Leave. No PRESS. There is nothing to accept.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>11. Service and defaults</h2>
+      <p>Destructive actions live together, away from ordinary edits. Each states its blast radius. PRESS confirm twice. Motor must be idle. Full factory erase is USB-only. It is not on this menu.</p>
+      <figure class="lcd">
+        <img src="shots/set-11.png" width="320" alt="SET service: five actions, Erase obstruction tables selected, confirm twice">
+        <figcaption>Figure 11. SET · service. Five actions. Erase tables selected. Confirm twice. Clear station Wi-Fi and Reboot controller are the fourth and fifth rows.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · service</code></td><td>Header left.</td></tr>
+          <tr><td><code>5 actions</code></td><td>Header right. Not values. Actions.</td></tr>
+          <tr><td>Red pip + highlight + <code>Erase obstruction tables</code> + <code>BOTH</code></td><td>Selected. Drops empty and loaded envelopes. Origin stays. Hard ceiling until relearn.</td></tr>
+          <tr><td>Amber pip + <code>Restore setting defaults</code> + <code>KEEPS CALIBRATION</code></td><td>Settings struct reset. Keeps calibration. Keeps Wi-Fi strings.</td></tr>
+          <tr><td>Red pip + <code>Clear calibration and origin</code> + <code>FORCES SETUP</code></td><td>Main shows Needs Setup. Automatic motion blocks until Calibration runs again.</td></tr>
+          <tr><td>Amber pip + <code>Clear station Wi-Fi</code> + <code>SOFTAP AFTER REBOOT</code></td><td>Zeros stored STA SSID and password. Fallback AP name and password stay. The live STA session stays until reboot. Next boot skips STA and starts SoftAP.</td></tr>
+          <tr><td>Amber pip + <code>Reboot controller</code> + <code>NOW</code></td><td>Stops PWM and resets the ESP32. Same as a power cycle. Motion does not resume. PRESS twice, motor idle.</td></tr>
+          <tr><td><code>selected action</code> · <code>erases both envelopes · hard ceiling until relearn</code></td><td>Blast radius of the highlighted row, restated under the list.</td></tr>
+          <tr><td><code>PRESS confirm twice</code></td><td>First PRESS arms. Second PRESS runs. HOLD at either step aborts. TURN after the first PRESS cancels the arm.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to groups without running an action.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>12. Station Wi-Fi cleared</h2>
+      <p>Shown after Clear station Wi-Fi runs. The write is already in NVS. PRESS reboots now so SoftAP can start. HOLD returns to Settings if you want to reboot later from Service.</p>
+      <figure class="lcd">
+        <img src="shots/set-12.png" width="320" alt="SET wifi: WIFI CLEARED, PRESS reboot, SoftAP on next boot">
+        <figcaption>Figure 12. SET · wifi. Station SSID empty. PRESS reboots. HOLD leaves this session on the old STA address.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · wifi</code></td><td>Header left.</td></tr>
+          <tr><td><code>reboot</code></td><td>Header right. The change is stored. SoftAP starts on the next boot.</td></tr>
+          <tr><td><code>WIFI CLEARED</code></td><td>Warn banner. Station SSID and password are empty.</td></tr>
+          <tr><td><code>PRESS reboot · SoftAP on next boot</code></td><td>This session can stay on the old STA address until you PRESS or power-cycle.</td></tr>
+          <tr><td><code>Station SSID</code> · <code>(empty - AP only)</code></td><td>Boot will skip STA join.</td></tr>
+          <tr><td><code>Fallback AP name</code> · <code>PrivateReserve</code></td><td>Unchanged. Join this AP after reboot, then set a new SSID on the web.</td></tr>
+          <tr><td><code>Join password</code> · <code>reserved</code></td><td>WPA2 PSK for that AP. Type it on the phone. Shown here because the web page is not reachable until you join.</td></tr>
+          <tr><td><code>After reboot</code> · <code>join AP, then set SSID on the web</code></td><td>SoftAP starts. Then open <code>http://192.168.4.1/wifi</code>. The live STA link, if any, stays until this reboot.</td></tr>
+          <tr><td><code>PRESS reboot</code></td><td>Stops PWM and resets the ESP32. One PRESS. Motor must be idle.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to Settings groups without rebooting.</td></tr>
+        </tbody>
+      </table>
+    </section>
+    </section>
+  </article>
+</body>
+</html>

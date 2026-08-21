@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Software — Settings (draft)</title>
+  <link rel="stylesheet" href="page.css">
+</head>
+<body>
+  <article class="page">
+    <p class="lede">Private Reserve · DIN controller · first draft</p>
+    <h1>Settings</h1>
+    <p>Not a fourth operating mode. A menu reached from Main, the same way as Calibration and Diagnostics. Header prefix is <code>SET ·</code>. Motion is idle while values are edited. Service holds the destructive actions: erase tables, restore defaults, clear calibration, <strong>clear station Wi-Fi</strong>, and <strong>reboot the controller</strong>.</p>
+
+    <nav class="sec" aria-label="Software pages">
+      <a href="index.html">Overview</a>
+      <a href="main.html">Main</a>
+      <a href="calibration.html">Calibration</a>
+      <a href="diagnostics.html">Diagnostics</a>
+      <a href="settings.html" aria-current="page">Settings</a>
+      <a href="wiring-guide.html">Wiring</a>
+      <a class="pdf-dl" href="../pdf/Software_User_Manual.pdf">User Manual (PDF)</a>
+      <a class="pdf-dl" href="../pdf/Wiring_Guide.pdf">Wiring Guide (PDF)</a>
+    </nav>
+
+    <div class="banner">
+      <strong>Draft.</strong> Pixel layout:
+      UI/settings.html.
+      NVS names and defaults:
+      T-Display-S3_Firmware_Config.md.
+    </div>
+
+    <div class="warn">
+      <strong>Never write NVS while the motor runs.</strong> If you open Settings
+      during a move, the panel shows <code>SETTINGS LOCKED</code>. Pending edits
+      stay in RAM. Retry when idle. A profile or travel change that invalidates
+      learned tables says so on its own screen and again on confirm.
+    </div>
+
+    <section class="shot">
+      <h2>1. Groups</h2>
+      <p>Grouped by effect, not by NVS layout. The count on the right is how many values sit in each group. An amber pip marks a group that holds an unsaved change. Six rows fit. Service is the seventh row, off this shot until you TURN.</p>
+      <figure class="lcd">
+        <img src="shots/set-01.png" width="320" alt="SET groups: Motion profile selected, 3 unsaved">
+        <figcaption>Figure 1. SET · groups. Three unsaved changes. Motion profile selected.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · groups</code></td><td>Header left. Settings root.</td></tr>
+          <tr><td><code>3 unsaved ▾</code></td><td>Header right. Three staged field edits. The triangle means more groups below.</td></tr>
+          <tr><td>Amber pip + highlight + <code>Motion profile</code> + <code>7 VALUES</code></td><td>Selected. Cruise, floors, creep, jog, accel, cruise time, decel. Amber because cruise duty is staged 512 → 544.</td></tr>
+          <tr><td>Green pip + <code>Travel and markers</code> + <code>6 VALUES</code></td><td>Caps, probe tolerance, resync drift. Some rows open a locked derived page.</td></tr>
+          <tr><td>Amber pip + <code>Obstruction detection</code> + <code>5 VALUES</code></td><td>Inrush skip, snug amps, envelope knobs. Amber because this group also holds a staged edit in this example.</td></tr>
+          <tr><td>Green pip + <code>Triggers and debounce</code> + <code>3 VALUES</code></td><td>Bottle-key polarity and switch debounce. Saving polarity re-arms from the current sensor level. It does not command a move.</td></tr>
+          <tr><td>Green pip + <code>Display and knob</code> + <code>3 VALUES</code></td><td>Display timeout (minutes, default 5), HOLD min ms, HOLD max ms.</td></tr>
+          <tr><td>Green pip + <code>Network</code> + <code>5 VALUES</code></td><td>STA SSID, STA password, join timeout, AP name, AP password. Station password is web-only. Fallback AP password is shown in clear (default <code>reserved</code>). This row is clipped at the bottom of the panel.</td></tr>
+          <tr><td><code>Service and defaults</code> + <code>5 ACTIONS</code> (off-screen)</td><td>Seventh group. TURN to it. Destructive. Figure 11. Clear station Wi-Fi is the fourth action; Reboot controller is the fifth. PRESS twice.</td></tr>
+          <tr><td><code>TURN scroll</code></td><td>Move the highlight. Window the list.</td></tr>
+          <tr><td><code>PRESS open</code></td><td>Enter the highlighted group.</td></tr>
+          <tr><td><code>HOLD exit</code></td><td>Return to Main. Staged edits stay in RAM until Review saves or discards them.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>2. Motion profile group</h2>
+      <p>A value list, not a form. Pending edits show the new value in amber next to the stored one. Decelerate is the seventh row, off this shot.</p>
+      <figure class="lcd">
+        <img src="shots/set-02.png" width="320" alt="SET motion: Cruise duty 512 to 544 selected">
+        <figcaption>Figure 2. SET · motion. Cruise duty staged 512 → 544.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · motion</code></td><td>Header left.</td></tr>
+          <tr><td><code>7 values</code></td><td>Header right. Count in this group.</td></tr>
+          <tr><td>Highlight + <code>Cruise duty</code> + <code>512 → 544</code> (544 amber)</td><td>Selected. Stored 512, pending 544. Changing this invalidates both learned tables.</td></tr>
+          <tr><td><code>Minimum moving duty</code> · <code>64</code></td><td>Floor while the profile is moving. Below this the motor may not break away.</td></tr>
+          <tr><td><code>Creep duty</code> · <code>96</code></td><td>Duty for marker seeks, snug, and short calibration moves.</td></tr>
+          <tr><td><code>Jog duty</code> · <code>96</code></td><td>Duty for the diagnostic jog page.</td></tr>
+          <tr><td><code>Accelerate</code> · <code>3000 MS</code></td><td>Time to climb from moving floor to cruise. Changing it invalidates tables.</td></tr>
+          <tr><td><code>Cruise time</code> · <code>6000 MS</code></td><td>Time at cruise duty. Changing it invalidates tables. Clipped at the bottom of this shot.</td></tr>
+          <tr><td><code>Decelerate</code> · <code>3000 MS</code> (off-screen)</td><td>Seventh value. TURN to it. Time to drop from cruise to creep. Changing it invalidates tables.</td></tr>
+          <tr><td><code>TURN scroll</code> · <code>PRESS edit</code> · <code>HOLD back</code></td><td>Move, open the edit screen, or return to groups.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>3. Edit — cruise duty</h2>
+      <p>The sharpest setting on the controller. Range, default, and step are on the panel. The consequence line is stated before the edit is accepted.</p>
+      <figure class="lcd">
+        <img src="shots/set-03.png" width="320" alt="SET cruise duty: 544, min 128, default 512, max 768">
+        <figcaption>Figure 3. SET · cruise duty. Pending 544. Invalidates both tables.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · cruise duty</code></td><td>Header left. Field name.</td></tr>
+          <tr><td><code>motion 1/7</code></td><td>Header right. First field in the motion group.</td></tr>
+          <tr><td><code>544</code> with caret, blue box</td><td>Pending value. TURN changes it.</td></tr>
+          <tr><td><code>duty counts, 10-bit</code></td><td>Unit. Same 0–1023 scale as the PWM diagnostic.</td></tr>
+          <tr><td><code>was 512 · 53% of 1023 · 15 kHz fixed</code></td><td>Stored value, percent of full scale, and the compile-time carrier. 15&nbsp;kHz is not editable.</td></tr>
+          <tr><td>Blue fill on the range bar, white tick</td><td>Fill is the pending value. The tick is the default (512).</td></tr>
+          <tr><td><code>min 128</code> · <code>default 512</code> · <code>max 768</code></td><td>Allowed range and factory default. Max is below 1023 so cruise cannot sit on the rail.</td></tr>
+          <tr><td><code>step per detent</code> · <code>8 counts</code></td><td>How much TURN changes the pending value.</td></tr>
+          <tr><td><code>estimated stroke time</code> · <code>12.0 s → 11.4 s</code></td><td>Advisory. Faster cruise shortens the move. Not a safety limit.</td></tr>
+          <tr><td><code>invalidates</code> · <code>both learned tables</code> (amber)</td><td>Accepting this drop both envelopes to stale. Until a relearn, trip is the 2.50&nbsp;A ceiling only.</td></tr>
+          <tr><td><code>TURN adjust</code> · <code>PRESS accept</code> · <code>HOLD cancel</code></td><td>Change, keep the pending value (then confirm), or restore 512.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>4. Confirm — consequence of the edit</h2>
+      <p>Shown when an accepted edit invalidates learned data. Dropping to the hard ceiling is a real reduction in protection, so it is spelled out and needs a second press.</p>
+      <figure class="lcd">
+        <img src="shots/set-04.png" width="320" alt="SET confirm: RELEARN REQUIRED, tables go stale">
+        <figcaption>Figure 4. SET · confirm. Cruise duty will stale both obstruction tables.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · confirm</code></td><td>Header left.</td></tr>
+          <tr><td><code>cruise duty</code></td><td>Header right. Which field triggered this gate.</td></tr>
+          <tr><td><code>RELEARN REQUIRED</code></td><td>Amber banner title.</td></tr>
+          <tr><td><code>Changing the profile invalidates both obstruction tables</code></td><td>Banner detail. Cruise duty, accel, cruise time, and decel all do this.</td></tr>
+          <tr><td>Amber pip + <code>Empty-rack table</code> + <code>ARMED → STALE</code></td><td>Empty envelope is in service now. After this save it will not be.</td></tr>
+          <tr><td>Amber pip + <code>Loaded-rack table</code> + <code>STALE → STALE</code></td><td>Already stale. Stays stale.</td></tr>
+          <tr><td>Red pip + <code>Until relearn, trip is</code> + <code>2.50 A CEILING ONLY</code></td><td>Protection drops to the hard ceiling. Main still runs, with less discrimination.</td></tr>
+          <tr><td><code>PRESS accept change</code></td><td>Keep the pending cruise duty. Tables mark stale on Review save, not on this press alone.</td></tr>
+          <tr><td><code>HOLD keep 512</code></td><td>Drop the pending edit. Stored 512 stays.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>5. Edit — display timeout</h2>
+      <p>A benign value, shown for contrast. No consequence line, no confirm step. Units are minutes because that is how an operator thinks about a screen going dark.</p>
+      <figure class="lcd">
+        <img src="shots/set-05.png" width="320" alt="SET display timeout: 5 minutes, default 5, max 60">
+        <figcaption>Figure 5. SET · display timeout. Default 5 minutes. Invalidates nothing.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · display timeout</code></td><td>Header left.</td></tr>
+          <tr><td><code>display 1/3</code></td><td>Header right. First of three Display and knob fields.</td></tr>
+          <tr><td><code>5</code> with caret</td><td>Pending minutes of idle before blanking.</td></tr>
+          <tr><td><code>minutes of idle</code></td><td>Unit on the panel. Firmware stores milliseconds.</td></tr>
+          <tr><td><code>stored 300 000 ms · 0 disables blanking</code></td><td>NVS value for 5 minutes. Zero means the panel stays on.</td></tr>
+          <tr><td>Range bar, <code>min 1</code> · <code>default 5</code> · <code>max 60</code></td><td>Allowed minutes. Default matches the factory 300000&nbsp;ms.</td></tr>
+          <tr><td><code>step per detent</code> · <code>1 minute</code></td><td>TURN step.</td></tr>
+          <tr><td><code>wakes on</code> · <code>knob turn · knob press · GPIO14</code></td><td>What resets the timer and what wakes a blanked panel. Web commands also reset it. Wake returns to Main.</td></tr>
+          <tr><td><code>invalidates</code> · <code>nothing</code></td><td>This field does not stale calibration or tables. Dim on purpose.</td></tr>
+          <tr><td><code>TURN adjust</code> · <code>PRESS accept</code> · <code>HOLD cancel</code></td><td>Same edit gestures as cruise duty. No confirm step after PRESS.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>6. Edit — trigger polarity</h2>
+      <p>An enumerated choice, so it is a two-item pick list rather than a number. Saving re-arms the trigger from the level the sensor is reading now, which is why that line is on the screen.</p>
+      <figure class="lcd">
+        <img src="shots/set-06.png" width="320" alt="SET key polarity: Bottle absent opens the door, default selected">
+        <figcaption>Figure 6. SET · key polarity. Default: absent opens. Key reads PRESENT now.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · key polarity</code></td><td>Header left.</td></tr>
+          <tr><td><code>triggers 1/3</code></td><td>Header right. First of three Triggers and debounce fields.</td></tr>
+          <tr><td>Green pip + highlight + <code>Bottle absent opens the door</code> + <code>DEFAULT</code></td><td>Selected choice. Handbook polarity. Place the bottle to close.</td></tr>
+          <tr><td>Grey pip + <code>Bottle present opens the door</code></td><td>Inverted polarity. Use only if this cabinet is wired that way.</td></tr>
+          <tr><td><code>key reads now</code> · <code>PRESENT · adc 2 971</code></td><td>Live cooked state and raw ADC, so you can see what re-arm will start from.</td></tr>
+          <tr><td><code>on save</code> · <code>re-arm from current level, no move</code></td><td>Firmware adopts the new polarity from the present reading. It does not command open or close.</td></tr>
+          <tr><td><code>client handbook says</code> · <code>place the bottle to open</code> (amber)</td><td>Published client instruction. Compare it with the selected row before you accept. Absent-opens means remove the bottle to open. Present-opens means place the bottle to open.</td></tr>
+          <tr><td><code>TURN choose</code> · <code>PRESS accept</code> · <code>HOLD cancel</code></td><td>Move the highlight, stage the choice, or keep the previous polarity.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>7. Network group</h2>
+      <p>Text entry through one knob is a trap, so the LCD shows the values and points at the web page. The station password is masked. The fallback AP password is shown in clear (default <code>reserved</code>) so a phone can join <code>PrivateReserve</code> before <code>/wifi</code> exists. Then open <code>http://192.168.4.1/</code>. The web View of this screen adds a clickable <code>Set SSID and password</code> link, the same idea as Docs adding <code>Open GitHub page</code>. That form is hosted by the controller at <code>/wifi</code> and is not drawn on the LCD. Scan takes a few seconds. The page stays live. The screen states that the web interface has no login. To drop the stored STA network, do not edit this list: use Service → Clear station Wi-Fi, then reboot.</p>
+      <figure class="lcd">
+        <img src="shots/set-07.png" width="320" alt="SET network: house-iot SSID, masked station password, fallback AP password reserved">
+        <figcaption>Figure 7. SET · network. Station password masked. Fallback AP password in clear. No application login.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · network</code></td><td>Header left.</td></tr>
+          <tr><td><code>5 values</code></td><td>Header right.</td></tr>
+          <tr><td><code>Station SSID</code> · <code>house-iot</code></td><td>Stored STA network name. Shown in clear.</td></tr>
+          <tr><td><code>Station password</code> · <code>******** (web only)</code></td><td>Masked. The LCD cannot edit it. On the web View of this screen, open <code>Set SSID and password</code>. That is a separate page at <code>/wifi</code> on the controller, with a phone keyboard and a Scan list. Scan takes a few seconds; the page stays live. It is not on the LCD.</td></tr>
+          <tr><td><code>Join timeout</code> · <code>15 000 ms</code></td><td>How long STA join may run before SoftAP starts. This is a number. PRESS can edit it from the knob.</td></tr>
+          <tr><td><code>Fallback AP name</code> · <code>PrivateReserve</code></td><td>SoftAP SSID when STA is empty or join fails. Default name is <code>PrivateReserve</code>.</td></tr>
+          <tr><td><code>Fallback AP password</code> · <code>reserved</code></td><td>Shown in clear. You need this before the web page exists. Default is <code>reserved</code>. Empty means an open AP. Change it later on <code>/wifi</code>.</td></tr>
+          <tr><td>Amber line: <code>No login on the web page. Anyone on this network can move the door.</code></td><td>HTTP is port 80 with no application login. Do not expose that LAN.</td></tr>
+          <tr><td><code>TURN scroll</code></td><td>Move among rows.</td></tr>
+          <tr><td><code>PRESS edit numbers</code></td><td>Edit join timeout (and other numeric fields). SSID and passwords do not open a knob editor. On the web, a blue <code>Set SSID and password</code> link opens <code>/wifi</code>. To drop the stored STA network, use Service → Clear station Wi-Fi.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to groups.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>8. Derived and locked values</h2>
+      <p>Read-only by design. Counts-per-inch came from a measured span and a typed stroke. The ceiling and the PWM carrier are hardware facts. Showing them with a lock stops somebody hunting for an edit screen.</p>
+      <figure class="lcd">
+        <img src="shots/set-08.png" width="320" alt="SET derived locked: span, counts per inch, 2.50 A, 15 kHz">
+        <figcaption>Figure 8. SET · derived · locked. Recalibrate to change these.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · derived · locked</code></td><td>Header left.</td></tr>
+          <tr><td><code>read only</code></td><td>Header right. No edit affordance.</td></tr>
+          <tr><td><code>Measured span</code> · <code>20 180 cnt · from stage 4</code></td><td>Close-marker actuation minus origin. Dim because it is not editable here.</td></tr>
+          <tr><td><code>Counts per inch</code> · <code>631 · derived from stroke</code></td><td>Display scale only. Never a seek cap.</td></tr>
+          <tr><td><code>Seated position</code> · <code>20 348 cnt · stage 5</code></td><td>Closed seated counts.</td></tr>
+          <tr><td><code>Hard current ceiling</code> · <code>2.50 A · compile-time</code></td><td>Not an NVS setting. Firmware constant.</td></tr>
+          <tr><td><code>PWM carrier</code> · <code>15 kHz · 10-bit</code></td><td>Not an NVS setting. Hardware/firmware fact.</td></tr>
+          <tr><td>Green line: <code>Recalibrate to change these. No settings screen can adjust them.</code></td><td>Span and seated change only through Calibration. Ceiling and carrier do not change in the field.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return. There is no PRESS.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>9. Review and save pending changes</h2>
+      <p>The single write point, mirroring Calibration review. It lists every staged change with old and new value. It will not write while the motor is running.</p>
+      <figure class="lcd">
+        <img src="shots/set-09.png" width="320" alt="SET review: READY TO SAVE, three changes, tables stale side effect">
+        <figcaption>Figure 9. SET · review. Three field edits plus the table-stale side effect.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · review</code></td><td>Header left.</td></tr>
+          <tr><td><code>3 changes</code></td><td>Header right. Three field writes in this set. The side-effect row is extra.</td></tr>
+          <tr><td><code>READY TO SAVE</code> (green)</td><td>Hero. Motor idle, current decayed.</td></tr>
+          <tr><td><code>motor idle · current decayed</code></td><td>Write precondition. Same rule as Calibration review.</td></tr>
+          <tr><td>Amber pip + <code>Cruise duty</code> + <code>512 → 544</code></td><td>First staged write. Amber because it invalidates tables.</td></tr>
+          <tr><td>Green pip + <code>Display timeout</code> + <code>5 → 8 MIN</code></td><td>Second staged write. Benign.</td></tr>
+          <tr><td>Green pip + <code>Switch debounce</code> + <code>25 → 30 MS</code></td><td>Third staged write.</td></tr>
+          <tr><td>Amber pip + <code>Side effect: both tables → stale</code></td><td>Not a field you typed. Consequence of cruise duty. Named so it cannot be missed.</td></tr>
+          <tr><td><code>PRESS save all</code></td><td>One NVS write of the remaining rows.</td></tr>
+          <tr><td><code>TURN drop one</code></td><td>Remove the highlighted row from this set. It stays at the stored value.</td></tr>
+          <tr><td><code>HOLD discard</code></td><td>Drop the whole set. Stored NVS is unchanged.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>10. Edit blocked — motor busy</h2>
+      <p>A defined refusal, not an error. Configuration cannot change under a running profile or an active calibration stage. The screen names which one is holding the lock.</p>
+      <figure class="lcd">
+        <img src="shots/set-10.png" width="320" alt="SET blocked: SETTINGS LOCKED, door is closing">
+        <figcaption>Figure 10. SET · blocked. Door closing. Three pending edits kept in RAM.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · blocked</code></td><td>Header left.</td></tr>
+          <tr><td><code>no write</code></td><td>Header right. This screen will not commit NVS.</td></tr>
+          <tr><td><code>SETTINGS LOCKED</code></td><td>Red banner title.</td></tr>
+          <tr><td><code>Door is closing · configuration writes need an idle motor</code></td><td>Banner detail. Why, and the rule.</td></tr>
+          <tr><td><code>holder</code> · <code>automatic close · cruise</code></td><td>Which activity owns the motor. Could also name a calibration or jog step.</td></tr>
+          <tr><td><code>pending changes</code> · <code>3 kept in memory</code></td><td>Staged edits survive. They are not discarded by the lock.</td></tr>
+          <tr><td><code>retry</code> · <code>when motion completes or faults</code></td><td>Open Settings again after idle. Review can then save.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Leave. No PRESS. There is nothing to accept.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>11. Service and defaults</h2>
+      <p>Destructive actions live together, away from ordinary edits. Each states its blast radius. PRESS confirm twice. Motor must be idle. Full factory erase is USB-only. It is not on this menu.</p>
+      <figure class="lcd">
+        <img src="shots/set-11.png" width="320" alt="SET service: five actions, Erase obstruction tables selected, confirm twice">
+        <figcaption>Figure 11. SET · service. Five actions. Erase tables selected. Confirm twice. Clear station Wi-Fi and Reboot controller are the fourth and fifth rows.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · service</code></td><td>Header left.</td></tr>
+          <tr><td><code>5 actions</code></td><td>Header right. Not values. Actions.</td></tr>
+          <tr><td>Red pip + highlight + <code>Erase obstruction tables</code> + <code>BOTH</code></td><td>Selected. Drops empty and loaded envelopes. Origin stays. Hard ceiling until relearn.</td></tr>
+          <tr><td>Amber pip + <code>Restore setting defaults</code> + <code>KEEPS CALIBRATION</code></td><td>Settings struct reset. Keeps calibration. Keeps Wi-Fi strings.</td></tr>
+          <tr><td>Red pip + <code>Clear calibration and origin</code> + <code>FORCES SETUP</code></td><td>Main shows Needs Setup. Automatic motion blocks until Calibration runs again.</td></tr>
+          <tr><td>Amber pip + <code>Clear station Wi-Fi</code> + <code>SOFTAP AFTER REBOOT</code></td><td>Zeros stored STA SSID and password. Fallback AP name and password stay. The live STA session stays until reboot. Next boot skips STA and starts SoftAP.</td></tr>
+          <tr><td>Amber pip + <code>Reboot controller</code> + <code>NOW</code></td><td>Stops PWM and resets the ESP32. Same as a power cycle. Motion does not resume. PRESS twice, motor idle.</td></tr>
+          <tr><td><code>selected action</code> · <code>erases both envelopes · hard ceiling until relearn</code></td><td>Blast radius of the highlighted row, restated under the list.</td></tr>
+          <tr><td><code>PRESS confirm twice</code></td><td>First PRESS arms. Second PRESS runs. HOLD at either step aborts. TURN after the first PRESS cancels the arm.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to groups without running an action.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="shot">
+      <h2>12. Station Wi-Fi cleared</h2>
+      <p>Shown after Clear station Wi-Fi runs. The write is already in NVS. PRESS reboots now so SoftAP can start. HOLD returns to Settings if you want to reboot later from Service.</p>
+      <figure class="lcd">
+        <img src="shots/set-12.png" width="320" alt="SET wifi: WIFI CLEARED, PRESS reboot, SoftAP on next boot">
+        <figcaption>Figure 12. SET · wifi. Station SSID empty. PRESS reboots. HOLD leaves this session on the old STA address.</figcaption>
+      </figure>
+      <table>
+        <thead>
+          <tr><th>On screen</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>SET · wifi</code></td><td>Header left.</td></tr>
+          <tr><td><code>reboot</code></td><td>Header right. The change is stored. SoftAP starts on the next boot.</td></tr>
+          <tr><td><code>WIFI CLEARED</code></td><td>Warn banner. Station SSID and password are empty.</td></tr>
+          <tr><td><code>PRESS reboot · SoftAP on next boot</code></td><td>This session can stay on the old STA address until you PRESS or power-cycle.</td></tr>
+          <tr><td><code>Station SSID</code> · <code>(empty - AP only)</code></td><td>Boot will skip STA join.</td></tr>
+          <tr><td><code>Fallback AP name</code> · <code>PrivateReserve</code></td><td>Unchanged. Join this AP after reboot, then set a new SSID on the web.</td></tr>
+          <tr><td><code>Join password</code> · <code>reserved</code></td><td>WPA2 PSK for that AP. Type it on the phone. Shown here because the web page is not reachable until you join.</td></tr>
+          <tr><td><code>After reboot</code> · <code>join AP, then set SSID on the web</code></td><td>SoftAP starts. Then open <code>http://192.168.4.1/wifi</code>. The live STA link, if any, stays until this reboot.</td></tr>
+          <tr><td><code>PRESS reboot</code></td><td>Stops PWM and resets the ESP32. One PRESS. Motor must be idle.</td></tr>
+          <tr><td><code>HOLD back</code></td><td>Return to Settings groups without rebooting.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <h2>13. Related</h2>
+    <nav class="links">
+      <ul>
+        <li><a href="index.html">Software overview</a> — full web UI, figure 1</li>
+        <li><a href="main.html#documentation">Documentation</a> — GitHub QR</li>
+      </ul>
+    </nav>
+
+    <footer>This page is a chapter of the <a href="../pdf/Software_User_Manual.pdf">Software User Manual</a>.</footer>
+  </article>
+</body>
+</html>

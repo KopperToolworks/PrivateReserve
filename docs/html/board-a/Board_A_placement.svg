@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="640"
+     viewBox="0 0 860 640" role="img" aria-labelledby="title desc">
+<title id="title">Board A placement — dual Perma-Proto T-Display-S3</title>
+<desc id="desc">Draft placement. USB-C left, EC11 right. Outer rails as-built; inner rails proposed.</desc>
+<defs>
+  <style>
+    .title { font: 700 16px system-ui, sans-serif; fill: #101828; }
+    .sub { font: 12px system-ui, sans-serif; fill: #475467; }
+    .col { font: 8px system-ui, sans-serif; fill: #667085; }
+    .gutter-lab { font: 8px system-ui, sans-serif; fill: #667085; }
+    .rail-lab { font: 700 8px system-ui, sans-serif; }
+    .pin-lab { font: 600 7.5px system-ui, sans-serif; }
+    .mod { font: 700 11px system-ui, sans-serif; fill: #f2f4f7; }
+    .mod-s { font: 9px system-ui, sans-serif; fill: #d0d5dd; }
+    .mod-ec11 { font: 700 11px system-ui, sans-serif; fill: #f2f4f7; }
+    .mod-ec11-pin { font: 500 10px system-ui, sans-serif; fill: #e4e7ec; }
+    .note { font: 10px system-ui, sans-serif; fill: #b54708; }
+    .term { font: 700 8px system-ui, sans-serif; fill: #101828; }
+    .term-id { font: 600 7px system-ui, sans-serif; fill: #667085; }
+    .edge { font: 700 10px system-ui, sans-serif; fill: #344054; }
+  </style>
+</defs>
+<rect width="860" height="640" fill="#ffffff"/>
+<text x="24" y="28" class="title">Board A — placement (first draft)</text>
+<text x="24" y="46" class="sub">USB-C left · EC11 right · header pin 12 nearest USB · outer rails as-built · inner rails proposed</text>
+
+<text x="24" y="62" class="edge">TOP edge · left → right</text>
+<rect x="72.0" y="68.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#dc6803" stroke-width="1.6"/>
+<text x="97.0" y="78.0" text-anchor="middle" class="term-id">T1</text>
+<text x="97.0" y="90.0" text-anchor="middle" class="term">3V</text>
+<rect x="127.0" y="68.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#101828" stroke-width="1.6"/>
+<text x="152.0" y="78.0" text-anchor="middle" class="term-id">T2</text>
+<text x="152.0" y="90.0" text-anchor="middle" class="term">GND</text>
+<rect x="182.0" y="68.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#101828" stroke-width="1.6"/>
+<text x="207.0" y="78.0" text-anchor="middle" class="term-id">T3</text>
+<text x="207.0" y="90.0" text-anchor="middle" class="term">GND</text>
+<rect x="237.0" y="68.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#98a2b3" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="262.0" y="78.0" text-anchor="middle" class="term-id">T4</text>
+<text x="262.0" y="90.0" text-anchor="middle" class="term">NC</text>
+<rect x="292.0" y="68.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#175cd3" stroke-width="1.6"/>
+<text x="317.0" y="78.0" text-anchor="middle" class="term-id">T5</text>
+<text x="317.0" y="90.0" text-anchor="middle" class="term">PWM</text>
+<rect x="347.0" y="68.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#175cd3" stroke-width="1.6"/>
+<text x="372.0" y="78.0" text-anchor="middle" class="term-id">T6</text>
+<text x="372.0" y="90.0" text-anchor="middle" class="term">DIR_OR</text>
+<rect x="402.0" y="68.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#175cd3" stroke-width="1.6"/>
+<text x="427.0" y="78.0" text-anchor="middle" class="term-id">T7</text>
+<text x="427.0" y="90.0" text-anchor="middle" class="term">LIM-U</text>
+<rect x="457.0" y="68.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#175cd3" stroke-width="1.6"/>
+<text x="482.0" y="78.0" text-anchor="middle" class="term-id">T8</text>
+<text x="482.0" y="90.0" text-anchor="middle" class="term">CLOSE</text>
+<rect x="512.0" y="68.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#175cd3" stroke-width="1.6"/>
+<text x="537.0" y="78.0" text-anchor="middle" class="term-id">T9</text>
+<text x="537.0" y="90.0" text-anchor="middle" class="term">SCL</text>
+<rect x="567.0" y="68.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#175cd3" stroke-width="1.6"/>
+<text x="592.0" y="78.0" text-anchor="middle" class="term-id">T10</text>
+<text x="592.0" y="90.0" text-anchor="middle" class="term">SDA</text>
+<rect x="622.0" y="68.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#101828" stroke-width="1.6"/>
+<text x="647.0" y="78.0" text-anchor="middle" class="term-id">T11</text>
+<text x="647.0" y="90.0" text-anchor="middle" class="term">GND</text>
+<rect x="677.0" y="68.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#101828" stroke-width="1.6"/>
+<text x="702.0" y="78.0" text-anchor="middle" class="term-id">T12</text>
+<text x="702.0" y="90.0" text-anchor="middle" class="term">GND</text>
+<rect x="72.0" y="102.0" width="660.0" height="7.0" rx="1" fill="#f2f4f7" stroke="#98a2b3" stroke-width="1" stroke-dasharray="3 2"/><text x="64.0" y="107.2" text-anchor="end" class="rail-lab" fill="#98a2b3">unused</text>
+<rect x="72.0" y="111.0" width="660.0" height="7.0" rx="1" fill="#f2f4f7" stroke="#98a2b3" stroke-width="1" stroke-dasharray="3 2"/><text x="64.0" y="116.2" text-anchor="end" class="rail-lab" fill="#98a2b3">unused</text>
+<rect x="72.0" y="122.0" width="660.0" height="96.0" fill="#ffffff" stroke="#344054" stroke-width="1.2"/>
+<text x="83.0" y="133.0" text-anchor="middle" class="col">1</text>
+<line x1="83.0" y1="136.0" x2="83.0" y2="214.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="171.0" y="133.0" text-anchor="middle" class="col">5</text>
+<line x1="171.0" y1="136.0" x2="171.0" y2="214.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="281.0" y="133.0" text-anchor="middle" class="col">10</text>
+<line x1="281.0" y1="136.0" x2="281.0" y2="214.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="391.0" y="133.0" text-anchor="middle" class="col">15</text>
+<line x1="391.0" y1="136.0" x2="391.0" y2="214.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="501.0" y="133.0" text-anchor="middle" class="col">20</text>
+<line x1="501.0" y1="136.0" x2="501.0" y2="214.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="611.0" y="133.0" text-anchor="middle" class="col">25</text>
+<line x1="611.0" y1="136.0" x2="611.0" y2="214.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="721.0" y="133.0" text-anchor="middle" class="col">30</text>
+<line x1="721.0" y1="136.0" x2="721.0" y2="214.0" stroke="#eaecf0" stroke-width="0.6"/>
+<rect x="73.0" y="162.3" width="658.0" height="14" fill="#eaecf0"/>
+<text x="402.0" y="172.3" text-anchor="middle" class="gutter-lab">Adafruit Perma-Proto 1/2</text>
+<rect x="72.0" y="222.0" width="660.0" height="7.0" rx="1" fill="#dc6803"/><text x="64.0" y="227.2" text-anchor="end" class="rail-lab" fill="#dc6803">+3.3V</text>
+<rect x="72.0" y="231.0" width="660.0" height="7.0" rx="1" fill="#101828"/><text x="64.0" y="236.2" text-anchor="end" class="rail-lab" fill="#101828">GND</text>
+<text x="742.0" y="172.0" class="sub">upper</text>
+<rect x="160.0" y="268.0" width="28" height="22" rx="3" fill="#98a2b3" stroke="#344054" stroke-width="1"/>
+<text x="174.0" y="283.0" text-anchor="middle" class="mod-s" fill="#101828">USB</text>
+<rect x="195.2" y="250.0" width="290.4" height="58" rx="4" fill="#1d2939"/>
+<rect x="231.2" y="258.0" width="212.4" height="42" rx="2" fill="#0c111d"/>
+<text x="243.2" y="283.0" class="mod">T-Display-S3</text>
+<text x="457.6" y="283.0" text-anchor="middle" class="mod-s">LILYGO</text>
+<circle cx="215.0" cy="248.0" r="4.2" fill="#dc6803" stroke="#fff" stroke-width="0.8"/>
+<text x="215.0" y="240.0" text-anchor="middle" class="pin-lab" fill="#dc6803">3V</text>
+<circle cx="237.0" cy="248.0" r="4.2" fill="#101828" stroke="#fff" stroke-width="0.8"/>
+<text x="237.0" y="240.0" text-anchor="middle" class="pin-lab" fill="#101828">GND</text>
+<circle cx="259.0" cy="248.0" r="4.2" fill="#101828" stroke="#fff" stroke-width="0.8"/>
+<text x="259.0" y="240.0" text-anchor="middle" class="pin-lab" fill="#101828">GND</text>
+<circle cx="281.0" cy="248.0" r="4.2" fill="#98a2b3" stroke="#fff" stroke-width="0.8"/>
+<text x="281.0" y="240.0" text-anchor="middle" class="pin-lab" fill="#98a2b3">NC</text>
+<circle cx="303.0" cy="248.0" r="4.2" fill="#175cd3" stroke="#fff" stroke-width="0.8"/>
+<text x="303.0" y="240.0" text-anchor="middle" class="pin-lab" fill="#175cd3">PWM</text>
+<circle cx="325.0" cy="248.0" r="4.2" fill="#175cd3" stroke="#fff" stroke-width="0.8"/>
+<text x="325.0" y="240.0" text-anchor="middle" class="pin-lab" fill="#175cd3">DIR_OR</text>
+<circle cx="347.0" cy="248.0" r="4.2" fill="#175cd3" stroke="#fff" stroke-width="0.8"/>
+<text x="347.0" y="240.0" text-anchor="middle" class="pin-lab" fill="#175cd3">LIM-U</text>
+<circle cx="369.0" cy="248.0" r="4.2" fill="#175cd3" stroke="#fff" stroke-width="0.8"/>
+<text x="369.0" y="240.0" text-anchor="middle" class="pin-lab" fill="#175cd3">CLOSE</text>
+<circle cx="391.0" cy="248.0" r="4.2" fill="#175cd3" stroke="#fff" stroke-width="0.8"/>
+<text x="391.0" y="240.0" text-anchor="middle" class="pin-lab" fill="#175cd3">SCL</text>
+<circle cx="413.0" cy="248.0" r="4.2" fill="#175cd3" stroke="#fff" stroke-width="0.8"/>
+<text x="413.0" y="240.0" text-anchor="middle" class="pin-lab" fill="#175cd3">SDA</text>
+<circle cx="435.0" cy="248.0" r="4.2" fill="#101828" stroke="#fff" stroke-width="0.8"/>
+<text x="435.0" y="240.0" text-anchor="middle" class="pin-lab" fill="#101828">GND</text>
+<circle cx="457.0" cy="248.0" r="4.2" fill="#101828" stroke="#fff" stroke-width="0.8"/>
+<text x="457.0" y="240.0" text-anchor="middle" class="pin-lab" fill="#101828">GND</text>
+<circle cx="215.0" cy="310.0" r="4.2" fill="#b42318" stroke="#fff" stroke-width="0.8"/>
+<text x="215.0" y="324.0" text-anchor="middle" class="pin-lab" fill="#b42318">5V</text>
+<circle cx="237.0" cy="310.0" r="4.2" fill="#101828" stroke="#fff" stroke-width="0.8"/>
+<text x="237.0" y="324.0" text-anchor="middle" class="pin-lab" fill="#101828">GND</text>
+<circle cx="259.0" cy="310.0" r="4.2" fill="#98a2b3" stroke="#fff" stroke-width="0.8"/>
+<text x="259.0" y="324.0" text-anchor="middle" class="pin-lab" fill="#98a2b3">NC</text>
+<circle cx="281.0" cy="310.0" r="4.2" fill="#98a2b3" stroke="#fff" stroke-width="0.8"/>
+<text x="281.0" y="324.0" text-anchor="middle" class="pin-lab" fill="#98a2b3">NC</text>
+<circle cx="303.0" cy="310.0" r="4.2" fill="#6941c6" stroke="#fff" stroke-width="0.8"/>
+<text x="303.0" y="324.0" text-anchor="middle" class="pin-lab" fill="#6941c6">13</text>
+<circle cx="325.0" cy="310.0" r="4.2" fill="#6941c6" stroke="#fff" stroke-width="0.8"/>
+<text x="325.0" y="324.0" text-anchor="middle" class="pin-lab" fill="#6941c6">12</text>
+<circle cx="347.0" cy="310.0" r="4.2" fill="#6941c6" stroke="#fff" stroke-width="0.8"/>
+<text x="347.0" y="324.0" text-anchor="middle" class="pin-lab" fill="#6941c6">11</text>
+<circle cx="369.0" cy="310.0" r="4.2" fill="#175cd3" stroke="#fff" stroke-width="0.8"/>
+<text x="369.0" y="324.0" text-anchor="middle" class="pin-lab" fill="#175cd3">OPEN</text>
+<circle cx="391.0" cy="310.0" r="4.2" fill="#175cd3" stroke="#fff" stroke-width="0.8"/>
+<text x="391.0" y="324.0" text-anchor="middle" class="pin-lab" fill="#175cd3">LIM-L</text>
+<circle cx="413.0" cy="310.0" r="4.2" fill="#175cd3" stroke="#fff" stroke-width="0.8"/>
+<text x="413.0" y="324.0" text-anchor="middle" class="pin-lab" fill="#175cd3">ISENSE</text>
+<circle cx="435.0" cy="310.0" r="4.2" fill="#175cd3" stroke="#fff" stroke-width="0.8"/>
+<text x="435.0" y="324.0" text-anchor="middle" class="pin-lab" fill="#175cd3">HALL</text>
+<circle cx="457.0" cy="310.0" r="4.2" fill="#dc6803" stroke="#fff" stroke-width="0.8"/>
+<text x="457.0" y="324.0" text-anchor="middle" class="pin-lab" fill="#dc6803">3V</text>
+<rect x="534.0" y="254.0" width="104.0" height="56.0" rx="4" fill="#1d2939" stroke="#344054" stroke-width="1"/>
+<circle cx="560.0" cy="282.0" r="15.0" fill="#101828" stroke="#667085" stroke-width="2"/>
+<text x="584.0" y="270.0" class="mod-ec11">EC11</text>
+<text x="584.0" y="282.0" class="mod-ec11-pin">CLK · DT</text>
+<text x="584.0" y="294.0" class="mod-ec11-pin">SW</text>
+<text x="584.0" y="306.0" class="mod-ec11-pin">+ · GND</text>
+<rect x="72.0" y="336.0" width="660.0" height="7.0" rx="1" fill="#101828"/><text x="64.0" y="341.2" text-anchor="end" class="rail-lab" fill="#101828">GND</text>
+<rect x="72.0" y="345.0" width="660.0" height="7.0" rx="1" fill="#dc6803"/><text x="64.0" y="350.2" text-anchor="end" class="rail-lab" fill="#dc6803">+3.3V</text>
+<rect x="72.0" y="356.0" width="660.0" height="96.0" fill="#ffffff" stroke="#344054" stroke-width="1.2"/>
+<text x="83.0" y="367.0" text-anchor="middle" class="col">1</text>
+<line x1="83.0" y1="370.0" x2="83.0" y2="448.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="171.0" y="367.0" text-anchor="middle" class="col">5</text>
+<line x1="171.0" y1="370.0" x2="171.0" y2="448.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="281.0" y="367.0" text-anchor="middle" class="col">10</text>
+<line x1="281.0" y1="370.0" x2="281.0" y2="448.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="391.0" y="367.0" text-anchor="middle" class="col">15</text>
+<line x1="391.0" y1="370.0" x2="391.0" y2="448.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="501.0" y="367.0" text-anchor="middle" class="col">20</text>
+<line x1="501.0" y1="370.0" x2="501.0" y2="448.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="611.0" y="367.0" text-anchor="middle" class="col">25</text>
+<line x1="611.0" y1="370.0" x2="611.0" y2="448.0" stroke="#eaecf0" stroke-width="0.6"/>
+<text x="721.0" y="367.0" text-anchor="middle" class="col">30</text>
+<line x1="721.0" y1="370.0" x2="721.0" y2="448.0" stroke="#eaecf0" stroke-width="0.6"/>
+<rect x="73.0" y="396.3" width="658.0" height="14" fill="#eaecf0"/>
+<text x="402.0" y="406.3" text-anchor="middle" class="gutter-lab">Adafruit Perma-Proto 1/2</text>
+<rect x="72.0" y="456.0" width="660.0" height="7.0" rx="1" fill="#f2f4f7" stroke="#98a2b3" stroke-width="1" stroke-dasharray="3 2"/><text x="64.0" y="461.2" text-anchor="end" class="rail-lab" fill="#98a2b3">unused</text>
+<rect x="72.0" y="465.0" width="660.0" height="7.0" rx="1" fill="#101828"/><text x="64.0" y="470.2" text-anchor="end" class="rail-lab" fill="#101828">GND</text>
+<text x="742.0" y="406.0" class="sub">lower</text>
+<text x="24" y="488.0" class="edge">BOTTOM edge · left → right</text>
+<rect x="72.0" y="496.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#b42318" stroke-width="1.6"/>
+<text x="97.0" y="506.0" text-anchor="middle" class="term-id">T13</text>
+<text x="97.0" y="518.0" text-anchor="middle" class="term">5V</text>
+<rect x="127.0" y="496.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#101828" stroke-width="1.6"/>
+<text x="152.0" y="506.0" text-anchor="middle" class="term-id">T14</text>
+<text x="152.0" y="518.0" text-anchor="middle" class="term">GND</text>
+<rect x="182.0" y="496.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#98a2b3" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="207.0" y="506.0" text-anchor="middle" class="term-id">T15</text>
+<text x="207.0" y="518.0" text-anchor="middle" class="term">NC</text>
+<rect x="237.0" y="496.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#98a2b3" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="262.0" y="506.0" text-anchor="middle" class="term-id">T16</text>
+<text x="262.0" y="518.0" text-anchor="middle" class="term">NC</text>
+<rect x="292.0" y="496.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#98a2b3" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="317.0" y="506.0" text-anchor="middle" class="term-id">T17</text>
+<text x="317.0" y="518.0" text-anchor="middle" class="term">NC</text>
+<rect x="347.0" y="496.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#98a2b3" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="372.0" y="506.0" text-anchor="middle" class="term-id">T18</text>
+<text x="372.0" y="518.0" text-anchor="middle" class="term">NC</text>
+<rect x="402.0" y="496.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#98a2b3" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="427.0" y="506.0" text-anchor="middle" class="term-id">T19</text>
+<text x="427.0" y="518.0" text-anchor="middle" class="term">NC</text>
+<rect x="457.0" y="496.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#175cd3" stroke-width="1.6"/>
+<text x="482.0" y="506.0" text-anchor="middle" class="term-id">T20</text>
+<text x="482.0" y="518.0" text-anchor="middle" class="term">OPEN</text>
+<rect x="512.0" y="496.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#175cd3" stroke-width="1.6"/>
+<text x="537.0" y="506.0" text-anchor="middle" class="term-id">T21</text>
+<text x="537.0" y="518.0" text-anchor="middle" class="term">LIM-L</text>
+<rect x="567.0" y="496.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#175cd3" stroke-width="1.6"/>
+<text x="592.0" y="506.0" text-anchor="middle" class="term-id">T22</text>
+<text x="592.0" y="518.0" text-anchor="middle" class="term">ISENSE</text>
+<rect x="622.0" y="496.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#175cd3" stroke-width="1.6"/>
+<text x="647.0" y="506.0" text-anchor="middle" class="term-id">T23</text>
+<text x="647.0" y="518.0" text-anchor="middle" class="term">HALL</text>
+<rect x="677.0" y="496.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#dc6803" stroke-width="1.6"/>
+<text x="702.0" y="506.0" text-anchor="middle" class="term-id">T24</text>
+<text x="702.0" y="518.0" text-anchor="middle" class="term">3V</text>
+<text x="24" y="530" class="edge">Rail and pin colors</text>
+<rect x="24" y="540" width="12" height="12" rx="2" fill="#b42318"/>
+<text x="42" y="551" class="sub">+5V (earth)  +5V_EARTH</text>
+<rect x="294" y="540" width="12" height="12" rx="2" fill="#dc6803"/>
+<text x="312" y="551" class="sub">+3.3V (earth)  +3V3_TDISPLAY</text>
+<rect x="564" y="540" width="12" height="12" rx="2" fill="#101828"/>
+<text x="582" y="551" class="sub">GND (earth)  MCU_GND</text>
+<rect x="24" y="562" width="12" height="12" rx="2" fill="#175cd3"/>
+<text x="42" y="573" class="sub">Field GPIO / command</text>
+<rect x="294" y="562" width="12" height="12" rx="2" fill="#6941c6"/>
+<text x="312" y="573" class="sub">EC11 header pins (on-board, not terminals)</text>
+<rect x="564" y="562" width="12" height="12" rx="2" fill="#98a2b3"/>
+<text x="582" y="573" class="sub">NC terminal / unused rail</text>
+<text x="24" y="602" class="note">Draft. Upper outer rails unused. Lower outer + unused; lower outer − is MCU_GND.</text>
+<text x="24" y="616" class="note">+5V_EARTH is the 5V screw terminal, not a proto + bus. Column span 7–18 is assumed.</text>
+</svg>

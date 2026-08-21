@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Board C — HV switch stage (draft)</title>
+  <style>
+    :root {
+      --ink: #101828;
+      --muted: #475467;
+      --line: #d0d5dd;
+      --paper: #fff;
+      --wash: #f9fafb;
+      --earth: #175cd3;
+      --warn-bg: #fffaeb;
+      --warn-bd: #dc6803;
+      --draft-bg: #f4f3ff;
+      --draft-bd: #7f56d9;
+      --v70p: #ea580c;
+      --v70n: #78716c;
+      --sw: #d97706;
+      --gate: #175cd3;
+    }
+    * { box-sizing: border-box; }
+    html { font: 16px/1.45 system-ui, sans-serif; color: var(--ink); background: #e4e7ec; }
+    body { margin: 0; }
+    .page {
+      max-width: 52rem;
+      margin: 0 auto;
+      padding: 1.5rem 1.75rem 3rem;
+      background: var(--paper);
+    }
+    h1 { font-size: 1.6rem; margin: 0 0 0.35rem; letter-spacing: -0.02em; }
+    h2 { font-size: 1.15rem; margin: 2rem 0 0.6rem; }
+    h3 { font-size: 1rem; margin: 1.25rem 0 0.4rem; }
+    h4 { font-size: 0.95rem; margin: 1rem 0 0.35rem; color: var(--muted); font-weight: 600; }
+    p, li { color: var(--ink); }
+    .lede { color: var(--muted); margin: 0 0 1rem; }
+    .banner {
+      border: 2px solid var(--draft-bd);
+      background: var(--draft-bg);
+      padding: 0.65rem 0.85rem;
+      margin: 0 0 1rem;
+    }
+    .banner strong { color: #42307d; }
+    .warn {
+      border: 2px solid var(--warn-bd);
+      background: var(--warn-bg);
+      padding: 0.65rem 0.85rem;
+      margin: 0 0 1.25rem;
+    }
+    figure { margin: 1rem 0 1.5rem; }
+    figure img, figure object, figure svg { width: 100%; height: auto; display: block; }
+    figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.4rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin: 0.5rem 0 1rem; }
+    th, td { border: 1px solid var(--line); padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; }
+    th { background: var(--wash); }
+    code { font-size: 0.88em; }
+    .swatch {
+      display: inline-block; width: 0.7rem; height: 0.7rem;
+      margin-right: 0.35rem; vertical-align: -0.1rem;
+    }
+    nav.links { font-size: 0.9rem; }
+    nav.links a { color: var(--earth); }
+    footer { margin-top: 2rem; font-size: 0.8rem; color: var(--muted); }
+    @media print {
+      html { background: #fff; font-size: 11pt; }
+      .page { max-width: none; padding: 0; }
+      .banner, .warn { break-inside: avoid; }
+      figure { break-inside: avoid; }
+      a { color: inherit; text-decoration: none; }
+      nav.links a::after { content: " (" attr(href) ")"; font-size: 0.75em; color: var(--muted); }
+    }
+    @media (max-width: 640px) {
+      .page { padding: 1rem; }
+    }
+      /* client-nav */
+    nav.sec { display: flex; flex-wrap: wrap; gap: 0.85rem; margin: 0 0 1.25rem; font-size: 0.9rem; }
+    nav.sec a { color: var(--earth); }
+    nav.sec a[aria-current="page"] { color: var(--ink); font-weight: 600; text-decoration: none; }
+    nav.sec a.pdf-dl { font-weight: 600; }
+    .pdf-all { margin: 0 0 1.25rem; font-size: 0.9rem; }
+    .pdf-all a { color: var(--earth); }
+    .manual-cover { min-height: 18rem; padding: 3rem 0 2rem; break-after: page; }
+    .manual-cover h1 { font-size: 2rem; margin: 0.2rem 0 0.8rem; }
+    .manual-cover .toc { margin-top: 2rem; }
+    .chapter { break-before: page; }
+    @media print {
+      nav.sec, nav.links, .pdf-dl, .pdf-all { display: none !important; }
+      nav.links a::after { content: none; }
+      table { break-inside: avoid; }
+    }
+    /* /client-nav */
+  </style>
+</head>
+<body>
+  <article class="page">
+    <p class="lede">Private Reserve · DIN controller · first draft</p>
+    <h1>Board C — HV switch stage</h1>
+    <p>Adafruit Perma-Proto <strong>1/4</strong> (columns 1–15) carrying Q1
+      IRFP460, D9 STTH8R06 flyback, TVS1 P6KE200A, and the local
+      <code>SW</code> / flyback loop. All copper is in the floating HV domain
+      referenced to <code>−70V</code>. Screw terminals
+      <strong>T4</strong> and <strong>T5</strong> wire to the DIN K1 return
+      contacts; motor leads land on K1 COM, not on this board.</p>
+
+    <nav class="sec" aria-label="Wiring pages">
+      <a href="../board-a/index.html">Board A</a>
+      <a href="../board-b/index.html">Board B</a>
+      <a href="../board-c/index.html" aria-current="page">Board C</a>
+      <a href="../wiring-guide.html">All boards</a>
+      <a href="../index.html">Software</a>
+      <a class="pdf-dl" href="../../pdf/Wiring_Guide.pdf">Wiring Guide (PDF)</a>
+    </nav>
+
+    <p class="pdf-all"><strong>Wiring Guide.</strong> <a href="../../pdf/Wiring_Guide.pdf">Download PDF</a> · <a href="../wiring-guide.html">Single-page HTML</a></p>
+
+
+    <div class="banner">
+      <strong>Draft.</strong> View with the screw terminals on the
+      <strong>bottom</strong> edge and the IRFP460 heatsink at the
+      <strong>top</strong>. Terminals are numbered <strong>T1–T5</strong> left
+      to right (T1 at column 3). On the as-built unit all four Perma-Proto
+      power rails are <strong>unused</strong> — HV nets use column jumpers,
+      not the silkscreen ± buses. On-board gate clamp parts (10 kΩ, BZX85C15)
+      and row-column routing are documented elsewhere. Pin-by-pin IC wiring is
+      not duplicated here.
+    </div>
+
+    <div class="warn">
+      <strong>Floating HV — up to 140 VDC.</strong> Every net on Board C is
+      hazardous relative to earth when the motor supply is energized.
+      <code>−70V</code> is <strong>not</strong> <code>MCU_GND</code>. Do not
+      bond this board to protective earth except through an analyzed heatsink
+      isolator. Q1 tab and drain are live at <code>SW</code>. Use an isolated
+      or differential probe referenced to <code>−70V</code>, not earth ground.
+      Discharge the bus and verify safe voltage before service.
+    </div>
+
+    <h2>1. Placement</h2>
+    <p>Mount on DIN rail with ≥20 mm clearance beside the heatsink for airflow
+      (see DIN layout). Q1 sits under an
+      insulated heatsink at the top of the proto. D9 spans the mid board with
+      cathode toward the fused <code>+70V</code> side and anode to
+      <code>SW</code>. TVS1 clamps between the on-board
+      <code>+70V</code> and <code>−70V</code> nodes (via column wiring, not
+      the Perma-Proto rails). Five screw terminals on the bottom edge accept
+      field and inter-board cables; there are no terminals on the top edge.</p>
+
+    <p><strong>Flyback loop constraint.</strong> When Q1 turns off, motor
+      inductance pushes current through D9 from <code>SW</code> to
+      <code>+70V</code>. That path — <code>SW</code> → D9 anode → D9 cathode
+      → <code>+70V</code> — must stay physically short and entirely on Board C.
+      Figure 1 shows this as a dashed callout box below the proto; it is a
+      <em>placement rule</em>, not a specific jumper wire to install. Do not
+      run the flyback loop through a long cable to Board B or the DIN rail.</p>
+
+    <figure>
+      <img src="Board_C_placement.svg" alt="Board C line-art: Perma-Proto 1/4, IRFP460, D9, TVS, colored rails, T1–T5 labels">
+      <figcaption>
+        Figure 1. Grid-true placement (columns 1–15). Terminal IDs T1–T5 label
+        each screw block left to right. Dashed gray bars are unused Perma-Proto
+        rails. T4 and T5 are separate K1 return-contact landings (NC1 / NO2),
+        both on the <code>SW</code> net on-board. The full-width dashed amber
+        box below the proto is a placement constraint for the flyback path —
+        not a wire diagram.
+      </figcaption>
+    </figure>
+
+    <h2>2. Rails</h2>
+    <p>The 1/4 Perma-Proto has four full-width buses (15 columns). On the
+      as-built unit <strong>all four rails are unused</strong> — no jumpers
+      connect them to <code>+70V</code>, <code>−70V</code>, or any other net.
+      HV distribution uses column strips and point-to-point jumpers instead.
+      Do not land <code>MCU_GND</code>, <code>+5V_EARTH</code>,
+      <code>+5V_ISO</code>, or <code>+12V_GD</code> on any Board C bus.</p>
+
+    <table>
+      <thead>
+        <tr><th>Rail</th><th>Net</th><th>Diagram color</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Upper outer −</td><td>unused (as-built; no jumper)</td><td><span class="swatch" style="background:#98a2b3"></span>unused</td></tr>
+        <tr><td>Upper inner +</td><td>unused (as-built; no jumper)</td><td><span class="swatch" style="background:#98a2b3"></span>unused</td></tr>
+        <tr><td>Lower inner −</td><td>unused (as-built; no jumper)</td><td><span class="swatch" style="background:#98a2b3"></span>unused</td></tr>
+        <tr><td>Lower outer +</td><td>unused (as-built; no jumper)</td><td><span class="swatch" style="background:#98a2b3"></span>unused</td></tr>
+      </tbody>
+    </table>
+
+    <h2>3. What attaches</h2>
+
+    <h3>Power</h3>
+    <p>Board C receives the motor outer rails from the inter-box 140 V feed
+      and Wago distribution (see DIN layout,
+      row B). The fused <code>+70V</code> high rail enters at
+      <strong>T1</strong> after external fuse F1. The low outer rail
+      <code>−70V</code> enters at <strong>T2</strong>. Those terminals feed
+      D9 cathode, TVS1, and Q1 source on-board. K1 high-side contacts
+      (NO1/NC2) take fused <code>+70V</code> from the Wago star, not through
+      a second Board C terminal, unless your harness branches from T1.</p>
+
+    <h3>Screw terminals</h3>
+    <p>Numbering follows Figure 1: left to right with the heatsink up and
+      terminals down. T1 is leftmost (column 3 on the as-built unit). On the
+      as-built board, leads at the motor-current terminals
+      (<strong>T1</strong>, <strong>T2</strong>, <strong>T4</strong>,
+      <strong>T5</strong>) are <strong>reinforced</strong> for the higher
+      continuous and PWM motor current. Use heavy-gauge, HV-rated wire on those
+      paths; keep <strong>T3</strong> (gate) as a low-current signal lead.
+      See DIN layout for 140 V path gauge
+      guidance (18 AWG minimum; 16 AWG preferred for runs &gt;1 m).</p>
+
+    <h4>Bottom edge — T1–T5</h4>
+    <table>
+      <thead>
+        <tr><th>Terminal</th><th>Label</th><th>Net</th><th>Attaches</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>T1</strong></td><td><strong>+70V</strong></td><td><code>+70V</code></td><td><strong>Power in.</strong> Fused high rail from Wago / F1 out → D9 K, TVS1 K (board-internal)</td></tr>
+        <tr><td><strong>T2</strong></td><td><strong>−70V</strong></td><td><code>−70V</code></td><td><strong>Power in.</strong> Motor low outer rail → Q1 source, TVS1 A, Rgs/Dz return (board-internal)</td></tr>
+        <tr><td><strong>T3</strong></td><td><strong>GATE</strong></td><td>gate</td><td>Board B TC4426 OUT B (100 Ω may be on B or at Q1; see Motor_Driver_Wiring.md)</td></tr>
+        <tr><td><strong>T4</strong></td><td><strong>NC1</strong></td><td><code>SW</code></td><td>K1 pin 12 (NC1) — return contact → Q1 drain / D9 anode on-board</td></tr>
+        <tr><td><strong>T5</strong></td><td><strong>NO2</strong></td><td><code>SW</code></td><td>K1 pin 24 (NO2) — return contact → same <code>SW</code> node as T4 on-board</td></tr>
+      </tbody>
+    </table>
+
+    <h3>On-board only (not on terminals)</h3>
+    <table>
+      <thead>
+        <tr><th>Ref</th><th>Part</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Q1</td><td>IRFP460NPBF</td><td>Low-side switch; tab = drain = <code>SW</code></td></tr>
+        <tr><td>D9</td><td>STTH8R06D</td><td>Motor PWM flyback; cathode → <code>+70V</code>, anode → <code>SW</code></td></tr>
+        <tr><td>TVS1</td><td>P6KE200A</td><td>Across <code>+70V</code> and <code>−70V</code> on-board (column wiring; rails unused)</td></tr>
+        <tr><td>Rgs</td><td>10 kΩ</td><td>Gate-to-source at Q1</td></tr>
+        <tr><td>Dz</td><td>BZX85C15</td><td>15 V gate clamp at Q1</td></tr>
+      </tbody>
+    </table>
+    <p>Full pin tables:
+      Motor_Driver_Wiring.md.</p>
+
+    <h3>Board B → Board C</h3>
+    <p>Keyed two-conductor floating cable from Board B
+      <strong>T9</strong> (PWM out / gate) and <strong>T3</strong>
+      (<code>−70V</code> gate-driver return / Q1 source reference) to Board C
+      <strong>T3</strong> (GATE) and <strong>T2</strong> (<code>−70V</code>).
+      Keep this harness short; do not route the D9 flyback loop off Board C.</p>
+
+    <h3>Board C → DIN K1 (contacts)</h3>
+    <p>Direction switching uses the Phoenix K1 DPDT on the DIN rail. Board C
+      lands the return-contact harness; high-side contacts and motor commons
+      wire at the relay.</p>
+    <table>
+      <thead>
+        <tr><th>K1 pin</th><th>Net</th><th>From</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>NO1, NC2</td><td><code>+70V</code> (fused)</td><td>Wago / F1 star (not a Board C terminal unless branched from T1)</td></tr>
+        <tr><td>NC1 (12)</td><td><code>SW</code></td><td><strong>T4</strong></td></tr>
+        <tr><td>NO2 (24)</td><td><code>SW</code></td><td><strong>T5</strong></td></tr>
+        <tr><td>COM1, COM2</td><td><code>MOTOR_A</code>, <code>MOTOR_B</code></td><td>Field motor harness (HV gland)</td></tr>
+      </tbody>
+    </table>
+    <p>K1 coil (<code>+12V_GD</code> / Q3) is driven from Board B; see
+      K1 floating coil option.</p>
+
+    <h2>4. As-built photo</h2>
+    <p>Line art is the labeled figure. The photo shows the unit that was built.</p>
+    <figure>
+      <img src="Board_C_PermaProto.jpg" alt="Board C wired Perma-Proto 1/4: IRFP460 heatsink up, D9 flyback, screw terminals down">
+      <figcaption>Wired carrier. Heatsink up, five bottom-edge terminals,
+        columns 1–15. Red leads at T1–T2 and T4–T5 are reinforced for motor
+        current; T3 (gate) is a low-current signal.</figcaption>
+    </figure>
+
+    <h2>Related</h2>
+    <nav class="links">
+      <ul>
+        <li><a href="../board-a/index.html">Board A</a> — earth-side control (T-Display-S3, EC11, field I/O)</li>
+        <li><a href="../board-b/index.html">Board B</a> — floating gate driver</li>
+        <li><a href="../board-c/index.html">Board C</a> — HV switch stage</li>
+        <li><a href="../wiring-guide.html">Wiring Guide</a> — boards A, B, and C on one page</li>
+        <li><a href="../index.html">Software</a> — operator screens</li>
+      </ul>
+    </nav>
+
+    <footer>This page is a chapter of the <a href="../../pdf/Wiring_Guide.pdf">Wiring Guide</a>. Electrical wiring truth for the motor stack remains the gate-driver schematic, not the placement drawing.</footer>
+  </article>
+</body>
+</html>

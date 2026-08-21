@@ -1,0 +1,10 @@
+# Editor / OS
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# Local build output
+docs/node_modules/
+firmware/.pio/
