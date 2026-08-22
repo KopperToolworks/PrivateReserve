@@ -12,8 +12,8 @@ The on-box LCD during an open, and the empty-rack current table that sets the mi
 
 <table>
 <tr>
-<th width="50%" align="center" valign="bottom">Main, opening</th>
-<th width="50%" align="center" valign="bottom">Diagnostics, current table</th>
+<th width="50%" align="center" valign="top">Main, opening</th>
+<th width="50%" align="center" valign="top">Diagnostics, current table</th>
 </tr>
 <tr>
 <td width="50%" align="center">
