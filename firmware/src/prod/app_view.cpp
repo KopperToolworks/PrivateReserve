@@ -418,7 +418,7 @@ void App::composeDiag() {
       row(3, "shaft (supporting)", tmp);
       view_.nrows = 4;
       snprintf(lv, sizeof(lv), "16: PWM - 21: %s", door.k1Open() ? "HIGH" : "LOW");
-      pin("GPIO16 -> PWM -> 6N137 - GPIO21 -> DIR_OR", lv);
+      pin("GPIO16 -> PWM -> 6N137 - GPIO21 -> DIR", lv);
       view_.nftr = 1;
       copy(view_.ftr[0], sizeof(view_.ftr[0]), "HOLD back");
       break;

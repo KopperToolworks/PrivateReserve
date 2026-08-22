@@ -137,7 +137,7 @@
     </div>
 
     <h2>1. Placement</h2>
-    <p>View with the display facing you. USB-C is on the left. The EC11 is on the right. Pin 12 of each header is nearest USB. Screw terminals are numbered <strong>T1–T12</strong> on the top edge and <strong>T13–T24</strong> on the bottom edge, left to right. The <strong>top</strong> edge starts at T1 (<code>3V</code>, <code>GND</code>, one NC, then PWM, DIR_OR, limits, I²C). The <strong>bottom</strong> edge starts at T13 (<code>5V</code>, <code>GND</code>, five NC including T17–T19, then OPEN, LIM-L, ISENSE, HALL, 3V). The EC11 uses GPIO11–13 on the T-Display header directly; see <a href="board-a/EC11_Onboard_Wiring.md">EC11 on-board wiring</a>.</p>
+    <p>View with the display facing you. USB-C is on the left. The EC11 is on the right. Pin 12 of each header is nearest USB. Screw terminals are numbered <strong>T1–T12</strong> on the top edge and <strong>T13–T24</strong> on the bottom edge, left to right. The <strong>top</strong> edge starts at T1 (<code>3V</code>, <code>GND</code>, one NC, then PWM, DIR, limits, I²C). The <strong>bottom</strong> edge starts at T13 (<code>5V</code>, <code>GND</code>, five NC including T17–T19, then OPEN, LIM-L, ISENSE, HALL, 3V). The EC11 uses GPIO11–13 on the T-Display header directly; see <a href="board-a/EC11_Onboard_Wiring.md">EC11 on-board wiring</a>.</p>
 
     <figure>
       <img src="board-a/Board_A_placement.svg" alt="Board A line-art: dual Perma-Proto, T-Display-S3, EC11, colored rails, and function labels on each header pin">
@@ -195,7 +195,7 @@
         <tr><td><strong>T3</strong></td><td><strong>GND</strong></td><td><code>MCU_GND</code></td><td>Sensor, limit, and rocker returns</td></tr>
         <tr><td><strong>T4</strong></td><td><strong>NC</strong></td><td>—</td><td>Module NC. Unassigned. May be jumpered to <code>MCU_GND</code>.</td></tr>
         <tr><td><strong>T5</strong></td><td><strong>PWM</strong></td><td>GPIO16</td><td>Board B 6N137 LED</td></tr>
-        <tr><td><strong>T6</strong></td><td><strong>DIR_OR</strong></td><td>GPIO21</td><td>Board B U4 LED</td></tr>
+        <tr><td><strong>T6</strong></td><td><strong>DIR</strong></td><td>GPIO21</td><td>Board B U4 LED</td></tr>
         <tr><td><strong>T7</strong></td><td><strong>LIM-U</strong></td><td>GPIO17</td><td>Upper NC limit to GND</td></tr>
         <tr><td><strong>T8</strong></td><td><strong>CLOSE</strong></td><td>GPIO18</td><td>Close rocker (active-low, paralleled pair)</td></tr>
         <tr><td><strong>T9</strong></td><td><strong>SCL</strong></td><td>GPIO44</td><td>AS5600 SCL</td></tr>
@@ -246,7 +246,7 @@
 
     <h3>Board A → Board B</h3>
     <p>Keyed 3-pin earth-side cable from <strong>T5</strong> (<code>PWM</code>),
-      <strong>T6</strong> (<code>DIR_OR</code>), and a <code>MCU_GND</code> terminal
+      <strong>T6</strong> (<code>DIR</code>), and a <code>MCU_GND</code> terminal
       (for example <strong>T11</strong> or <strong>T14</strong>). LED resistors stay
       on Board B.</p>
 
@@ -281,7 +281,7 @@
 
     <div class="warn">
       <strong>Two galvanic domains.</strong> Columns 1–5 are the earth LED
-      island: <code>PWM</code>, <code>DIR_OR</code>, and <code>MCU_GND</code> from
+      island: <code>PWM</code>, <code>DIR</code>, and <code>MCU_GND</code> from
       Board A (T-Display-S3 GPIO16 / GPIO21 and earth return). Those nets are
       earth-referenced only. Columns 6–30 are floating, referenced to
       <code>−70V</code>. U1 and U4 translate the command signals optically; no
@@ -302,7 +302,7 @@
       <strong>T4</strong> (<code>PWM</code>) and <strong>T5</strong>
       (<code>MCU_GND</code>). The lower-left stack (<strong>T6–T7</strong>)
       carries HDR-15-5 #2. The upper-right block (<strong>T8–T9</strong>) takes
-      <code>DIR_OR</code> from Board A and drives PWM out to Board C. The
+      <code>DIR</code> from Board A and drives PWM out to Board C. The
       lower-right block (<strong>T10–T11</strong>) wires the Phoenix K1 coil.</p>
 
     <figure>
@@ -442,7 +442,7 @@
         <tr>
           <td><strong>T8</strong></td>
           <td><strong>DIR</strong></td>
-          <td><code>DIR_OR</code> (GPIO21)</td>
+          <td><code>DIR</code> (GPIO21)</td>
           <td>Board A <strong>T6</strong> ← T-Display-S3 GPIO21. Earth island → U4 LED (270&nbsp;Ω on-board). LED return shares <strong>T5</strong> <code>MCU_GND</code> — no separate earth screw for DIR. Optically isolated to Q3 / K1 coil.</td>
         </tr>
         <tr>
@@ -488,7 +488,7 @@
         <tr><td>K1 coil +</td><td><code>+12V_GD</code></td><td><strong>T11</strong> → Phoenix PLC-RSC-12DC/21-21 coil (+)</td></tr>
         <tr><td>K1 coil −</td><td>Q3 drain</td><td><strong>T10</strong> ← relay coil (−); Q3 source → <code>−70V</code></td></tr>
         <tr><td>PWM command</td><td><code>PWM</code></td><td>T-Display-S3 GPIO16 → Board A <strong>T5</strong> → Board B <strong>T4</strong> → U1 LED (220&nbsp;Ω on-board); optically isolated to Q2 / U3 / gate</td></tr>
-        <tr><td>Direction command</td><td><code>DIR_OR</code></td><td>T-Display-S3 GPIO21 → Board A <strong>T6</strong> → Board B <strong>T8</strong> → U4 LED; return via <strong>T5</strong> <code>MCU_GND</code></td></tr>
+        <tr><td>Direction command</td><td><code>DIR</code></td><td>T-Display-S3 GPIO21 → Board A <strong>T6</strong> → Board B <strong>T8</strong> → U4 LED; return via <strong>T5</strong> <code>MCU_GND</code></td></tr>
       </tbody>
     </table>
     <p>Coil and contact detail:
@@ -512,7 +512,7 @@
         <tr><th>Cable</th><th>Board B landing</th><th>Domain</th></tr>
       </thead>
       <tbody>
-        <tr><td>Board A → Board B</td><td><strong>T4</strong> (<code>PWM</code> in), <strong>T5</strong> (<code>MCU_GND</code>), <strong>T8</strong> (<code>DIR_OR</code>)</td><td>Earth only; translated optically by U1 / U4</td></tr>
+        <tr><td>Board A → Board B</td><td><strong>T4</strong> (<code>PWM</code> in), <strong>T5</strong> (<code>MCU_GND</code>), <strong>T8</strong> (<code>DIR</code>)</td><td>Earth only; translated optically by U1 / U4</td></tr>
         <tr><td>Board B → Board C</td><td><strong>T3</strong> (<code>−70V</code>) + <strong>T9</strong> (PWM out → Board C <strong>T3</strong>)</td><td>Floating; keep short</td></tr>
         <tr><td>Board B → DIN K1 coil</td><td><strong>T10</strong> (Coil−), <strong>T11</strong> (Coil+ / <code>+12V_GD</code>)</td><td>Floating</td></tr>
       </tbody>

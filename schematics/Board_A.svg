@@ -1,0 +1,544 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2280" height="1478"
+     viewBox="0 0 2280 1478" version="1.1" role="img"
+     aria-labelledby="title desc">
+  <title id="title">Board A — Earth-side control</title>
+  <desc id="desc">Service schematic for the Private Reserve Board A
+    dual Perma-Proto 1/2. LilyGo T-Display-S3, on-board EC11, screw
+    terminals T1–T24. Earth domain only.
+  </desc>
+  <defs>
+    <style>
+      .wire { fill:none; stroke:#222; stroke-width:3; stroke-linecap:round; stroke-linejoin:round }
+      .earth { fill:none; stroke:#175cd3; stroke-width:3; stroke-linecap:round; stroke-linejoin:round }
+      .gnd { fill:none; stroke:#101828; stroke-width:3; stroke-linecap:round; stroke-linejoin:round }
+      .v5 { fill:none; stroke:#b42318; stroke-width:4; stroke-linecap:round; stroke-linejoin:round }
+      .v33 { fill:none; stroke:#dc6803; stroke-width:3; stroke-linecap:round; stroke-linejoin:round }
+      .enc { fill:none; stroke:#7f56d9; stroke-width:3; stroke-linecap:round; stroke-linejoin:round }
+      .nc { fill:none; stroke:#98a2b3; stroke-width:2; stroke-dasharray:6 4; stroke-linecap:round }
+      .box { fill:#fff; stroke:#344054; stroke-width:2 }
+      .part { fill:#f9fafb; stroke:#344054; stroke-width:2 }
+      .onboard { fill:#fff; stroke:#344054; stroke-width:2.4 }
+      .earthbox { fill:#eff8ff; stroke:#175cd3; stroke-width:1.6 }
+      .off { fill:#f9fafb; stroke:#667085; stroke-width:2; stroke-dasharray:8 5 }
+      .warn { fill:#fffaeb; stroke:#dc6803; stroke-width:2 }
+      .termbox { fill:#fff; stroke:#344054; stroke-width:2 }
+      .termnc { fill:#f9fafb; stroke:#98a2b3; stroke-width:1.6; stroke-dasharray:5 3 }
+      .callout { fill:#fffaeb; stroke:#dc6803; stroke-width:1.6; stroke-dasharray:5 3 }
+      .lcd { fill:#1d2939; stroke:#344054; stroke-width:1.6 }
+      .title { font:700 26px sans-serif; fill:#101828 }
+      .section { font:700 16px sans-serif; fill:#101828 }
+      .label { font:600 15px sans-serif; fill:#101828 }
+      .text { font:14px sans-serif; fill:#344054 }
+      .small { font:12px sans-serif; fill:#475467 }
+      .pin { font:12px monospace; fill:#344054 }
+      .lcdtitle { font:700 16px sans-serif; fill:#f2f4f7 }
+      .lcdsub { font:11px sans-serif; fill:#d0d5dd }
+      .v5text { font:700 13px sans-serif; fill:#b42318 }
+      .v33text { font:700 13px sans-serif; fill:#dc6803 }
+      .gndtext { font:700 13px sans-serif; fill:#101828 }
+      .earthtext { font:700 13px sans-serif; fill:#175cd3 }
+      .enctext { font:700 12px sans-serif; fill:#6941c6 }
+      .nctext { font:700 12px sans-serif; fill:#667085 }
+    </style>
+  </defs>
+<rect x="0" y="0" width="2280" height="1478" rx="0" class="box"/>
+<rect width="2280" height="1478" fill="#fff"/>
+<text x="40" y="40" class="title">Board A — Earth-side control</text>
+<text x="40" y="64" class="text">Private Reserve · as-built dual Adafruit Perma-Proto 1/2 · LilyGo T-Display-S3 + EC11 · T1–T24 · Rev 2026-08-22</text>
+<rect x="40" y="78" width="2200" height="68" rx="5" class="warn"/>
+<text x="56" y="102" class="label">Earth domain only. Never land floating or HV copper here.</text>
+<text x="56" y="124" class="text">No +5V_ISO, +12V_GD, −70V, +70V, or SW. MCU_GND is not −70V. Do not back-feed 3.3 V into the module 3V pin. LED resistors stay on Board B.</text>
+<rect x="40" y="162" width="1620" height="1236" rx="8" class="onboard"/>
+<text x="56" y="186" class="section">BOARD A · on-board</text>
+<text x="280" y="186" class="small">Display facing you · USB-C left · EC11 right · header pin 12 nearest USB · upper outer rails unused · +5V_EARTH is not a proto + bus</text>
+<rect x="54" y="198" width="1548" height="290" rx="6" class="earthbox"/>
+<text x="66" y="216" class="earthtext">UPPER PERMA-PROTO 1/2</text>
+<text x="280" y="216" class="small">row A takes the T-Display RIGHT header · top edge T1–T12 · pin 12 nearest USB</text>
+<rect x="54" y="768" width="1548" height="612" rx="6" class="earthbox"/>
+<text x="66" y="788" class="earthtext">LOWER PERMA-PROTO 1/2</text>
+<text x="280" y="788" class="small">row J takes the T-Display LEFT header · bottom edge T13–T24 · pin 12 nearest USB</text>
+<rect x="48.0" y="230" width="1296" height="86" rx="4" class="termbox"/>
+<text x="102" y="250" class="pin" text-anchor="middle">T1</text>
+<text x="102" y="268" class="label" text-anchor="middle">3V</text>
+<text x="102" y="284" class="small" text-anchor="middle">+3V3</text>
+<text x="102" y="300" class="small" text-anchor="middle">sensor VCC</text>
+<circle cx="102" cy="316" r="4.5" fill="#dc6803"/>
+<line x1="156.0" y1="230" x2="156.0" y2="316" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<text x="210" y="250" class="pin" text-anchor="middle">T2</text>
+<text x="210" y="268" class="label" text-anchor="middle">GND</text>
+<text x="210" y="284" class="small" text-anchor="middle">MCU_GND</text>
+<text x="210" y="300" class="small" text-anchor="middle">returns</text>
+<circle cx="210" cy="316" r="4.5" fill="#101828"/>
+<line x1="264.0" y1="230" x2="264.0" y2="316" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<text x="318" y="250" class="pin" text-anchor="middle">T3</text>
+<text x="318" y="268" class="label" text-anchor="middle">GND</text>
+<text x="318" y="284" class="small" text-anchor="middle">MCU_GND</text>
+<text x="318" y="300" class="small" text-anchor="middle">returns</text>
+<circle cx="318" cy="316" r="4.5" fill="#101828"/>
+<line x1="372.0" y1="230" x2="372.0" y2="316" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<text x="426" y="250" class="pin" text-anchor="middle">T4</text>
+<text x="426" y="268" class="label" text-anchor="middle">NC</text>
+<text x="426" y="284" class="small" text-anchor="middle">—</text>
+<text x="426" y="300" class="small" text-anchor="middle">unassigned</text>
+<circle cx="426" cy="316" r="4.5" fill="#98a2b3"/>
+<line x1="480.0" y1="230" x2="480.0" y2="316" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<text x="534" y="250" class="pin" text-anchor="middle">T5</text>
+<text x="534" y="268" class="label" text-anchor="middle">PWM</text>
+<text x="534" y="284" class="small" text-anchor="middle">GPIO16</text>
+<text x="534" y="300" class="small" text-anchor="middle">→ B T4</text>
+<circle cx="534" cy="316" r="4.5" fill="#175cd3"/>
+<line x1="588.0" y1="230" x2="588.0" y2="316" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<text x="642" y="250" class="pin" text-anchor="middle">T6</text>
+<text x="642" y="268" class="label" text-anchor="middle">DIR</text>
+<text x="642" y="284" class="small" text-anchor="middle">GPIO21</text>
+<text x="642" y="300" class="small" text-anchor="middle">→ B T8</text>
+<circle cx="642" cy="316" r="4.5" fill="#175cd3"/>
+<line x1="696.0" y1="230" x2="696.0" y2="316" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<text x="750" y="250" class="pin" text-anchor="middle">T7</text>
+<text x="750" y="268" class="label" text-anchor="middle">LIM-U</text>
+<text x="750" y="284" class="small" text-anchor="middle">GPIO17</text>
+<text x="750" y="300" class="small" text-anchor="middle">upper NC</text>
+<circle cx="750" cy="316" r="4.5" fill="#175cd3"/>
+<line x1="804.0" y1="230" x2="804.0" y2="316" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<text x="858" y="250" class="pin" text-anchor="middle">T8</text>
+<text x="858" y="268" class="label" text-anchor="middle">CLOSE</text>
+<text x="858" y="284" class="small" text-anchor="middle">GPIO18</text>
+<text x="858" y="300" class="small" text-anchor="middle">rocker</text>
+<circle cx="858" cy="316" r="4.5" fill="#175cd3"/>
+<line x1="912.0" y1="230" x2="912.0" y2="316" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<text x="966" y="250" class="pin" text-anchor="middle">T9</text>
+<text x="966" y="268" class="label" text-anchor="middle">SCL</text>
+<text x="966" y="284" class="small" text-anchor="middle">GPIO44</text>
+<text x="966" y="300" class="small" text-anchor="middle">AS5600</text>
+<circle cx="966" cy="316" r="4.5" fill="#175cd3"/>
+<line x1="1020.0" y1="230" x2="1020.0" y2="316" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<text x="1074" y="250" class="pin" text-anchor="middle">T10</text>
+<text x="1074" y="268" class="label" text-anchor="middle">SDA</text>
+<text x="1074" y="284" class="small" text-anchor="middle">GPIO43</text>
+<text x="1074" y="300" class="small" text-anchor="middle">AS5600</text>
+<circle cx="1074" cy="316" r="4.5" fill="#175cd3"/>
+<line x1="1128.0" y1="230" x2="1128.0" y2="316" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<text x="1182" y="250" class="pin" text-anchor="middle">T11</text>
+<text x="1182" y="268" class="label" text-anchor="middle">GND</text>
+<text x="1182" y="284" class="small" text-anchor="middle">MCU_GND</text>
+<text x="1182" y="300" class="small" text-anchor="middle">returns</text>
+<circle cx="1182" cy="316" r="4.5" fill="#101828"/>
+<line x1="1236.0" y1="230" x2="1236.0" y2="316" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<text x="1290" y="250" class="pin" text-anchor="middle">T12</text>
+<text x="1290" y="268" class="label" text-anchor="middle">GND</text>
+<text x="1290" y="284" class="small" text-anchor="middle">MCU_GND</text>
+<text x="1290" y="300" class="small" text-anchor="middle">→ B T5</text>
+<circle cx="1290" cy="316" r="4.5" fill="#101828"/>
+<line x1="102" y1="340" x2="1290" y2="340" class="v33"/>
+<circle cx="102" cy="340" r="5" fill="#dc6803"/>
+<text x="112" y="330" class="v33text">+3V3_TDISPLAY   module 3V · sensors · EC11 +   ·   do not back-feed</text>
+<rect x="72" y="496" width="1248" height="260" rx="8" class="part"/>
+<rect x="36" y="592" width="36" height="56" rx="4" class="part"/>
+<text x="54" y="624" class="small" text-anchor="middle">USB</text>
+<rect x="240" y="540" width="720" height="168" rx="4" class="lcd"/>
+<text x="260" y="576" class="lcdtitle">T-Display-S3</text>
+<text x="260" y="598" class="lcdsub">LilyGo · ESP32-S3 · ST7789 320×170</text>
+<text x="260" y="620" class="lcdsub">setRotation(3) · origin is operator top-left</text>
+<text x="260" y="650" class="lcdsub">GPIO14  on-board button   ·   GPIO0  BOOT</text>
+<text x="260" y="668" class="lcdsub">LCD / backlight GPIOs reserved — do not reassign</text>
+<text x="260" y="694" class="lcdsub">RIGHT header on top · LEFT header on bottom · pin 12 nearest USB</text>
+<rect x="90" y="584" width="52" height="28" rx="3" class="part"/>
+<text x="116" y="602" class="small" text-anchor="middle">BOOT</text>
+<rect x="90" y="622" width="52" height="28" rx="3" class="part"/>
+<text x="116" y="640" class="small" text-anchor="middle">GPIO14</text>
+<text x="90" y="692" class="small">LILYGO</text>
+<text x="80" y="478" class="small">RIGHT</text>
+<circle cx="102" cy="496" r="5.5" fill="#dc6803"/>
+<text x="102" y="518" class="pin" text-anchor="middle">3V</text>
+<text x="102" y="488" class="small" text-anchor="middle">p12</text>
+<circle cx="210" cy="496" r="5.5" fill="#101828"/>
+<text x="210" y="518" class="pin" text-anchor="middle">GND</text>
+<text x="210" y="488" class="small" text-anchor="middle">p11</text>
+<circle cx="318" cy="496" r="5.5" fill="#101828"/>
+<text x="318" y="518" class="pin" text-anchor="middle">GND</text>
+<text x="318" y="488" class="small" text-anchor="middle">p10</text>
+<circle cx="426" cy="496" r="5.5" fill="#98a2b3"/>
+<text x="426" y="518" class="pin" text-anchor="middle">NC</text>
+<text x="426" y="488" class="nctext" text-anchor="middle">p9</text>
+<circle cx="534" cy="496" r="5.5" fill="#175cd3"/>
+<text x="534" y="518" class="pin" text-anchor="middle">16</text>
+<text x="534" y="488" class="small" text-anchor="middle">p8</text>
+<circle cx="642" cy="496" r="5.5" fill="#175cd3"/>
+<text x="642" y="518" class="pin" text-anchor="middle">21</text>
+<text x="642" y="488" class="small" text-anchor="middle">p7</text>
+<circle cx="750" cy="496" r="5.5" fill="#175cd3"/>
+<text x="750" y="518" class="pin" text-anchor="middle">17</text>
+<text x="750" y="488" class="small" text-anchor="middle">p6</text>
+<circle cx="858" cy="496" r="5.5" fill="#175cd3"/>
+<text x="858" y="518" class="pin" text-anchor="middle">18</text>
+<text x="858" y="488" class="small" text-anchor="middle">p5</text>
+<circle cx="966" cy="496" r="5.5" fill="#175cd3"/>
+<text x="966" y="518" class="pin" text-anchor="middle">44</text>
+<text x="966" y="488" class="small" text-anchor="middle">p4</text>
+<circle cx="1074" cy="496" r="5.5" fill="#175cd3"/>
+<text x="1074" y="518" class="pin" text-anchor="middle">43</text>
+<text x="1074" y="488" class="small" text-anchor="middle">p3</text>
+<circle cx="1182" cy="496" r="5.5" fill="#101828"/>
+<text x="1182" y="518" class="pin" text-anchor="middle">GND</text>
+<text x="1182" y="488" class="small" text-anchor="middle">p2</text>
+<circle cx="1290" cy="496" r="5.5" fill="#101828"/>
+<text x="1290" y="518" class="pin" text-anchor="middle">GND</text>
+<text x="1290" y="488" class="small" text-anchor="middle">p1</text>
+<text x="80" y="788" class="small">LEFT</text>
+<circle cx="102" cy="756" r="5.5" fill="#b42318"/>
+<text x="102" y="744" class="pin" text-anchor="middle">5V</text>
+<text x="102" y="778" class="small" text-anchor="middle">p12</text>
+<circle cx="210" cy="756" r="5.5" fill="#101828"/>
+<text x="210" y="744" class="pin" text-anchor="middle">GND</text>
+<text x="210" y="778" class="small" text-anchor="middle">p11</text>
+<circle cx="318" cy="756" r="5.5" fill="#98a2b3"/>
+<text x="318" y="744" class="pin" text-anchor="middle">NC</text>
+<text x="318" y="778" class="nctext" text-anchor="middle">p10</text>
+<circle cx="426" cy="756" r="5.5" fill="#98a2b3"/>
+<text x="426" y="744" class="pin" text-anchor="middle">NC</text>
+<text x="426" y="778" class="nctext" text-anchor="middle">p9</text>
+<circle cx="534" cy="756" r="5.5" fill="#7f56d9"/>
+<text x="534" y="744" class="pin" text-anchor="middle">13</text>
+<text x="534" y="778" class="small" text-anchor="middle">p8</text>
+<circle cx="642" cy="756" r="5.5" fill="#7f56d9"/>
+<text x="642" y="744" class="pin" text-anchor="middle">12</text>
+<text x="642" y="778" class="small" text-anchor="middle">p7</text>
+<circle cx="750" cy="756" r="5.5" fill="#7f56d9"/>
+<text x="750" y="744" class="pin" text-anchor="middle">11</text>
+<text x="750" y="778" class="small" text-anchor="middle">p6</text>
+<circle cx="858" cy="756" r="5.5" fill="#175cd3"/>
+<text x="858" y="744" class="pin" text-anchor="middle">10</text>
+<text x="858" y="778" class="small" text-anchor="middle">p5</text>
+<circle cx="966" cy="756" r="5.5" fill="#175cd3"/>
+<text x="966" y="744" class="pin" text-anchor="middle">3</text>
+<text x="966" y="778" class="small" text-anchor="middle">p4</text>
+<circle cx="1074" cy="756" r="5.5" fill="#175cd3"/>
+<text x="1074" y="744" class="pin" text-anchor="middle">2</text>
+<text x="1074" y="778" class="small" text-anchor="middle">p3</text>
+<circle cx="1182" cy="756" r="5.5" fill="#175cd3"/>
+<text x="1182" y="744" class="pin" text-anchor="middle">1</text>
+<text x="1182" y="778" class="small" text-anchor="middle">p2</text>
+<circle cx="1290" cy="756" r="5.5" fill="#dc6803"/>
+<text x="1290" y="744" class="pin" text-anchor="middle">3V</text>
+<text x="1290" y="778" class="small" text-anchor="middle">p1</text>
+<line x1="102" y1="316" x2="102" y2="340" class="v33"/>
+<circle cx="102" cy="340" r="4" fill="#dc6803"/>
+<line x1="102" y1="340" x2="102" y2="496" class="v33"/>
+<circle cx="102" cy="496" r="4" fill="#dc6803"/>
+<line x1="210" y1="316" x2="210" y2="332" class="gnd"/>
+<path d="M210 332 A8 8 0 0 1 210 348" fill="none" stroke="#101828" stroke-width="3"/>
+<line x1="210" y1="348" x2="210" y2="496" class="gnd"/>
+<circle cx="210" cy="496" r="4" fill="#101828"/>
+<line x1="318" y1="316" x2="318" y2="332" class="gnd"/>
+<path d="M318 332 A8 8 0 0 1 318 348" fill="none" stroke="#101828" stroke-width="3"/>
+<line x1="318" y1="348" x2="318" y2="496" class="gnd"/>
+<circle cx="318" cy="496" r="4" fill="#101828"/>
+<line x1="426" y1="316" x2="426" y2="332" class="nc"/>
+<path d="M426 332 A8 8 0 0 1 426 348" fill="none" stroke="#98a2b3" stroke-width="3"/>
+<line x1="426" y1="348" x2="426" y2="496" class="nc"/>
+<line x1="534" y1="316" x2="534" y2="332" class="earth"/>
+<path d="M534 332 A8 8 0 0 1 534 348" fill="none" stroke="#175cd3" stroke-width="3"/>
+<line x1="534" y1="348" x2="534" y2="496" class="earth"/>
+<circle cx="534" cy="496" r="4" fill="#175cd3"/>
+<line x1="642" y1="316" x2="642" y2="332" class="earth"/>
+<path d="M642 332 A8 8 0 0 1 642 348" fill="none" stroke="#175cd3" stroke-width="3"/>
+<line x1="642" y1="348" x2="642" y2="496" class="earth"/>
+<circle cx="642" cy="496" r="4" fill="#175cd3"/>
+<line x1="750" y1="316" x2="750" y2="332" class="earth"/>
+<path d="M750 332 A8 8 0 0 1 750 348" fill="none" stroke="#175cd3" stroke-width="3"/>
+<line x1="750" y1="348" x2="750" y2="496" class="earth"/>
+<circle cx="750" cy="496" r="4" fill="#175cd3"/>
+<line x1="858" y1="316" x2="858" y2="332" class="earth"/>
+<path d="M858 332 A8 8 0 0 1 858 348" fill="none" stroke="#175cd3" stroke-width="3"/>
+<line x1="858" y1="348" x2="858" y2="496" class="earth"/>
+<circle cx="858" cy="496" r="4" fill="#175cd3"/>
+<line x1="966" y1="316" x2="966" y2="332" class="earth"/>
+<path d="M966 332 A8 8 0 0 1 966 348" fill="none" stroke="#175cd3" stroke-width="3"/>
+<line x1="966" y1="348" x2="966" y2="496" class="earth"/>
+<circle cx="966" cy="496" r="4" fill="#175cd3"/>
+<line x1="1074" y1="316" x2="1074" y2="332" class="earth"/>
+<path d="M1074 332 A8 8 0 0 1 1074 348" fill="none" stroke="#175cd3" stroke-width="3"/>
+<line x1="1074" y1="348" x2="1074" y2="496" class="earth"/>
+<circle cx="1074" cy="496" r="4" fill="#175cd3"/>
+<line x1="1182" y1="316" x2="1182" y2="332" class="gnd"/>
+<path d="M1182 332 A8 8 0 0 1 1182 348" fill="none" stroke="#101828" stroke-width="3"/>
+<line x1="1182" y1="348" x2="1182" y2="496" class="gnd"/>
+<circle cx="1182" cy="496" r="4" fill="#101828"/>
+<line x1="1290" y1="316" x2="1290" y2="332" class="gnd"/>
+<path d="M1290 332 A8 8 0 0 1 1290 348" fill="none" stroke="#101828" stroke-width="3"/>
+<line x1="1290" y1="348" x2="1290" y2="496" class="gnd"/>
+<circle cx="1290" cy="496" r="4" fill="#101828"/>
+<circle cx="642" cy="368" r="4" fill="#175cd3"/>
+<line x1="642" y1="368" x2="338" y2="368" class="earth"/>
+<line x1="338" y1="368" x2="338" y2="404" class="earth"/>
+<circle cx="338" cy="368" r="4" fill="#175cd3"/>
+<rect x="324.0" y="404" width="28" height="52" rx="2" class="part"/>
+<text x="338" y="434.0" class="pin" text-anchor="middle">10k</text>
+<line x1="338" y1="456" x2="338" y2="474" class="gnd"/>
+<line x1="338" y1="474" x2="318" y2="474" class="gnd"/>
+<circle cx="318" cy="474" r="4" fill="#101828"/>
+<text x="358" y="428" class="label">R7</text>
+<text x="358" y="444" class="small">DIR pull-down</text>
+<text x="358" y="460" class="small">holds B LED off</text>
+<rect x="1368" y="508" width="268" height="236" rx="6" class="part"/>
+<text x="1380" y="530" class="label">EC11  menu encoder</text>
+<text x="1380" y="548" class="small">on-board · not on T17–T19</text>
+<circle cx="1416" cy="596" r="22" fill="#101828"/>
+<circle cx="1416" cy="596" r="22" fill="none" stroke="#667085" stroke-width="2"/>
+<text x="1448" y="580" class="pin">CLK   GPIO11</text>
+<text x="1448" y="598" class="pin">DT    GPIO12</text>
+<text x="1448" y="616" class="pin">SW    GPIO13</text>
+<text x="1448" y="640" class="pin">+     +3V3</text>
+<text x="1448" y="658" class="pin">GND   MCU_GND</text>
+<text x="1380" y="688" class="small">3.3 V pull-ups on the breakout.</text>
+<text x="1380" y="704" class="small">Never pull CLK / DT / SW to 5 V.</text>
+<text x="1380" y="728" class="enctext">Short leads to LEFT header</text>
+<line x1="534" y1="756" x2="534" y2="788" class="enc"/>
+<circle cx="534" cy="756" r="4" fill="#7f56d9"/>
+<circle cx="534" cy="788" r="4" fill="#7f56d9"/>
+<line x1="534" y1="788" x2="850" y2="788" class="enc"/>
+<path d="M850 788 A8 8 0 0 1 866 788" fill="none" stroke="#7f56d9" stroke-width="3"/>
+<line x1="866" y1="788" x2="958" y2="788" class="enc"/>
+<path d="M958 788 A8 8 0 0 1 974 788" fill="none" stroke="#7f56d9" stroke-width="3"/>
+<line x1="974" y1="788" x2="1066" y2="788" class="enc"/>
+<path d="M1066 788 A8 8 0 0 1 1082 788" fill="none" stroke="#7f56d9" stroke-width="3"/>
+<line x1="1082" y1="788" x2="1174" y2="788" class="enc"/>
+<path d="M1174 788 A8 8 0 0 1 1190 788" fill="none" stroke="#7f56d9" stroke-width="3"/>
+<line x1="1190" y1="788" x2="1282" y2="788" class="enc"/>
+<path d="M1282 788 A8 8 0 0 1 1298 788" fill="none" stroke="#7f56d9" stroke-width="3"/>
+<line x1="1298" y1="788" x2="1376" y2="788" class="enc"/>
+<circle cx="1376" cy="788" r="4" fill="#7f56d9"/>
+<text x="1384" y="792" class="enctext">SW</text>
+<line x1="642" y1="756" x2="642" y2="808" class="enc"/>
+<circle cx="642" cy="756" r="4" fill="#7f56d9"/>
+<circle cx="642" cy="808" r="4" fill="#7f56d9"/>
+<line x1="642" y1="808" x2="850" y2="808" class="enc"/>
+<path d="M850 808 A8 8 0 0 1 866 808" fill="none" stroke="#7f56d9" stroke-width="3"/>
+<line x1="866" y1="808" x2="958" y2="808" class="enc"/>
+<path d="M958 808 A8 8 0 0 1 974 808" fill="none" stroke="#7f56d9" stroke-width="3"/>
+<line x1="974" y1="808" x2="1066" y2="808" class="enc"/>
+<path d="M1066 808 A8 8 0 0 1 1082 808" fill="none" stroke="#7f56d9" stroke-width="3"/>
+<line x1="1082" y1="808" x2="1174" y2="808" class="enc"/>
+<path d="M1174 808 A8 8 0 0 1 1190 808" fill="none" stroke="#7f56d9" stroke-width="3"/>
+<line x1="1190" y1="808" x2="1282" y2="808" class="enc"/>
+<path d="M1282 808 A8 8 0 0 1 1298 808" fill="none" stroke="#7f56d9" stroke-width="3"/>
+<line x1="1298" y1="808" x2="1376" y2="808" class="enc"/>
+<circle cx="1376" cy="808" r="4" fill="#7f56d9"/>
+<text x="1384" y="812" class="enctext">DT</text>
+<line x1="750" y1="756" x2="750" y2="828" class="enc"/>
+<circle cx="750" cy="756" r="4" fill="#7f56d9"/>
+<circle cx="750" cy="828" r="4" fill="#7f56d9"/>
+<line x1="750" y1="828" x2="850" y2="828" class="enc"/>
+<path d="M850 828 A8 8 0 0 1 866 828" fill="none" stroke="#7f56d9" stroke-width="3"/>
+<line x1="866" y1="828" x2="958" y2="828" class="enc"/>
+<path d="M958 828 A8 8 0 0 1 974 828" fill="none" stroke="#7f56d9" stroke-width="3"/>
+<line x1="974" y1="828" x2="1066" y2="828" class="enc"/>
+<path d="M1066 828 A8 8 0 0 1 1082 828" fill="none" stroke="#7f56d9" stroke-width="3"/>
+<line x1="1082" y1="828" x2="1174" y2="828" class="enc"/>
+<path d="M1174 828 A8 8 0 0 1 1190 828" fill="none" stroke="#7f56d9" stroke-width="3"/>
+<line x1="1190" y1="828" x2="1282" y2="828" class="enc"/>
+<path d="M1282 828 A8 8 0 0 1 1298 828" fill="none" stroke="#7f56d9" stroke-width="3"/>
+<line x1="1298" y1="828" x2="1376" y2="828" class="enc"/>
+<circle cx="1376" cy="828" r="4" fill="#7f56d9"/>
+<text x="1384" y="832" class="enctext">CLK</text>
+<line x1="1290" y1="756" x2="1290" y2="848" class="v33"/>
+<circle cx="1290" cy="848" r="4" fill="#dc6803"/>
+<line x1="1290" y1="848" x2="1376" y2="848" class="v33"/>
+<circle cx="1376" cy="848" r="4" fill="#dc6803"/>
+<text x="1384" y="852" class="v33text">+</text>
+<line x1="1376" y1="868" x2="1376" y2="1096" class="gnd"/>
+<circle cx="1376" cy="868" r="4" fill="#101828"/>
+<circle cx="1376" cy="1096" r="5" fill="#101828"/>
+<text x="1384" y="872" class="gndtext">GND</text>
+<line x1="1290" y1="340" x2="1344" y2="340" class="v33"/>
+<line x1="1344" y1="340" x2="1344" y2="756" class="v33"/>
+<line x1="1344" y1="756" x2="1290" y2="756" class="v33"/>
+<circle cx="1344" cy="340" r="4" fill="#dc6803"/>
+<circle cx="1344" cy="756" r="4" fill="#dc6803"/>
+<line x1="102" y1="1096" x2="1376" y2="1096" class="gnd"/>
+<circle cx="102" cy="1096" r="5" fill="#101828"/>
+<text x="112" y="1118" class="gndtext">MCU_GND   T2 T3 T11 T12 T14 · sensor / rocker / Board B LED return   ·   not −70V</text>
+<line x1="102" y1="756" x2="102" y2="1088" class="v5"/>
+<path d="M102 1088 A8 8 0 0 1 102 1104" fill="none" stroke="#b42318" stroke-width="3"/>
+<line x1="102" y1="1104" x2="102" y2="1188" class="v5"/>
+<circle cx="102" cy="756" r="4" fill="#b42318"/>
+<line x1="210" y1="756" x2="210" y2="1096" class="gnd"/>
+<circle cx="210" cy="1096" r="4" fill="#101828"/>
+<line x1="210" y1="1096" x2="210" y2="1188" class="gnd"/>
+<line x1="318" y1="756" x2="318" y2="1088" class="nc"/>
+<path d="M318 1088 A8 8 0 0 1 318 1104" fill="none" stroke="#98a2b3" stroke-width="3"/>
+<line x1="318" y1="1104" x2="318" y2="1188" class="nc"/>
+<line x1="426" y1="756" x2="426" y2="1088" class="nc"/>
+<path d="M426 1088 A8 8 0 0 1 426 1104" fill="none" stroke="#98a2b3" stroke-width="3"/>
+<line x1="426" y1="1104" x2="426" y2="1188" class="nc"/>
+<line x1="858" y1="756" x2="858" y2="1088" class="earth"/>
+<path d="M858 1088 A8 8 0 0 1 858 1104" fill="none" stroke="#175cd3" stroke-width="3"/>
+<line x1="858" y1="1104" x2="858" y2="1188" class="earth"/>
+<circle cx="858" cy="756" r="4" fill="#175cd3"/>
+<line x1="966" y1="756" x2="966" y2="1088" class="earth"/>
+<path d="M966 1088 A8 8 0 0 1 966 1104" fill="none" stroke="#175cd3" stroke-width="3"/>
+<line x1="966" y1="1104" x2="966" y2="1188" class="earth"/>
+<circle cx="966" cy="756" r="4" fill="#175cd3"/>
+<line x1="1074" y1="756" x2="1074" y2="960" class="earth"/>
+<circle cx="1074" cy="756" r="4" fill="#175cd3"/>
+<circle cx="1074" cy="960" r="4" fill="#175cd3"/>
+<line x1="1074" y1="960" x2="1074" y2="968" class="earth"/>
+<rect x="1060.0" y="968" width="28" height="48" rx="2" class="part"/>
+<text x="1074" y="996.0" class="pin" text-anchor="middle">10k</text>
+<line x1="1074" y1="1016" x2="1074" y2="1088" class="earth"/>
+<path d="M1074 1088 A8 8 0 0 1 1074 1104" fill="none" stroke="#175cd3" stroke-width="3"/>
+<line x1="1074" y1="1104" x2="1074" y2="1188" class="earth"/>
+<line x1="1074" y1="960" x2="1034" y2="960" class="earth"/>
+<line x1="1034" y1="960" x2="1034" y2="968" class="earth"/>
+<rect x="1020.0" y="968" width="28" height="52" rx="2" class="part"/>
+<text x="1034" y="998.0" class="pin" text-anchor="middle">20k</text>
+<line x1="1034" y1="1020" x2="1034" y2="1096" class="gnd"/>
+<circle cx="1034" cy="1096" r="4" fill="#101828"/>
+<text x="1092" y="988" class="label">10k/20k</text>
+<text x="1092" y="1004" class="small">ACS712 ≤ 3.3 V</text>
+<line x1="1182" y1="756" x2="1182" y2="1088" class="earth"/>
+<path d="M1182 1088 A8 8 0 0 1 1182 1104" fill="none" stroke="#175cd3" stroke-width="3"/>
+<line x1="1182" y1="1104" x2="1182" y2="1188" class="earth"/>
+<circle cx="1182" cy="756" r="4" fill="#175cd3"/>
+<line x1="1290" y1="756" x2="1290" y2="1088" class="v33"/>
+<path d="M1290 1088 A8 8 0 0 1 1290 1104" fill="none" stroke="#dc6803" stroke-width="3"/>
+<line x1="1290" y1="1104" x2="1290" y2="1188" class="v33"/>
+<circle cx="1290" cy="756" r="4" fill="#dc6803"/>
+<rect x="48.0" y="1188" width="1296" height="92" rx="4" class="termbox"/>
+<text x="102" y="1208" class="pin" text-anchor="middle">T13</text>
+<text x="102" y="1226" class="label" text-anchor="middle">5V</text>
+<text x="102" y="1242" class="small" text-anchor="middle">+5V_EARTH</text>
+<text x="102" y="1258" class="small" text-anchor="middle">HDR #1 +</text>
+<circle cx="102" cy="1188" r="4.5" fill="#b42318"/>
+<line x1="156.0" y1="1188" x2="156.0" y2="1280" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<text x="210" y="1208" class="pin" text-anchor="middle">T14</text>
+<text x="210" y="1226" class="label" text-anchor="middle">GND</text>
+<text x="210" y="1242" class="small" text-anchor="middle">MCU_GND</text>
+<text x="210" y="1258" class="small" text-anchor="middle">HDR #1 −</text>
+<circle cx="210" cy="1188" r="4.5" fill="#101828"/>
+<line x1="264.0" y1="1188" x2="264.0" y2="1280" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<rect x="266.0" y="1190" width="104" height="88" rx="3" class="termnc"/>
+<text x="318" y="1208" class="pin" text-anchor="middle">T15</text>
+<text x="318" y="1226" class="label" text-anchor="middle">NC</text>
+<text x="318" y="1242" class="small" text-anchor="middle">—</text>
+<text x="318" y="1258" class="small" text-anchor="middle">unassigned</text>
+<circle cx="318" cy="1188" r="4.5" fill="#98a2b3"/>
+<line x1="372.0" y1="1188" x2="372.0" y2="1280" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<rect x="374.0" y="1190" width="104" height="88" rx="3" class="termnc"/>
+<text x="426" y="1208" class="pin" text-anchor="middle">T16</text>
+<text x="426" y="1226" class="label" text-anchor="middle">NC</text>
+<text x="426" y="1242" class="small" text-anchor="middle">—</text>
+<text x="426" y="1258" class="small" text-anchor="middle">unassigned</text>
+<circle cx="426" cy="1188" r="4.5" fill="#98a2b3"/>
+<line x1="480.0" y1="1188" x2="480.0" y2="1280" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<rect x="482.0" y="1190" width="104" height="88" rx="3" class="termnc"/>
+<text x="534" y="1208" class="pin" text-anchor="middle">T17</text>
+<text x="534" y="1226" class="label" text-anchor="middle">NC</text>
+<text x="534" y="1242" class="small" text-anchor="middle">GPIO13</text>
+<text x="534" y="1258" class="small" text-anchor="middle">EC11 SW on-bd</text>
+<circle cx="534" cy="1188" r="4.5" fill="#98a2b3"/>
+<line x1="588.0" y1="1188" x2="588.0" y2="1280" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<rect x="590.0" y="1190" width="104" height="88" rx="3" class="termnc"/>
+<text x="642" y="1208" class="pin" text-anchor="middle">T18</text>
+<text x="642" y="1226" class="label" text-anchor="middle">NC</text>
+<text x="642" y="1242" class="small" text-anchor="middle">GPIO12</text>
+<text x="642" y="1258" class="small" text-anchor="middle">EC11 DT on-bd</text>
+<circle cx="642" cy="1188" r="4.5" fill="#98a2b3"/>
+<line x1="696.0" y1="1188" x2="696.0" y2="1280" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<rect x="698.0" y="1190" width="104" height="88" rx="3" class="termnc"/>
+<text x="750" y="1208" class="pin" text-anchor="middle">T19</text>
+<text x="750" y="1226" class="label" text-anchor="middle">NC</text>
+<text x="750" y="1242" class="small" text-anchor="middle">GPIO11</text>
+<text x="750" y="1258" class="small" text-anchor="middle">EC11 CLK on-bd</text>
+<circle cx="750" cy="1188" r="4.5" fill="#98a2b3"/>
+<line x1="804.0" y1="1188" x2="804.0" y2="1280" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<text x="858" y="1208" class="pin" text-anchor="middle">T20</text>
+<text x="858" y="1226" class="label" text-anchor="middle">OPEN</text>
+<text x="858" y="1242" class="small" text-anchor="middle">GPIO10</text>
+<text x="858" y="1258" class="small" text-anchor="middle">rocker</text>
+<circle cx="858" cy="1188" r="4.5" fill="#175cd3"/>
+<line x1="912.0" y1="1188" x2="912.0" y2="1280" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<text x="966" y="1208" class="pin" text-anchor="middle">T21</text>
+<text x="966" y="1226" class="label" text-anchor="middle">LIM-L</text>
+<text x="966" y="1242" class="small" text-anchor="middle">GPIO3</text>
+<text x="966" y="1258" class="small" text-anchor="middle">lower NC</text>
+<circle cx="966" cy="1188" r="4.5" fill="#175cd3"/>
+<line x1="1020.0" y1="1188" x2="1020.0" y2="1280" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<text x="1074" y="1208" class="pin" text-anchor="middle">T22</text>
+<text x="1074" y="1226" class="label" text-anchor="middle">ISENSE</text>
+<text x="1074" y="1242" class="small" text-anchor="middle">GPIO2</text>
+<text x="1074" y="1258" class="small" text-anchor="middle">ACS712 OUT</text>
+<circle cx="1074" cy="1188" r="4.5" fill="#175cd3"/>
+<line x1="1128.0" y1="1188" x2="1128.0" y2="1280" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<text x="1182" y="1208" class="pin" text-anchor="middle">T23</text>
+<text x="1182" y="1226" class="label" text-anchor="middle">HALL</text>
+<text x="1182" y="1242" class="small" text-anchor="middle">GPIO1</text>
+<text x="1182" y="1258" class="small" text-anchor="middle">SS49E OUT</text>
+<circle cx="1182" cy="1188" r="4.5" fill="#175cd3"/>
+<line x1="1236.0" y1="1188" x2="1236.0" y2="1280" stroke="#d0d5dd" stroke-width="1.2" stroke-linecap="round"/>
+<text x="1290" y="1208" class="pin" text-anchor="middle">T24</text>
+<text x="1290" y="1226" class="label" text-anchor="middle">3V</text>
+<text x="1290" y="1242" class="small" text-anchor="middle">+3V3</text>
+<text x="1290" y="1258" class="small" text-anchor="middle">sensor VCC</text>
+<circle cx="1290" cy="1188" r="4.5" fill="#dc6803"/>
+<text x="66" y="1304" class="small">As-built screws, USB-C left → right.  Top:  T1 3V · T2 GND · T3 GND · T4 NC · T5 PWM · T6 DIR · T7 LIM-U · T8 CLOSE · T9 SCL · T10 SDA · T11 GND · T12 GND</text>
+<text x="66" y="1322" class="small">Bottom:  T13 5V · T14 GND · T15 NC · T16 NC · T17–T19 NC (EC11 on header) · T20 OPEN · T21 LIM-L · T22 ISENSE · T23 HALL · T24 3V</text>
+<text x="66" y="1348" class="small">3-pin earth cable to Board B:  T5 PWM · T6 DIR · T12 MCU_GND.  No floating supply on that cable.  R7 is on this board; 220 Ω / 270 Ω LED resistors are on Board B.</text>
+<text x="66" y="1366" class="small">Upper outer +/− unused.  Lower outer + unused.  Lower outer − is MCU_GND.  Inner +3V3 / GND buses are proposed.</text>
+<rect x="1684" y="162" width="556" height="1236" rx="8" class="off"/>
+<text x="1700" y="186" class="section">OFF BOARD</text>
+<text x="1700" y="204" class="small">Dashed outline. Not on Board A copper.</text>
+<rect x="1700" y="220" width="524" height="108" rx="5" class="box"/>
+<text x="1712" y="244" class="label">HDR-15-5 #1  ·  +5V_EARTH / MCU_GND</text>
+<text x="1712" y="268" class="pin">+  →  T13  5V      −  →  T14  GND</text>
+<text x="1712" y="288" class="small">Feeds the T-Display 5V pin. Module makes 3V.</text>
+<text x="1712" y="306" class="small">USB-C remains for bench programming.</text>
+<rect x="1700" y="344" width="524" height="148" rx="5" class="box"/>
+<text x="1712" y="368" class="label">Board B · floating gate driver</text>
+<text x="1712" y="392" class="pin">T5   PWM     GPIO16  →  Board B T4</text>
+<text x="1712" y="410" class="pin">T6   DIR  GPIO21  →  Board B T8</text>
+<text x="1712" y="428" class="pin">T12  MCU_GND          →  Board B T5</text>
+<text x="1712" y="450" class="small">Keyed 3-pin earth cable. No +5V_ISO / −70V.</text>
+<text x="1712" y="468" class="small">R7 keeps DIR low if A is dark or resetting.</text>
+<text x="1712" y="486" class="small">See schematics/Board_B.svg</text>
+<rect x="1700" y="508" width="524" height="292" rx="5" class="box"/>
+<text x="1712" y="532" class="label">Field I/O  (earth only)</text>
+<text x="1712" y="556" class="pin">T7   LIM-U   GPIO17   upper NC → GND</text>
+<text x="1712" y="574" class="pin">T21  LIM-L   GPIO3    lower NC → GND</text>
+<text x="1712" y="592" class="small">INPUT_PULLUP. HIGH = marker or open wire.</text>
+<text x="1712" y="616" class="pin">T20  OPEN    GPIO10   rocker (active-low)</text>
+<text x="1712" y="634" class="pin">T8   CLOSE   GPIO18   rocker (active-low)</text>
+<text x="1712" y="652" class="small">Dual paralleled (ON)-OFF-(ON) stations.</text>
+<text x="1712" y="676" class="pin">T9 / T10    GPIO44 / 43    AS5600 SCL / SDA</text>
+<text x="1712" y="694" class="pin">T23  HALL    GPIO1     SS49E OUT</text>
+<text x="1712" y="712" class="pin">T1 / T24    +3V3       sensor VCC</text>
+<text x="1712" y="730" class="small">AS5600 at 0x36. SS49E is the bottle key,</text>
+<text x="1712" y="746" class="small">not travel. Returns on T2 / T3 / T11 / T14.</text>
+<text x="1712" y="770" class="pin">T22  ISENSE  GPIO2     ACS712-05B OUT</text>
+<text x="1712" y="788" class="small">Module is DIN-mounted. 10k/20k lives here.</text>
+<rect x="1700" y="816" width="524" height="100" rx="5" class="box"/>
+<text x="1712" y="840" class="label">ACS712-05B  ·  DIN HV island</text>
+<text x="1712" y="864" class="small">Current path is fused +70V, not on Board A.</text>
+<text x="1712" y="882" class="small">VCC / GND = +5V_EARTH / MCU_GND (Wago star).</text>
+<text x="1712" y="900" class="small">OUT → T22 → 10k / 20k → GPIO2  (185 mV/A).</text>
+<rect x="1700" y="932" width="524" height="88" rx="5" class="callout"/>
+<text x="1712" y="956" class="label">Not on Board A</text>
+<text x="1712" y="976" class="small">U1 6N137 · U3 TC4426 · U4 4N35 · Q1–Q3</text>
+<text x="1712" y="994" class="small">+70V · −70V · SW · +5V_ISO · +12V_GD · K1</text>
+<text x="1712" y="1012" class="small">See schematics/Board_B.svg and Board_C.svg</text>
+<rect x="1700" y="1036" width="524" height="320" rx="5" class="part"/>
+<text x="1712" y="1064" class="label">Private Reserve</text>
+<text x="1712" y="1088" class="text">DWG  schematics/Board_A.svg</text>
+<text x="1712" y="1110" class="text">REV  2026-08-22 · earth control</text>
+<text x="1712" y="1142" class="small">Datasheets:</text>
+<text x="1712" y="1162" class="small">T-Display-S3 · ESP32-S3</text>
+<text x="1712" y="1180" class="small">EC11 · ACS712-05B</text>
+<text x="1712" y="1198" class="small">AS5600 · SS49E</text>
+<text x="1712" y="1216" class="small">HDR-15-5 · SZL-WL</text>
+<text x="1960" y="1162" class="small">GPIO14 is the module</text>
+<text x="1960" y="1180" class="small">button, not a header pin.</text>
+<text x="1960" y="1198" class="small">T17–T19 stay NC.</text>
+<text x="1960" y="1216" class="small">No 555 / 74LS157.</text>
+<text x="40" y="1426" class="small">GPIO16 and GPIO21 must be LOW at boot. PWM-off, wait for current decay, then change K1, wait ≥25 ms, then resume PWM. Loss of +5V_EARTH extinguishes the Board B LEDs → gate off.</text>
+</svg>

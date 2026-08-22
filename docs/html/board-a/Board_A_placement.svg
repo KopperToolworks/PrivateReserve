@@ -43,7 +43,7 @@
 <text x="317.0" y="90.0" text-anchor="middle" class="term">PWM</text>
 <rect x="347.0" y="68.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#175cd3" stroke-width="1.6"/>
 <text x="372.0" y="78.0" text-anchor="middle" class="term-id">T6</text>
-<text x="372.0" y="90.0" text-anchor="middle" class="term">DIR_OR</text>
+<text x="372.0" y="90.0" text-anchor="middle" class="term">DIR</text>
 <rect x="402.0" y="68.0" width="50.0" height="26.0" rx="3" fill="#fff" stroke="#175cd3" stroke-width="1.6"/>
 <text x="427.0" y="78.0" text-anchor="middle" class="term-id">T7</text>
 <text x="427.0" y="90.0" text-anchor="middle" class="term">LIM-U</text>
@@ -101,7 +101,7 @@
 <circle cx="303.0" cy="248.0" r="4.2" fill="#175cd3" stroke="#fff" stroke-width="0.8"/>
 <text x="303.0" y="240.0" text-anchor="middle" class="pin-lab" fill="#175cd3">PWM</text>
 <circle cx="325.0" cy="248.0" r="4.2" fill="#175cd3" stroke="#fff" stroke-width="0.8"/>
-<text x="325.0" y="240.0" text-anchor="middle" class="pin-lab" fill="#175cd3">DIR_OR</text>
+<text x="325.0" y="240.0" text-anchor="middle" class="pin-lab" fill="#175cd3">DIR</text>
 <circle cx="347.0" cy="248.0" r="4.2" fill="#175cd3" stroke="#fff" stroke-width="0.8"/>
 <text x="347.0" y="240.0" text-anchor="middle" class="pin-lab" fill="#175cd3">LIM-U</text>
 <circle cx="369.0" cy="248.0" r="4.2" fill="#175cd3" stroke="#fff" stroke-width="0.8"/>

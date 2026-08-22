@@ -29,7 +29,7 @@ Join the AP, type the password, then open the HTTP address. The LCD shows the jo
 |------|----------|
 | [`docs/`](docs/) | Operator docs. Software and wiring HTML in [`docs/html/`](docs/html/), PDF guides in [`docs/pdf/`](docs/pdf/). Rebuild with [`docs/build.mjs`](docs/build.mjs). |
 | [`firmware/`](firmware/) | Production operator image (`tdisplay_s3_prod`). Source, PlatformIO env, and the shipped [`.bin`](firmware/images/tdisplay_s3_prod.bin). |
-| [`schematics/`](schematics/) | Service drawings. Manufacturer datasheets for Boards A, B, and C are in [`schematics/datasheets/`](schematics/datasheets/). |
+| [`schematics/`](schematics/) | Service drawings. Board A: [`schematics/Board_A.svg`](schematics/Board_A.svg) (`gen_board_a.py`). Board B: [`schematics/Board_B.svg`](schematics/Board_B.svg) (`gen_board_b.py`). Board C: [`schematics/Board_C.svg`](schematics/Board_C.svg) (`gen_board_c.py`). Manufacturer datasheets for Boards A, B, and C are in [`schematics/datasheets/`](schematics/datasheets/). |
 
 
 ## Operator docs
