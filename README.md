@@ -8,9 +8,12 @@ The trigger is a hall sensor. A magnet placed over it opens the door. The magnet
 
 This repository holds operator documentation, as-built wiring notes, and the production firmware image.
 
-| Opening | Current table |
-| :-----: | :-----------: |
+The on-box LCD during an open, and the empty-rack current table that sets the mid-stroke trip. The phone web page shows the same state.
+
+| Main, opening | Diagnostics, current table |
+| :-----------: | :------------------------: |
 | ![Main screen while the door is opening](docs/html/shots/main-02-opening.png) | ![Diagnostics current table from open to closed](docs/html/shots/diag-11.png) |
+| Travel, motor current, bottle key, and shaft while the door is moving. | Empty-rack current from open to closed: mean, ±σ, and trip. The yellow mark is live position. |
 
 
 ## Control network
