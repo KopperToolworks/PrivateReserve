@@ -8,6 +8,11 @@ The trigger is a hall sensor. A magnet placed over it opens the door. The magnet
 
 This repository holds operator documentation, as-built wiring notes, and the production firmware image.
 
+| Opening | Current table |
+| :-----: | :-----------: |
+| ![Main screen while the door is opening](docs/html/shots/main-02-opening.png) | ![Diagnostics current table from open to closed](docs/html/shots/diag-11.png) |
+
+
 ## Control network
 
 
