@@ -156,7 +156,7 @@ void App::composeDiag() {
         "Override rockers",
         "Motor current load - ACS712",
         "Motor PWM and direction",
-        "Jog to position",
+        "Manual jog",
         "Obstruction test",
         "Obstruction table",
         "EC11 knob and button",

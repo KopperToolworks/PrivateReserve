@@ -59,7 +59,7 @@
           <tr><td>Green pip + <code>Override rockers</code> + <code>CLOSE HELD</code></td><td>Close throw is made right now. Centre does nothing. PRESS on that page pulses a throw through the same path as the hardware.</td></tr>
           <tr><td>Green pip + <code>Motor current load — ACS712</code> + <code>0.00 A</code></td><td>Live amps at rest.</td></tr>
           <tr><td>Grey pip + <code>Motor PWM and direction</code> + <code>IDLE</code></td><td>Duty zero. Grey pip is idle, not a fault.</td></tr>
-          <tr><td>Amber pip + <code>Jog to position</code> + <code>MOVES MOTOR</code></td><td>Amber because opening this page can command the motor.</td></tr>
+          <tr><td>Amber pip + <code>Manual jog</code> + <code>MOVES MOTOR</code></td><td>Amber because opening this page can command the motor. Position is not required.</td></tr>
           <tr><td>Amber pip + <code>Obstruction test</code> + <code>MOVES MOTOR</code></td><td>Same warning. Plastic-bottle test. Does not write the learned table.</td></tr>
           <tr><td><code>TURN scroll</code> · <code>PRESS open</code> · <code>HOLD exit</code></td><td>Window the list, enter the highlighted item, or return to Main.</td></tr>
         </tbody>
@@ -265,7 +265,7 @@
     </section>
 
     <section class="shot">
-      <h2>8. Jog to position</h2>
+      <h2>8. Manual jog</h2>
       <p>Owns the motor. Each EC11 detent (or web − / +) queues a fixed run time at jog duty. Same-direction clicks add to that queue. Opposite clicks subtract; when the queue is gone, that click reverses through the normal PWM-off, decay, blank, and K1 settle windows. PRESS while idle cycles the two live settings: duty as a percent (5–25%) and time per detent (200–1000&nbsp;ms). Shaft encoder, markers, and learned envelope do not start, stop, or abort the move. Current is a live 0–2.50&nbsp;A graph when the ACS712 is sampling; it is display-only. Travel shows <code>unknown</code> if origin is not trusted.</p>
       <figure class="lcd">
         <img src="shots/diag-08.png" width="320" alt="DIAG jog: MOTOR LIVE, 9 percent duty, 400 ms step, live current graph">
