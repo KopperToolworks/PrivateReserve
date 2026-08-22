@@ -10,10 +10,20 @@ This repository holds operator documentation, as-built wiring notes, and the pro
 
 The on-box LCD during an open, and the empty-rack current table that sets the mid-stroke trip. The phone web page shows the same state.
 
-| Main, opening | Diagnostics, current table |
-| :-----------: | :------------------------: |
-| ![Main screen while the door is opening](docs/html/shots/main-02-opening.png) | ![Diagnostics current table from open to closed](docs/html/shots/diag-11.png) |
-| Travel, motor current, bottle key, and shaft while the door is moving. | Empty-rack current from open to closed: mean, ±σ, and trip. The yellow mark is live position. |
+<table>
+<tr>
+<td width="50%" align="center" valign="top">
+<strong>Main, opening</strong><br>
+<img src="docs/html/shots/main-02-opening.png" alt="Main screen while the door is opening" width="400">
+<br>Travel, motor current, bottle key, and shaft while the door is moving.
+</td>
+<td width="50%" align="center" valign="top">
+<strong>Diagnostics, current table</strong><br>
+<img src="docs/html/shots/diag-11.png" alt="Diagnostics current table from open to closed" width="400">
+<br>Empty-rack current from open to closed: mean, ±σ, and trip. The yellow mark is live position.
+</td>
+</tr>
+</table>
 
 
 ## Control network
