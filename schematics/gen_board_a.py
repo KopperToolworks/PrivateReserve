@@ -142,7 +142,7 @@ TOP = [
     dict(t="T3", lab="GND", gpio="MCU_GND", kind="gnd", dest="returns",
          pin=10, hdr="GND"),
     dict(t="T4", lab="NC", gpio="—", kind="nc", dest="unassigned",
-         pin=9, hdr="NC"),
+         pin=9, hdr="NC", to_term=False),
     dict(t="T5", lab="PWM", gpio="GPIO16", kind="io", dest="→ B T4",
          pin=8, hdr="16"),
     dict(t="T6", lab="DIR", gpio="GPIO21", kind="io", dest="→ B T8",
@@ -167,13 +167,13 @@ BOT = [
          pin=12, hdr="5V", to_term=True),
     dict(t="T14", lab="GND", gpio="MCU_GND", kind="gnd", dest="HDR #1 −",
          pin=11, hdr="GND", to_term=True),
-    dict(t="T15", lab="NC", gpio="—", kind="nc", dest="unassigned",
-         pin=10, hdr="NC", to_term=True),
-    dict(t="T16", lab="NC", gpio="—", kind="nc", dest="unassigned",
-         pin=9, hdr="NC", to_term=True),
-    dict(t="T17", lab="NC", gpio="GPIO13", kind="nc", dest="EC11 SW on-bd",
+    dict(t="T15", lab="5V", gpio="+5V_EARTH", kind="v5", dest="ACS712 VCC",
+         pin=10, hdr="NC", hdr_kind="nc", to_term=False),
+    dict(t="T16", lab="GND", gpio="MCU_GND", kind="gnd", dest="returns",
+         pin=9, hdr="NC", hdr_kind="nc", to_term=False),
+    dict(t="T17", lab="GND", gpio="MCU_GND", kind="gnd", dest="returns",
          pin=8, hdr="13", hdr_kind="enc", to_term=False),
-    dict(t="T18", lab="NC", gpio="GPIO12", kind="nc", dest="EC11 DT on-bd",
+    dict(t="T18", lab="GND", gpio="MCU_GND", kind="gnd", dest="returns",
          pin=7, hdr="12", hdr_kind="enc", to_term=False),
     dict(t="T19", lab="NC", gpio="GPIO11", kind="nc", dest="EC11 CLK on-bd",
          pin=6, hdr="11", hdr_kind="enc", to_term=False),
@@ -345,7 +345,7 @@ def build():
         color, cls = KIND[p["kind"]]
         s.circle(x, Y_TOP_PIN, 5.5, color)
         s.mid(x, Y_TOP_PIN + 22, "pin", p["hdr"])
-        s.mid(x, DISP_Y - 8, "nctext" if p["kind"] == "nc" else "small",
+        s.mid(x - 12, DISP_Y - 8, "nctext" if p["kind"] == "nc" else "small",
               f"p{p['pin']}")
 
     # Bottom header pins
@@ -356,7 +356,7 @@ def build():
         color, cls = KIND[hdr_kind]
         s.circle(x, Y_BOT_PIN, 5.5, color)
         s.mid(x, Y_BOT_PIN - 12, "pin", p["hdr"])
-        s.mid(x, Y_BOT_PIN + 22, "nctext" if hdr_kind == "nc" else "small",
+        s.mid(x - 12, Y_BOT_PIN + 22, "nctext" if hdr_kind == "nc" else "small",
               f"p{p['pin']}")
 
     # Wires: top strip → top pins. Only T1 joins +3V3; others hop that rail.
@@ -364,6 +364,8 @@ def build():
         x = XS[i]
         color, cls = KIND[p["kind"]]
         y0 = TOP_Y + TOP_H
+        if not p.get("to_term", True):
+            continue
         if p["kind"] == "v33":
             s.line(x, y0, x, Y33, "v33")
             s.circle(x, Y33, 4, C_V33)
@@ -449,10 +451,10 @@ def build():
     s.circle(xr33, Y_BOT_PIN, 4, C_V33)
 
     # GND rail — header GNDs are common on the module; proto rail is T14 / R7 / EC11
-    s.line(XS[0], YGND, enc_end, YGND, "gnd")
-    s.circle(XS[0], YGND, 5, C_GND)
-    s.text(XS[0] + 10, YGND + 22, "gndtext",
-           "MCU_GND   T2 T3 T11 T12 T14 · sensor / rocker / Board B LED return   ·   not −70V")
+    s.line(XS[1], YGND, enc_end, YGND, "gnd")
+    s.circle(XS[1], YGND, 5, C_GND)
+    s.text(XS[1] + 10, YGND - 12, "gndtext",
+           "MCU_GND   T2 T3 T11 T12 T14 T16–T18 · sensor / rocker / Board B LED return   ·   not −70V")
 
     # Bottom header → terminals. Signals hop MCU_GND; T14 joins it.
     for i, p in enumerate(BOT):
@@ -465,7 +467,7 @@ def build():
             s.hop_v(x, Y_BOT_PIN, y1, [YGND], "nc", C_NC)
             continue
         if p["kind"] == "v5":
-            s.hop_v(x, Y_BOT_PIN, y1, [YGND], "v5", C_V5)
+            s.line(x, Y_BOT_PIN, x, y1, "v5")
             s.circle(x, Y_BOT_PIN, 4, C_V5)
             continue
         if p["kind"] == "v33":
@@ -497,6 +499,20 @@ def build():
         s.hop_v(x, Y_BOT_PIN, y1, [YGND], cls, color)
         s.circle(x, Y_BOT_PIN, 4, color)
 
+    # T13–T15 +5V bridge. LEFT p10 stays NC on the module; T15 is not that pin.
+    y_br = BOT_Y - 22
+    s.line(XS[0], BOT_Y, XS[0], y_br, "v5")
+    s.hop_h(y_br, XS[0], XS[2], [XS[1]], "v5", C_V5)
+    s.line(XS[2], y_br, XS[2], BOT_Y, "v5")
+    s.circle(XS[0], y_br, 4, C_V5)
+    s.circle(XS[2], y_br, 4, C_V5)
+    s.text(XS[1] + 16, y_br - 16, "v5text", "T13–T15  +5V bridge")
+
+    # T16–T18 sensor GND returns land on the MCU_GND rail (same net as T14).
+    for i in (3, 4, 5):
+        s.line(XS[i], YGND, XS[i], BOT_Y, "gnd")
+        s.circle(XS[i], YGND, 4, C_GND)
+
     # ---- Bottom terminal strip T13–T24 ----
     s.rect(strip_x, BOT_Y, strip_w, BOT_H, "termbox", rx=4)
 
@@ -526,8 +542,9 @@ def build():
         66,
         1322,
         "small",
-        "Bottom:  T13 5V · T14 GND · T15 NC · T16 NC · T17–T19 NC (EC11 on "
-        "header) · T20 OPEN · T21 LIM-L · T22 ISENSE · T23 HALL · T24 3V",
+        "Bottom:  T13 5V · T14 GND · T15 5V (← T13) · T16–T18 GND (← T14) · "
+        "T19 NC (EC11 CLK on header) · T20 OPEN · T21 LIM-L · T22 ISENSE · "
+        "T23 HALL · T24 3V",
     )
     s.text(
         66,
@@ -554,7 +571,7 @@ def build():
     s.rect(tx, 220, 524, 108, "box")
     s.text(tx + 12, 244, "label", "HDR-15-5 #1  ·  +5V_EARTH / MCU_GND")
     s.text(tx + 12, 268, "pin", "+  →  T13  5V      −  →  T14  GND")
-    s.text(tx + 12, 288, "small", "Feeds the T-Display 5V pin. Module makes 3V.")
+    s.text(tx + 12, 288, "small", "T13→T15 +5V.  T14→T16–T18 GND.")
     s.text(tx + 12, 306, "small", "USB-C remains for bench programming.")
 
     s.rect(tx, 344, 524, 148, "box")
@@ -578,14 +595,14 @@ def build():
     s.text(tx + 12, 694, "pin", "T23  HALL    GPIO1     SS49E OUT")
     s.text(tx + 12, 712, "pin", "T1 / T24    +3V3       sensor VCC")
     s.text(tx + 12, 730, "small", "AS5600 at 0x36. SS49E is the bottle key,")
-    s.text(tx + 12, 746, "small", "not travel. Returns on T2 / T3 / T11 / T14.")
+    s.text(tx + 12, 746, "small", "not travel. Returns on T2 / T3 / T11 / T14 / T16–T18.")
     s.text(tx + 12, 770, "pin", "T22  ISENSE  GPIO2     ACS712-05B OUT")
     s.text(tx + 12, 788, "small", "Module is DIN-mounted. 10k/20k lives here.")
 
     s.rect(tx, 816, 524, 100, "box")
     s.text(tx + 12, 840, "label", "ACS712-05B  ·  DIN HV island")
     s.text(tx + 12, 864, "small", "Current path is fused +70V, not on Board A.")
-    s.text(tx + 12, 882, "small", "VCC / GND = +5V_EARTH / MCU_GND (Wago star).")
+    s.text(tx + 12, 882, "small", "VCC ← T15  (T13–T15 +5V bridge).  GND ← T14.")
     s.text(tx + 12, 900, "small", "OUT → T22 → 10k / 20k → GPIO2  (185 mV/A).")
 
     s.rect(tx, 932, 524, 88, "callout")
@@ -605,7 +622,7 @@ def build():
     s.text(tx + 12, 1216, "small", "HDR-15-5 · SZL-WL")
     s.text(tx + 260, 1162, "small", "GPIO14 is the module")
     s.text(tx + 260, 1180, "small", "button, not a header pin.")
-    s.text(tx + 260, 1198, "small", "T17–T19 stay NC.")
+    s.text(tx + 260, 1198, "small", "T19 stays NC (EC11 CLK).")
     s.text(tx + 260, 1216, "small", "No 555 / 74LS157.")
 
     s.text(
