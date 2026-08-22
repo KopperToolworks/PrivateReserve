@@ -12,16 +12,20 @@ The on-box LCD during an open, and the empty-rack current table that sets the mi
 
 <table>
 <tr>
-<td width="50%" align="center" valign="top">
-<strong>Main, opening</strong><br>
+<th width="50%" align="center" valign="bottom">Main, opening</th>
+<th width="50%" align="center" valign="bottom">Diagnostics, current table</th>
+</tr>
+<tr>
+<td width="50%" align="center">
 <img src="docs/html/shots/main-02-opening.png" alt="Main screen while the door is opening" width="400">
-<br>Travel, motor current, bottle key, and shaft while the door is moving.
 </td>
-<td width="50%" align="center" valign="top">
-<strong>Diagnostics, current table</strong><br>
+<td width="50%" align="center">
 <img src="docs/html/shots/diag-11.png" alt="Diagnostics current table from open to closed" width="400">
-<br>Empty-rack current from open to closed: mean, ±σ, and trip. The yellow mark is live position.
 </td>
+</tr>
+<tr>
+<td width="50%" align="center" valign="top">Travel, motor current, bottle key, and shaft while the door is moving.</td>
+<td width="50%" align="center" valign="top">Empty-rack current from open to closed: mean, ±σ, and trip. The yellow mark is live position.</td>
 </tr>
 </table>
 
