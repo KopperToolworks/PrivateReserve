@@ -9,6 +9,9 @@ namespace {
 constexpr uint8_t kPwmCh = 0;
 constexpr float kDecayAmps = 0.15f;
 constexpr uint32_t kDecayMinMs = 50;
+constexpr uint32_t kJogStepMinMs = 200;
+constexpr uint32_t kJogStepMaxMs = 1000;
+constexpr uint32_t kJogQueueMaxMs = 4000;
 
 float clampf(float v, float lo, float hi) {
   if (v < lo) {
@@ -108,6 +111,9 @@ void Door::applyDuty(uint16_t d) {
 }
 
 void Door::setRelay(Travel dir) {
+  if (duty_ != 0) {
+    applyDuty(0);
+  }
   dir_ = dir;
   bool open = dir == Travel::Open;
   if (store.settings.direction_invert) {
@@ -197,13 +203,15 @@ float Door::readAmps() {
 
 void Door::unwrap() {
   if (!enc_ || !enc_->update()) {
-    if (running()) {
+    if (running() && !sensorFreeJog()) {
       latch(FaultId::SensorFault);
     }
     return;
   }
-  if (!magnetOk() && running()) {
-    latch(FaultId::SensorFault);
+  if (!magnetOk()) {
+    if (running() && !sensorFreeJog()) {
+      latch(FaultId::SensorFault);
+    }
     return;
   }
   const uint16_t raw = enc_->rawAngle();
@@ -215,7 +223,7 @@ void Door::unwrap() {
   }
   if (d > 2048 || d < -2048) {
     trusted_ = false;
-    if (running()) {
+    if (running() && !sensorFreeJog()) {
       latch(FaultId::SensorFault);
     }
     last_raw_ = raw;
@@ -290,6 +298,8 @@ void Door::cancel() { stopMotionKeepK1(); }
 
 void Door::stopMotionKeepK1() {
   applyDuty(0);
+  jog_remaining_ms_ = 0;
+  next_is_jog_ = false;
   if (phase_ != DoorPhase::Fault) {
     setPhase(DoorPhase::Idle);
   }
@@ -316,23 +326,70 @@ void Door::acknowledgeFault() {
   applyDuty(0);
 }
 
-void Door::startJog(Travel dir) {
-  if (phase_ == DoorPhase::Fault) {
-    return;
-  }
-  jog_beat_ = millis();
-  next_is_jog_ = true;
-  next_is_cal_ = false;
-  if (running() && dir_ == dir && phase_ == DoorPhase::Jog) {
-    return;
-  }
-  pending_dir_ = dir;
-  applyDuty(0);
-  setPhase(DoorPhase::DecayWait);
-  last_event_ = FaultId::None;
+bool Door::sensorFreeJog() const {
+  return next_is_jog_ || phase_ == DoorPhase::Jog;
 }
 
-void Door::jogBeat() { jog_beat_ = millis(); }
+Travel Door::jogCommandDir() const {
+  if (phase_ == DoorPhase::DecayWait || phase_ == DoorPhase::PwmBlank ||
+      phase_ == DoorPhase::RelaySettle) {
+    return pending_dir_;
+  }
+  return dir_;
+}
+
+uint32_t Door::jogStepMs() const {
+  uint32_t step = store.settings.jog_step_ms;
+  if (step < kJogStepMinMs) {
+    step = kJogStepMinMs;
+  }
+  if (step > kJogStepMaxMs) {
+    step = kJogStepMaxMs;
+  }
+  return step;
+}
+
+void Door::clearFaultForJog() {
+  if (phase_ != DoorPhase::Fault) {
+    return;
+  }
+  applyDuty(0);
+  if (fault_ != FaultId::PositionUnknown) {
+    fault_ = trusted_ ? FaultId::None : FaultId::PositionUnknown;
+  }
+  setPhase(DoorPhase::Idle);
+}
+
+void Door::startJog(Travel dir) {
+  clearFaultForJog();
+  const uint32_t step = jogStepMs();
+  last_event_ = FaultId::None;
+  next_is_cal_ = false;
+
+  if (sensorFreeJog()) {
+    if (jogCommandDir() == dir) {
+      jog_remaining_ms_ += step;
+      if (jog_remaining_ms_ > kJogQueueMaxMs) {
+        jog_remaining_ms_ = kJogQueueMaxMs;
+      }
+      return;
+    }
+    if (jog_remaining_ms_ > step) {
+      jog_remaining_ms_ -= step;
+      return;
+    }
+    // Opposite detent used up the queue. Start the other way through the
+    // same PWM-off / decay / blank / K1 / settle path as every other reverse.
+    jog_remaining_ms_ = step;
+    next_is_jog_ = true;
+    enterBlank(dir);
+    return;
+  }
+
+  jog_remaining_ms_ = step;
+  next_is_jog_ = true;
+  enterBlank(dir);
+}
 
 void Door::startCreep(Travel dir) {
   if (phase_ == DoorPhase::Fault && fault_ != FaultId::PositionUnknown) {
@@ -455,10 +512,15 @@ void Door::advance(uint32_t now) {
         return;
       }
       if (std::fabs(amps_) > kDecayAmps) {
-        if (elapsed > s.current_decay_timeout_ms) {
-          latch(FaultId::CurrentDecayTimeout);
+        if (elapsed <= s.current_decay_timeout_ms) {
+          return;
         }
-        return;
+        if (!next_is_jog_) {
+          latch(FaultId::CurrentDecayTimeout);
+          return;
+        }
+        // Jog cannot depend on the ACS712. After the timeout, K1 still
+        // waits for blank-before; it does not move in this phase.
       }
       setPhase(DoorPhase::PwmBlank);
       break;
@@ -563,12 +625,11 @@ void Door::advance(uint32_t now) {
       break;
 
     case DoorPhase::Jog:
-      if (now - jog_beat_ > s.jog_heartbeat_ms) {
-        applyDuty(0);
-        setPhase(DoorPhase::Idle);
-        jog_beat_ = 0;
+      if (jog_remaining_ms_ <= kControlLoopMs) {
+        stopMotionKeepK1();
         break;
       }
+      jog_remaining_ms_ -= kControlLoopMs;
       applyDuty(s.pwm_jog_duty);
       pwm_on_ms_ += kControlLoopMs;
       break;
@@ -603,7 +664,7 @@ void Door::update() {
     return;
   }
 
-  if (bothMarks() && (running() || idle())) {
+  if (bothMarks() && (running() || idle()) && !sensorFreeJog()) {
     if (running()) {
       latch(FaultId::LimitHit);
       snprintf(hint_, sizeof(hint_), "both markers active");
@@ -611,7 +672,7 @@ void Door::update() {
     }
   }
 
-  if (running() && phase_ != DoorPhase::DecayWait &&
+  if (running() && !sensorFreeJog() && phase_ != DoorPhase::DecayWait &&
       phase_ != DoorPhase::PwmBlank && phase_ != DoorPhase::RelaySettle) {
     checkHardCurrent(millis());
     if (phase_ == DoorPhase::Fault) {

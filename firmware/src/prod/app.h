@@ -75,6 +75,8 @@ class App {
   void goStatus();
   void startStage(Screen s);
   void cancelProc();
+  void persistJogSettings();
+  void nudgeJogSetting(int32_t dir);
   void updateCal();
   void updateLearn();
   void finishProbe(bool open_end);
@@ -89,7 +91,8 @@ class App {
   void listItem(uint8_t i, const char* label, const char* value, uint8_t pip,
                 bool sel);
   uint8_t compactMenu(uint8_t total);
-  void row(uint8_t i, const char* k, const char* v, bool dim = false);
+  void row(uint8_t i, const char* k, const char* v, bool dim = false,
+           bool sel = false);
   void ftr2(const char* a, const char* b);
   void ftr3(const char* a, const char* b, const char* c);
   void pin(const char* parts, const char* lv);
@@ -164,6 +167,7 @@ class App {
   uint32_t sim_close_until_ = 0;
   bool sim_key_on_ = false;
   BottleKeySensor::State sim_key_ = BottleKeySensor::State::Absent;
+  bool jog_set_dirty_ = false;
 };
 
 extern App app;

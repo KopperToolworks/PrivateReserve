@@ -5,6 +5,8 @@
 #include "store.h"
 #include "fonts/FreeSans9pt7b.h"
 
+#include <cstdio>
+
 namespace {
 uint16_t rgb(Arduino_GFX* g, uint8_t r, uint8_t gc, uint8_t b) {
   return g->color565(r, gc, b);
@@ -49,6 +51,49 @@ uint16_t clsColor(Arduino_GFX* g, char cls, uint16_t text, uint16_t ok,
     return fault;
   }
   return text;
+}
+
+// Fixed 0–2.50 A window. Hist is centiamps. Left-pads a short series.
+void drawAmpStrip(Arduino_GFX* g, int y, float amps, uint16_t textc,
+                  uint16_t dim, uint16_t accent, uint16_t fault,
+                  uint16_t panel, uint16_t line) {
+  char lab[12];
+  snprintf(lab, sizeof(lab), "%.2f A", amps);
+  text(g, 6, y + 6, textc, lab);
+  text(g, 6, y + 15, dim, "0-2.50");
+  const int gx0 = 56;
+  const int gx1 = 314;
+  const int gy0 = y;
+  const int gy1 = y + 20;
+  g->fillRect(gx0, gy0, gx1 - gx0, gy1 - gy0, panel);
+  g->drawRect(gx0, gy0, gx1 - gx0, gy1 - gy0, line);
+  g->drawFastHLine(gx0 + 1, gy0 + 1, gx1 - gx0 - 2, fault);
+  const uint16_t* h = app.ampHist();
+  const uint8_t n = app.histCount();
+  if (n < 2) {
+    return;
+  }
+  constexpr int kAmax = 250;
+  const int span = gx1 - gx0 - 3;
+  int px = -1;
+  int py = 0;
+  for (uint8_t i = 0; i < n; ++i) {
+    int c = static_cast<int>(h[app.histChronoIndex(i)]);
+    if (c < 0) {
+      c = 0;
+    }
+    if (c > kAmax) {
+      c = kAmax;
+    }
+    const int x = gx0 + 1 + (kHistLen - n + i) * span / (kHistLen - 1);
+    const int yy = gy1 - 2 - c * (gy1 - gy0 - 4) / kAmax;
+    if (px >= 0) {
+      g->drawLine(px, py, x, yy, accent);
+    }
+    px = x;
+    py = yy;
+  }
+  g->fillCircle(px, py, 2, accent);
 }
 }  // namespace
 
@@ -253,6 +298,11 @@ void lcdDraw(Arduino_GFX* g) {
     y += 30;
   }
 
+  if (v.spark == 2 && v.hero != View::Hero::Action) {
+    drawAmpStrip(g, y, v.amps, textc, dim, accent, fault, panel, line);
+    y += 24;
+  }
+
   if (v.graph) {
     const LoadTable* t = store.armedTable();
     const LoadBin* bins =
@@ -339,7 +389,11 @@ void lcdDraw(Arduino_GFX* g) {
   }
 
   for (uint8_t i = 0; i < v.nrows; ++i) {
-    text(g, 6, y, dim, v.rows[i].k);
+    if (v.rows[i].sel) {
+      g->fillRect(6, y - 1, 308, 11, rgb(g, 29, 39, 51));
+      g->fillRect(6, y - 1, 2, 11, accent);
+    }
+    text(g, 10, y, dim, v.rows[i].k);
     const int vw = strlen(v.rows[i].v) * 6;
     text(g, 314 - vw, y, v.rows[i].dim ? faint : textc, v.rows[i].v);
     y += 11;

@@ -87,6 +87,9 @@ void Store::load() {
       settings.ec11_hold_max_ms > 8000) {
     settings.ec11_hold_max_ms = kEc11HoldMaxMs;
   }
+  if (settings.jog_step_ms < 200 || settings.jog_step_ms > 1000) {
+    settings.jog_step_ms = 400;
+  }
   if (cal.format != 3) {
     cal = CalRecord{};
     clearTable(empty_table);

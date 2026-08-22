@@ -32,8 +32,11 @@
     <div class="warn">
       <strong>Jog and the obstruction test own the motor.</strong> They carry an
       amber banner while live. Hall and rocker cannot preempt them. HOLD
-      cancels: PWM off, current decay, K1 unchanged. A web jog needs a repeating
-      heartbeat. A closed tab must not leave the motor latched.
+      cancels: PWM off, current decay, K1 unchanged. Jog is a timed EC11
+      (or web keypad) nudge. PRESS while idle edits duty (5–25%) and step
+      (200–1000&nbsp;ms). It does not need the shaft encoder, markers, or
+      current sensor. Leftover queue time expires on its own, so a closed tab
+      cannot leave the motor latched.
     </div>
 
     <section class="shot">
@@ -263,10 +266,10 @@
 
     <section class="shot">
       <h2>8. Jog to position</h2>
-      <p>Owns the motor. Amber banner and a heartbeat. A web client that goes away must not leave the motor latched, so the timeout is shown.</p>
+      <p>Owns the motor. Each EC11 detent (or web − / +) queues a fixed run time at jog duty. Same-direction clicks add to that queue. Opposite clicks subtract; when the queue is gone, that click reverses through the normal PWM-off, decay, blank, and K1 settle windows. PRESS while idle cycles the two live settings: duty as a percent (5–25%) and time per detent (200–1000&nbsp;ms). Shaft encoder, markers, and learned envelope do not start, stop, or abort the move. Current is a live 0–2.50&nbsp;A graph when the ACS712 is sampling; it is display-only. Travel shows <code>unknown</code> if origin is not trusted.</p>
       <figure class="lcd">
-        <img src="shots/diag-08.png" width="320" alt="DIAG jog: MOTOR LIVE, 62 percent, duty 96 CLOSE">
-        <figcaption>Figure 8. DIAG · jog. Motor live, envelope and markers armed.</figcaption>
+        <img src="shots/diag-08.png" width="320" alt="DIAG jog: MOTOR LIVE, 9 percent duty, 400 ms step, live current graph">
+        <figcaption>Figure 8. DIAG · jog. Timed queue, duty as percent, live 0–2.50&nbsp;A graph. PRESS while idle edits duty and step.</figcaption>
       </figure>
       <table>
         <thead>
@@ -276,17 +279,18 @@
           <tr><td><code>DIAG · jog</code></td><td>Header left.</td></tr>
           <tr><td><code>7 / 13</code></td><td>Header right.</td></tr>
           <tr><td><code>MOTOR LIVE — JOG</code></td><td>Amber banner title. This page owns the motor. Hall and rocker cannot preempt it.</td></tr>
-          <tr><td><code>Envelope and markers armed · release knob to stop</code></td><td>Banner detail. Learned trip and markers still apply. Releasing TURN stops PWM.</td></tr>
+          <tr><td><code>EC11 only — opposite blanks before reverse</code></td><td>Banner detail. Only the knob or web keypad commands this page. A reverse never hot-switches K1.</td></tr>
           <tr><td><code>OPEN</code> / <code>CLOSED</code></td><td>Travel ends.</td></tr>
-          <tr><td>Blue fill to 62%, yellow thumb, two marker ticks</td><td>Same travel widget as Main. Door is at 62% of span.</td></tr>
-          <tr><td><code>62%</code> · <code>12 690 cnt</code></td><td>Share of span and counts from origin.</td></tr>
-          <tr><td><code>jog duty · direction</code> · <code>96 · CLOSE</code></td><td>Creep-level duty and K1 for this jog.</td></tr>
-          <tr><td><code>step per detent · heartbeat</code> · <code>256 cnt · 1.2 s</code></td><td>Counts added per TURN click, and how soon a missing web heartbeat drops PWM.</td></tr>
+          <tr><td>Blue fill to 62%, yellow thumb, two marker ticks</td><td>Same travel widget as Main when position is trusted. Door is at 62% of span. Missing encoder: <code>unknown</code> and <code>-</code>.</td></tr>
+          <tr><td><code>62%</code> · <code>12 690 cnt</code></td><td>Share of span and counts from origin, if the shaft magnet is good.</td></tr>
+          <tr><td><code>jog duty · direction</code> · <code>9 % · CLOSE</code></td><td>Jog PWM as a percent of 10-bit full scale (5–25%). K1 for this jog. PRESS while idle highlights this row; TURN changes it.</td></tr>
+          <tr><td><code>step · remaining</code> · <code>400 ms · 800 ms</code></td><td>Time added per detent (200–1000&nbsp;ms, 50&nbsp;ms steps) and how much powered time is still queued. PRESS again highlights this row. Queue caps at 4&nbsp;s.</td></tr>
+          <tr><td>Live amp strip · <code>0.41 A</code> · 0–2.50 scale</td><td>ACS712 history, last ~8&nbsp;s. Red line is the 2.50&nbsp;A ceiling. Not used to run or stop the jog.</td></tr>
           <tr><td>Pin strip: <code>GPIO16</code> · <code>GPIO21</code> · <code>T5 / T6</code></td><td>PWM and direction pins, Board A motor terminals.</td></tr>
-          <tr><td><code>duty 96 · K1 CLOSE</code></td><td>Live command this instant.</td></tr>
-          <tr><td><code>TURN jog</code></td><td>Move while the detent is held or stepped. Direction follows turn sense.</td></tr>
-          <tr><td><code>PRESS stop</code></td><td>Drop PWM now. Stay on this page.</td></tr>
-          <tr><td><code>HOLD exit</code></td><td>Stop if moving, then return to the menu.</td></tr>
+          <tr><td><code>12 690 cnt</code> or <code>enc --</code></td><td>Shaft counts when the magnet is good. Display-only.</td></tr>
+          <tr><td><code>TURN jog</code> or <code>TURN duty</code> / <code>TURN step</code></td><td>Default: CW queues close, CCW queues open. Same way extends. Opposite shortens, then blanks and reverses. With a setting highlighted, TURN changes that value.</td></tr>
+          <tr><td><code>PRESS stop</code> or <code>PRESS edit</code> / <code>PRESS next</code></td><td>While moving: drop PWM. While idle: cycle Jog → duty % → step ms → Jog. Writes the value when you leave a field.</td></tr>
+          <tr><td><code>HOLD exit</code></td><td>Stop if moving, save a pending edit, then return to the menu.</td></tr>
         </tbody>
       </table>
     </section>

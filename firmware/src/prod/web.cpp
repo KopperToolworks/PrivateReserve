@@ -122,8 +122,8 @@ void buildState() {
     char k[48], val[48];
     jsonEsc(k, sizeof(k), v.rows[i].k);
     jsonEsc(val, sizeof(val), v.rows[i].v);
-    appendf(p, end, "{\"k\":\"%s\",\"v\":\"%s\",\"dim\":%u}", k, val,
-            v.rows[i].dim);
+    appendf(p, end, "{\"k\":\"%s\",\"v\":\"%s\",\"dim\":%u,\"sel\":%s}", k, val,
+            v.rows[i].dim, v.rows[i].sel ? "true" : "false");
   }
   append(p, end, "],\"items\":[");
   for (uint8_t i = 0; i < v.nitems; ++i) {
@@ -267,6 +267,10 @@ nav a.on{color:var(--text);font-weight:600}
 .banner.warn{background:#2a2211;border:1px solid var(--move)}
 .banner.ok{background:#0f2418;border:1px solid var(--ok)}
 .banner.bad .t{color:#ff8a82}.banner.warn .t{color:#f0c070}.banner.ok .t{color:#79d79a}
+.ampstrip{height:22px;display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.ampstrip .alab{width:46px;font-size:10px;font-weight:700;line-height:11px}
+.ampstrip .asub{font-size:7px;color:var(--dim);font-weight:400}
+.ampstrip svg{flex:1;display:block;background:#14181d}
 .travel{height:32px}
 .trow{display:flex;align-items:center;gap:6px}
 .tend{font-size:9px;color:var(--dim);width:38px}
@@ -286,7 +290,8 @@ nav a.on{color:var(--text);font-weight:600}
 .pip{width:7px;height:7px;border-radius:50%;background:var(--idle);display:inline-block;margin-right:4px}
 .pip.on{background:var(--ok)}.pip.warn{background:var(--move)}.pip.bad{background:var(--fault)}
 .rows{display:flex;flex-direction:column;gap:2px;flex:1}
-.row{display:flex;font-size:9px;gap:6px}
+.row{display:flex;font-size:9px;gap:6px;padding:0 2px}
+.row.sel{background:#1d2733;box-shadow:inset 2px 0 0 var(--accent)}
 .rk{color:var(--dim)}.rv{margin-left:auto;font-weight:700}
 .row.dim .rv{color:var(--faint);font-weight:400}
 .prog{display:flex;gap:2px;height:8px;background:#1e242b;padding:1px;border-radius:2px}
@@ -373,6 +378,17 @@ document.querySelectorAll('nav a').forEach(a=>a.onclick=()=>{
   const m={status:0,diag:1,cal:2,set:3,docs:4};
   cmd('nav', m[a.dataset.n]);
 });
+function ampStrip(st){
+  const arr=st.amp||[],N=st.histN||40,w=250,h=20,amax=250;
+  const xAt=i=>((N-arr.length+i)/Math.max(1,N-1)*w);
+  const yAt=v=> (h-2)-(Math.max(0,Math.min(amax,v))/amax*(h-4));
+  const pts=arr.map((v,i)=>xAt(i).toFixed(1)+','+yAt(v).toFixed(1)).join(' ');
+  const line=arr.length>1?`<polyline points="${pts}" fill="none" stroke="#5aa9e6" stroke-width="1.5"/>`:'';
+  const lx=arr.length?xAt(arr.length-1).toFixed(1):0;
+  const ly=arr.length?yAt(arr[arr.length-1]).toFixed(1):h-2;
+  return `<div class="ampstrip"><div class="alab">${st.amps.toFixed(2)} A<div class="asub">0-2.50</div></div>
+    <svg width="${w}" height="${h}"><rect width="${w}" height="${h}" fill="#14181d" stroke="#242a31"/><line x1="0" y1="1" x2="${w}" y2="1" stroke="#e04b43"/>${line}<circle cx="${lx}" cy="${ly}" r="2" fill="#5aa9e6"/></svg></div>`;
+}
 function spark(arr,color,win){
   if(!arr||!arr.length)return '';
   const n=arr.length, N=win||40, c=color||'#5aa9e6';
@@ -428,6 +444,7 @@ function render(st){
       <div>${side}${amps}</div></div>`;
   }
   let travel='';
+  const ampspark=(st.spark===2&&st.hero===3)?ampStrip(st):'';
   if(st.showTravel){
     const kc=st.moving?'move':st.faultKnob?'fault':'';
     travel=`<div class="travel"><div class="trow"><div class="tend">OPEN</div>
@@ -448,7 +465,7 @@ function render(st){
   }
   let rows='';
   if(st.rows&&st.rows.length){
-    rows=`<div class="rows">`+st.rows.map(r=>`<div class="row ${r.dim?'dim':''}"><span class="rk">${r.k}</span><span class="rv">${r.v}</span></div>`).join('')+`</div>`;
+    rows=`<div class="rows">`+st.rows.map(r=>`<div class="row ${r.dim?'dim':''}${r.sel?' sel':''}"><span class="rk">${r.k}</span><span class="rv">${r.v}</span></div>`).join('')+`</div>`;
   }
   let entry='';
   if(st.entry){
@@ -474,7 +491,7 @@ function render(st){
     <div class="note">source and docs</div>
   </div></div>`:'';
   S.innerHTML=`<div class="hdr"><div>${st.mode}</div><div class="net"><span class="dot ${st.ap?'ap':''}"></span>${st.net}</div></div>
-    ${hero}${entry}${prog}${g}${travel}${tiles}${items}${rows}${wifi}${qr}${pin}${ftr}`;
+    ${hero}${entry}${prog}${g}${travel}${ampspark}${tiles}${items}${rows}${wifi}${qr}${pin}${ftr}`;
 }
 async function tick(){
   try{

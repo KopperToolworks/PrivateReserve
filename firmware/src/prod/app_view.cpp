@@ -428,18 +428,38 @@ void App::composeDiag() {
       view_.hero = View::Hero::Warn;
       copy(view_.hero_big, sizeof(view_.hero_big), "MOTOR LIVE - JOG");
       copy(view_.hero_sub, sizeof(view_.hero_sub),
-           "Envelope and markers armed - release to stop");
+           "EC11 only - opposite blanks before reverse");
       view_.show_travel = true;
-      snprintf(tmp, sizeof(tmp), "%u - %s", store.settings.pwm_jog_duty,
-               door.k1Open() ? "OPEN" : "CLOSE");
-      row(0, "jog duty - direction", tmp);
-      snprintf(tmp, sizeof(tmp), "256 cnt - %lu ms",
-               static_cast<unsigned long>(store.settings.jog_heartbeat_ms));
-      row(1, "step - heartbeat", tmp);
+      {
+        const int pct = static_cast<int>(
+            (static_cast<uint32_t>(store.settings.pwm_jog_duty) * 100u +
+             (kPwmMaxDuty / 2u)) /
+            kPwmMaxDuty);
+        snprintf(tmp, sizeof(tmp), "%d %% - %s", pct,
+                 door.k1Open() ? "OPEN" : "CLOSE");
+        row(0, "jog duty - direction", tmp, false, cursor_ == 1);
+      }
+      snprintf(tmp, sizeof(tmp), "%lu ms - %lu ms",
+               static_cast<unsigned long>(store.settings.jog_step_ms),
+               static_cast<unsigned long>(door.jogRemainingMs()));
+      row(1, "step - remaining", tmp, false, cursor_ == 2);
       view_.nrows = 2;
-      pin("GPIO16 - GPIO21 - T5 / T6",
-          door.running() ? "duty live" : "idle");
-      ftr3("TURN jog", "PRESS stop", "HOLD exit");
+      view_.spark = 2;
+      if (door.magnetOk()) {
+        snprintf(lv, sizeof(lv), "%ld cnt", static_cast<long>(door.position()));
+      } else {
+        copy(lv, sizeof(lv), "enc --");
+      }
+      pin("GPIO16 - GPIO21 - T5 / T6", lv);
+      if (cursor_ == 1) {
+        ftr3("TURN duty 5-25%", "PRESS next", "HOLD exit");
+      } else if (cursor_ == 2) {
+        ftr3("TURN step 200-1000", "PRESS next", "HOLD exit");
+      } else if (door.idle()) {
+        ftr3("TURN jog", "PRESS edit", "HOLD exit");
+      } else {
+        ftr3("TURN jog", "PRESS stop", "HOLD exit");
+      }
       break;
 
     case Screen::DiagObstTest:

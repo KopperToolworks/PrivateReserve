@@ -8,6 +8,28 @@
 #include <cstring>
 
 namespace {
+constexpr int kJogDutyPctMin = 5;
+constexpr int kJogDutyPctMax = 25;
+constexpr int kJogStepEditMinMs = 200;
+constexpr int kJogStepEditMaxMs = 1000;
+constexpr int kJogStepEditIncMs = 50;
+
+int dutyToPct(uint16_t duty) {
+  return static_cast<int>(
+      (static_cast<uint32_t>(duty) * 100u + (kPwmMaxDuty / 2u)) / kPwmMaxDuty);
+}
+
+uint16_t pctToDuty(int pct) {
+  if (pct < kJogDutyPctMin) {
+    pct = kJogDutyPctMin;
+  }
+  if (pct > kJogDutyPctMax) {
+    pct = kJogDutyPctMax;
+  }
+  return static_cast<uint16_t>(
+      (static_cast<uint32_t>(pct) * kPwmMaxDuty + 50u) / 100u);
+}
+
 float clampf(float v, float lo, float hi) {
   if (v < lo) {
     return lo;
@@ -119,6 +141,9 @@ void App::revertRecentTurn() {
 }
 
 void App::go(Screen s) {
+  if (screen_ == Screen::DiagJog && s != Screen::DiagJog) {
+    persistJogSettings();
+  }
   clearDiagInject();
   screen_ = s;
   cursor_ = 0;
@@ -131,6 +156,7 @@ void App::go(Screen s) {
     owner_ = MotorOwner::Som;
   } else if (s == Screen::DiagJog) {
     owner_ = MotorOwner::Jog;
+    jog_set_dirty_ = false;
   } else if (s == Screen::DiagObstTest) {
     owner_ = MotorOwner::ObstTest;
   } else if (s >= Screen::CalPathClear && s <= Screen::CalLearnLoaded) {
@@ -158,7 +184,6 @@ void App::handle(Cmd cmd, int32_t arg, const char* text) {
   wake();
   if (cmd == Cmd::JogBeat) {
     if (screen_ == Screen::DiagJog) {
-      door.jogBeat();
       if (arg < 0) {
         door.startJog(Travel::Open);
       } else if (arg > 0) {
@@ -183,7 +208,36 @@ void App::handle(Cmd cmd, int32_t arg, const char* text) {
   }
 }
 
+void App::persistJogSettings() {
+  if (!jog_set_dirty_ || !door.idle()) {
+    return;
+  }
+  store.pending.pwm_jog_duty = store.settings.pwm_jog_duty;
+  store.pending.jog_step_ms = store.settings.jog_step_ms;
+  store.persistSettings();
+  jog_set_dirty_ = false;
+}
+
+void App::nudgeJogSetting(int32_t dir) {
+  if (cursor_ == 1) {
+    int pct = dutyToPct(store.settings.pwm_jog_duty) + static_cast<int>(dir);
+    store.settings.pwm_jog_duty = pctToDuty(pct);
+  } else if (cursor_ == 2) {
+    int32_t ms = static_cast<int32_t>(store.settings.jog_step_ms) +
+                 dir * kJogStepEditIncMs;
+    if (ms < kJogStepEditMinMs) {
+      ms = kJogStepEditMinMs;
+    }
+    if (ms > kJogStepEditMaxMs) {
+      ms = kJogStepEditMaxMs;
+    }
+    store.settings.jog_step_ms = static_cast<uint32_t>(ms);
+  }
+  jog_set_dirty_ = true;
+}
+
 void App::cancelProc() {
+  persistJogSettings();
   door.cancel();
   owner_ = MotorOwner::Som;
   if (screen_ >= Screen::CalMenu && screen_ <= Screen::CalReview) {
@@ -285,6 +339,10 @@ void App::onTurn(int32_t n) {
   const int dir = n > 0 ? 1 : -1;
 
   if (screen_ == Screen::DiagJog) {
+    if (cursor_ == 1 || cursor_ == 2) {
+      nudgeJogSetting(dir);
+      return;
+    }
     door.startJog(dir > 0 ? Travel::Close : Travel::Open);
     return;
   }
@@ -665,7 +723,12 @@ void App::onPress() {
       }
       break;
     case Screen::DiagJog:
-      door.cancel();
+      if (!door.idle()) {
+        door.cancel();
+        break;
+      }
+      persistJogSettings();
+      cursor_ = static_cast<uint8_t>((cursor_ + 1) % 3);
       break;
     case Screen::DiagEc11:
       detents_ = 0;
@@ -1378,13 +1441,14 @@ uint8_t App::compactMenu(uint8_t total) {
   return start;
 }
 
-void App::row(uint8_t i, const char* k, const char* v, bool dim) {
+void App::row(uint8_t i, const char* k, const char* v, bool dim, bool sel) {
   if (i >= 6) {
     return;
   }
   copy(view_.rows[i].k, sizeof(view_.rows[i].k), k);
   copy(view_.rows[i].v, sizeof(view_.rows[i].v), v);
   view_.rows[i].dim = dim ? 1 : 0;
+  view_.rows[i].sel = sel ? 1 : 0;
 }
 
 void App::ftr2(const char* a, const char* b) {

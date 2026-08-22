@@ -154,7 +154,7 @@ struct Settings {
   uint32_t display_timeout_ms = 300000;
   uint32_t switch_debounce_ms = 25;
   uint32_t wifi_sta_timeout_ms = 15000;
-  uint32_t jog_heartbeat_ms = 1200;
+  uint32_t jog_step_ms = 400;
   uint32_t obstruction_inrush_skip_ms = 400;
   uint32_t current_decay_timeout_ms = 2000;
   uint32_t move_timeout_ms = 30000;
@@ -250,6 +250,7 @@ struct View {
     char k[42];
     char v[42];
     uint8_t dim;
+    uint8_t sel;
   } rows[6];
   uint8_t nrows = 0;
 
