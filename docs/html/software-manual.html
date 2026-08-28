@@ -94,7 +94,7 @@
     </section>
 
     <h2>2. Knob map</h2>
-    <p>HOLD fires once when the push has been down for <code>ec11_hold_min_ms</code> (default 400&nbsp;ms). It does not wait for release. A shorter down is PRESS. Staying down past <code>ec11_hold_max_ms</code> does not fire a second HOLD.</p>
+    <p>HOLD fires once when the push has been down for <code>ec11_hold_min_ms</code> (default 400&nbsp;ms). It does not wait for release. A shorter down is PRESS. Keeping the button down does not fire a second HOLD. <code>ec11_hold_max_ms</code> remains a setting; it does not delay the first HOLD.</p>
     <p>Pressing the knob can twist CLK/DT. If the highlight moved within <code>ec11_press_revert_ms</code> (100&nbsp;ms) of an EC11 press, firmware restores the previous item, then handles PRESS. Rotation is ignored while SW is down.</p>
     <p>On bottle key, limit markers, and override rockers, TURN selects one of two choices. The highlight stops at the end instead of wrapping. Extra clicks in that direction do nothing. One click moves once.</p>
     <table>
@@ -1178,7 +1178,7 @@
 
     <section class="shot">
       <h2>9. Jog by position</h2>
-      <p>Owns the motor only while the AS5600 ACKs and the magnet is in range. Each detent queues shaft counts at the same jog duty (default 64 counts, 16–512 in steps of 16). Same-direction clicks extend the count queue (cap 2048). Opposite clicks subtract, then reverse through the same blanking path as time jog. The stall watchdog still applies. If I²C fails or the magnet is lost, PWM drops immediately without latching a sensor fault. The page is locked (banner <code>ENCODER REQUIRED</code>) until the bus and magnet recover. No dedicated LCD shot in this set; chrome matches time jog with counts in place of milliseconds and live magnet status on the pin strip.</p>
+      <p>Owns the motor only while the AS5600 ACKs and STATUS shows a magnet that is neither too weak nor too strong. That is not the same as a trusted origin; calibration is not required. Each detent queues shaft counts at the same jog duty (default 64 counts, 16–512 in steps of 16). Same-direction clicks extend the count queue (cap 2048). Opposite clicks subtract, then reverse through the same blanking path as time jog. The stall watchdog still applies. If I²C fails or STATUS drops out of range, PWM stops immediately without latching a sensor fault. While locked, the banner title is <code>ENCODER REQUIRED</code> and the subtitle names the check that failed. No dedicated LCD shot in this set; chrome matches time jog with counts in place of milliseconds. The pin strip still shows live counts and the magnet label.</p>
       <table>
         <thead>
           <tr><th>On screen</th><th>Meaning</th></tr>
@@ -1186,8 +1186,13 @@
         <tbody>
           <tr><td><code>DIAG · jog by position</code></td><td>Header left.</td></tr>
           <tr><td><code>8 / 14</code></td><td>Header right.</td></tr>
-          <tr><td><code>MOTOR LIVE — COUNTS</code> or <code>ENCODER REQUIRED</code></td><td>Amber banner. Locked when magnet or I²C is unhealthy.</td></tr>
+          <tr><td><code>MOTOR LIVE — COUNTS</code></td><td>Amber banner when I²C ACK and STATUS are good. TURN jogs.</td></tr>
           <tr><td><code>stops if encoder is lost</code></td><td>Banner detail when the sensor is good.</td></tr>
+          <tr><td><code>ENCODER REQUIRED</code></td><td>Amber banner. Jog is locked. TURN does not move the motor.</td></tr>
+          <tr><td><code>I2C NACK - chip unread at 0x36</code></td><td>Banner detail. The AS5600 did not ACK. Not a magnet STATUS flag. Bus time is the 10&nbsp;ms Wire timeout on a failed transfer; too-weak/too-strong do not change that time.</td></tr>
+          <tr><td><code>STATUS: magnet too weak</code></td><td>Banner detail. Chip ACKed. STATUS bit “too weak.” Angle was read and discarded.</td></tr>
+          <tr><td><code>STATUS: magnet too strong</code></td><td>Banner detail. Chip ACKed. STATUS bit “too strong.”</td></tr>
+          <tr><td><code>STATUS: magnet lost</code></td><td>Banner detail. Chip ACKed. Magnet-detect bit clear (and not the too-weak/too-strong pair).</td></tr>
           <tr><td>Travel widget</td><td>Shown. Live counts and magnet label on the pin strip (<code>AS5600 T5 / T6</code>).</td></tr>
           <tr><td><code>jog duty · direction</code></td><td>Same 5–25% duty as time jog. Shared setting.</td></tr>
           <tr><td><code>step · remaining</code> · counts</td><td>Counts added per detent and remaining distance in the commanded direction.</td></tr>

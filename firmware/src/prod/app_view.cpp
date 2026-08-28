@@ -466,8 +466,13 @@ void App::composeDiag() {
       view_.hero = View::Hero::Warn;
       if (!door.magnetOk()) {
         copy(view_.hero_big, sizeof(view_.hero_big), "ENCODER REQUIRED");
-        copy(view_.hero_sub, sizeof(view_.hero_sub),
-             door.busOk() ? "magnet not healthy" : "I2C not responding");
+        if (!door.busOk()) {
+          copy(view_.hero_sub, sizeof(view_.hero_sub),
+               "I2C NACK - chip unread at 0x36");
+        } else {
+          snprintf(view_.hero_sub, sizeof(view_.hero_sub), "STATUS: magnet %s",
+                   door.magnetLabel());
+        }
       } else {
         copy(view_.hero_big, sizeof(view_.hero_big), "MOTOR LIVE - COUNTS");
         copy(view_.hero_sub, sizeof(view_.hero_sub),

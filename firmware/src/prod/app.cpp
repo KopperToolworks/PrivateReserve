@@ -1330,7 +1330,7 @@ void App::pollMomentary(bool down, bool& last, uint32_t& edge_ms,
   edge_ms = now;
   if (down && !hold_sent) {
     const uint32_t held = now - down_ms;
-    if (held >= hold_min && held <= hold_max) {
+    if (held >= hold_min) {
       last_press_ms = held;
       if (revert_turn) {
         revertRecentTurn();

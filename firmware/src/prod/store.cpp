@@ -80,7 +80,7 @@ void Store::load() {
   nvs.getBytes("cal", &cal, sizeof(cal));
   nvs.getBytes("tempty", &empty_table, sizeof(empty_table));
   nvs.getBytes("tload", &loaded_table, sizeof(loaded_table));
-  if (settings.ec11_hold_min_ms < 150 || settings.ec11_hold_min_ms > 3000) {
+  if (settings.ec11_hold_min_ms < 150 || settings.ec11_hold_min_ms > 800) {
     settings.ec11_hold_min_ms = kEc11HoldMinMs;
   }
   if (settings.ec11_hold_max_ms < settings.ec11_hold_min_ms ||

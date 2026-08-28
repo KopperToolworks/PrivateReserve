@@ -89,7 +89,7 @@
     </section>
 
     <h2>2. Knob map</h2>
-    <p>HOLD fires once when the push has been down for <code>ec11_hold_min_ms</code> (default 400&nbsp;ms). It does not wait for release. A shorter down is PRESS. Staying down past <code>ec11_hold_max_ms</code> does not fire a second HOLD.</p>
+    <p>HOLD fires once when the push has been down for <code>ec11_hold_min_ms</code> (default 400&nbsp;ms). It does not wait for release. A shorter down is PRESS. Keeping the button down does not fire a second HOLD. <code>ec11_hold_max_ms</code> remains a setting; it does not delay the first HOLD.</p>
     <p>Pressing the knob can twist CLK/DT. If the highlight moved within <code>ec11_press_revert_ms</code> (100&nbsp;ms) of an EC11 press, firmware restores the previous item, then handles PRESS. Rotation is ignored while SW is down.</p>
     <p>On bottle key, limit markers, and override rockers, TURN selects one of two choices. The highlight stops at the end instead of wrapping. Extra clicks in that direction do nothing. One click moves once.</p>
     <table>

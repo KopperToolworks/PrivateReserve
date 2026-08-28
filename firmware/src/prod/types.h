@@ -156,7 +156,6 @@ struct Settings {
   uint32_t switch_debounce_ms = 25;
   uint32_t wifi_sta_timeout_ms = 15000;
   uint32_t jog_step_ms = 400;
-  int32_t jog_step_counts = 64;
   uint32_t obstruction_inrush_skip_ms = 400;
   uint32_t current_decay_timeout_ms = 2000;
   uint32_t move_timeout_ms = 30000;
@@ -181,6 +180,9 @@ struct Settings {
   char wifi_ap_password[65] = "reserved";
   uint32_t ec11_hold_min_ms = kEc11HoldMinMs;
   uint32_t ec11_hold_max_ms = kEc11HoldMaxMs;
+  // Append-only: a mid-struct field shifts NVS and corrupts later keys
+  // (hold time, Wi-Fi).
+  int32_t jog_step_counts = 64;
 };
 
 struct CalRecord {
