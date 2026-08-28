@@ -24,6 +24,9 @@ class Door {
   int32_t position() const { return trusted_ ? counts_ - origin_ : counts_; }
   bool positionTrusted() const { return trusted_; }
   bool magnetOk() const;
+  bool busOk() const;
+  const char* magnetLabel() const;
+  uint8_t agc() const;
   uint16_t rawAngle() const;
   float revPerSec() const { return rps_; }
   bool k1Open() const { return dir_ == Travel::Open; }

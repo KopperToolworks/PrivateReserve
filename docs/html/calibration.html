@@ -136,7 +136,7 @@
           <tr><td><code>1b of 8</code></td><td>Header right.</td></tr>
           <tr><td><code>± 3 cnt</code> (green)</td><td>Hero. Peak-to-peak AS5600 counts at rest.</td></tr>
           <tr><td><code>peak-to-peak at rest · 2.0 s window</code></td><td>How long the band was watched.</td></tr>
-          <tr><td><code>samples · magnet</code> · <code>200 at 10 ms · OK</code></td><td>Sample count and magnet status from the AS5600.</td></tr>
+          <tr><td><code>samples · magnet</code> · <code>I2C ACK · detected</code></td><td>Bus then STATUS. <code>I2C ACK</code> means the chip answered. <code>detected</code> / <code>lost</code> / <code>too weak</code> / <code>too strong</code> is magnet quality. <code>I2C NACK</code> plus <code>unread</code> means the bus failed.</td></tr>
           <tr><td><code>sets stall minimum progress</code> · <code>8 cnt / 500 ms</code></td><td>Stall check needs more motion than rest jitter. Derived from this band, not guessed.</td></tr>
           <tr><td><code>sets accumulation deadband</code> · <code>3 cnt</code></td><td>Counts inside this band do not walk idle position.</td></tr>
           <tr><td>Progress, two green + one amber, <code>baselines</code> · <code>2 of 3</code></td><td>Current zero accepted. Shaft is now. Key remains.</td></tr>

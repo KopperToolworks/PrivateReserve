@@ -186,10 +186,10 @@
       <tbody>
         <tr><td><strong>T1</strong></td><td><strong>3V</strong></td><td><code>+3V3_TDISPLAY</code></td><td>SS49E VCC, AS5600 VCC (from module <strong>3V</strong>)</td></tr>
         <tr><td><strong>T2</strong></td><td><strong>GND</strong></td><td><code>MCU_GND</code></td><td>Sensor, limit, and rocker returns</td></tr>
-        <tr><td><strong>T3</strong></td><td><strong>GND</strong></td><td><code>MCU_GND</code></td><td>Sensor, limit, and rocker returns</td></tr>
+        <tr><td><strong>T3</strong></td><td><strong>GND</strong></td><td><code>MCU_GND</code></td><td>Sensor, limit, and rocker returns. Lands <strong>R6</strong> (PWM) and <strong>R7</strong> (DIR) 10&nbsp;kΩ pull-downs</td></tr>
         <tr><td><strong>T4</strong></td><td><strong>NC</strong></td><td>—</td><td>Module NC. Unassigned. May be jumpered to <code>MCU_GND</code>.</td></tr>
-        <tr><td><strong>T5</strong></td><td><strong>PWM</strong></td><td>GPIO16</td><td>Board B 6N137 LED</td></tr>
-        <tr><td><strong>T6</strong></td><td><strong>DIR</strong></td><td>GPIO21</td><td>Board B U4 LED</td></tr>
+        <tr><td><strong>T5</strong></td><td><strong>PWM</strong></td><td>GPIO16</td><td>Board B 6N137 LED. On-board <strong>R6</strong> 10&nbsp;kΩ to T3 <code>MCU_GND</code></td></tr>
+        <tr><td><strong>T6</strong></td><td><strong>DIR</strong></td><td>GPIO21</td><td>Board B U4 LED. On-board <strong>R7</strong> 10&nbsp;kΩ to T3 <code>MCU_GND</code></td></tr>
         <tr><td><strong>T7</strong></td><td><strong>LIM-U</strong></td><td>GPIO17</td><td>Upper NC limit to GND</td></tr>
         <tr><td><strong>T8</strong></td><td><strong>CLOSE</strong></td><td>GPIO18</td><td>Close rocker (active-low, paralleled pair)</td></tr>
         <tr><td><strong>T9</strong></td><td><strong>SCL</strong></td><td>GPIO44</td><td>AS5600 SCL</td></tr>
@@ -237,6 +237,14 @@
     </table>
     <p>Full notes, terminal clarification, and links:
       <a href="EC11_Onboard_Wiring.md">EC11 on-board wiring</a>.</p>
+
+    <h3>On-board pull-downs</h3>
+    <p><strong>R6</strong> (10&nbsp;kΩ) sits between <strong>T5</strong>
+      (<code>PWM</code>, GPIO16) and <strong>T3</strong> (<code>MCU_GND</code>).
+      <strong>R7</strong> (10&nbsp;kΩ) sits between <strong>T6</strong>
+      (<code>DIR</code>, GPIO21) and the same T3 return. They hold the Board B
+      optocoupler LEDs off if the T-Display is unpowered or resetting. Series LED
+      resistors stay on Board B.</p>
 
     <h3>Board A → Board B</h3>
     <p>Keyed 3-pin earth-side cable from <strong>T5</strong> (<code>PWM</code>),

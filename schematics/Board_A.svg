@@ -45,7 +45,7 @@
 <rect x="0" y="0" width="2280" height="1478" rx="0" class="box"/>
 <rect width="2280" height="1478" fill="#fff"/>
 <text x="40" y="40" class="title">Board A — Earth-side control</text>
-<text x="40" y="64" class="text">Private Reserve · as-built dual Adafruit Perma-Proto 1/2 · LilyGo T-Display-S3 + EC11 · T1–T24 · Rev 2026-08-22</text>
+<text x="40" y="64" class="text">Private Reserve · as-built dual Adafruit Perma-Proto 1/2 · LilyGo T-Display-S3 + EC11 · T1–T24 · Rev 2026-08-27</text>
 <rect x="40" y="78" width="2200" height="68" rx="5" class="warn"/>
 <text x="56" y="102" class="label">Earth domain only. Never land floating or HV copper here.</text>
 <text x="56" y="124" class="text">No +5V_ISO, +12V_GD, −70V, +70V, or SW. MCU_GND is not −70V. Do not back-feed 3.3 V into the module 3V pin. LED resistors stay on Board B.</text>
@@ -236,7 +236,9 @@
 <circle cx="318" cy="496" r="4" fill="#101828"/>
 <line x1="534" y1="316" x2="534" y2="332" class="earth"/>
 <path d="M534 332 A8 8 0 0 1 534 348" fill="none" stroke="#175cd3" stroke-width="3"/>
-<line x1="534" y1="348" x2="534" y2="496" class="earth"/>
+<line x1="534" y1="348" x2="534" y2="360" class="earth"/>
+<path d="M534 360 A8 8 0 0 1 534 376" fill="none" stroke="#175cd3" stroke-width="3"/>
+<line x1="534" y1="376" x2="534" y2="496" class="earth"/>
 <circle cx="534" cy="496" r="4" fill="#175cd3"/>
 <line x1="642" y1="316" x2="642" y2="332" class="earth"/>
 <path d="M642 332 A8 8 0 0 1 642 348" fill="none" stroke="#175cd3" stroke-width="3"/>
@@ -266,6 +268,18 @@
 <path d="M1290 332 A8 8 0 0 1 1290 348" fill="none" stroke="#101828" stroke-width="3"/>
 <line x1="1290" y1="348" x2="1290" y2="496" class="gnd"/>
 <circle cx="1290" cy="496" r="4" fill="#101828"/>
+<circle cx="534" cy="388" r="4" fill="#175cd3"/>
+<line x1="534" y1="388" x2="480.0" y2="388" class="earth"/>
+<line x1="480.0" y1="388" x2="480.0" y2="404" class="earth"/>
+<circle cx="480.0" cy="388" r="4" fill="#175cd3"/>
+<rect x="466.0" y="404" width="28" height="52" rx="2" class="part"/>
+<text x="480.0" y="434.0" class="pin" text-anchor="middle">10k</text>
+<line x1="480.0" y1="456" x2="480.0" y2="474" class="gnd"/>
+<line x1="480.0" y1="474" x2="318" y2="474" class="gnd"/>
+<circle cx="318" cy="474" r="4" fill="#101828"/>
+<text x="500.0" y="428" class="label">R6</text>
+<text x="500.0" y="444" class="small">PWM pull-down</text>
+<text x="500.0" y="460" class="small">holds B LED off</text>
 <circle cx="642" cy="368" r="4" fill="#175cd3"/>
 <line x1="642" y1="368" x2="338" y2="368" class="earth"/>
 <line x1="338" y1="368" x2="338" y2="404" class="earth"/>
@@ -483,7 +497,7 @@
 <circle cx="1290" cy="1188" r="4.5" fill="#dc6803"/>
 <text x="66" y="1304" class="small">As-built screws, USB-C left → right.  Top:  T1 3V · T2 GND · T3 GND · T4 NC · T5 PWM · T6 DIR · T7 LIM-U · T8 CLOSE · T9 SCL · T10 SDA · T11 GND · T12 GND</text>
 <text x="66" y="1322" class="small">Bottom:  T13 5V · T14 GND · T15 5V (← T13) · T16–T18 GND (← T14) · T19 NC (EC11 CLK on header) · T20 OPEN · T21 LIM-L · T22 ISENSE · T23 HALL · T24 3V</text>
-<text x="66" y="1348" class="small">3-pin earth cable to Board B:  T5 PWM · T6 DIR · T12 MCU_GND.  No floating supply on that cable.  R7 is on this board; 220 Ω / 270 Ω LED resistors are on Board B.</text>
+<text x="66" y="1348" class="small">3-pin earth cable to Board B:  T5 PWM · T6 DIR · T12 MCU_GND.  R6 / R7 10 kΩ pull-downs (PWM / DIR → T3) are on this board; 220 Ω / 270 Ω LED resistors are on Board B.</text>
 <text x="66" y="1366" class="small">Upper outer +/− unused.  Lower outer + unused.  Lower outer − is MCU_GND.  Inner +3V3 / GND buses are proposed.</text>
 <rect x="1684" y="162" width="556" height="1236" rx="8" class="off"/>
 <text x="1700" y="186" class="section">OFF BOARD</text>
@@ -499,7 +513,7 @@
 <text x="1712" y="410" class="pin">T6   DIR  GPIO21  →  Board B T8</text>
 <text x="1712" y="428" class="pin">T12  MCU_GND          →  Board B T5</text>
 <text x="1712" y="450" class="small">Keyed 3-pin earth cable. No +5V_ISO / −70V.</text>
-<text x="1712" y="468" class="small">R7 keeps DIR low if A is dark or resetting.</text>
+<text x="1712" y="468" class="small">R6 / R7 hold PWM / DIR low if A is dark.</text>
 <text x="1712" y="486" class="small">See schematics/Board_B.svg</text>
 <rect x="1700" y="508" width="524" height="292" rx="5" class="box"/>
 <text x="1712" y="532" class="label">Field I/O  (earth only)</text>
@@ -529,7 +543,7 @@
 <rect x="1700" y="1036" width="524" height="320" rx="5" class="part"/>
 <text x="1712" y="1064" class="label">Private Reserve</text>
 <text x="1712" y="1088" class="text">DWG  schematics/Board_A.svg</text>
-<text x="1712" y="1110" class="text">REV  2026-08-22 · earth control</text>
+<text x="1712" y="1110" class="text">REV  2026-08-27 · earth control</text>
 <text x="1712" y="1142" class="small">Datasheets:</text>
 <text x="1712" y="1162" class="small">T-Display-S3 · ESP32-S3</text>
 <text x="1712" y="1180" class="small">EC11 · ACS712-05B</text>
@@ -539,5 +553,5 @@
 <text x="1960" y="1180" class="small">button, not a header pin.</text>
 <text x="1960" y="1198" class="small">T19 stays NC (EC11 CLK).</text>
 <text x="1960" y="1216" class="small">No 555 / 74LS157.</text>
-<text x="40" y="1426" class="small">GPIO16 and GPIO21 must be LOW at boot. PWM-off, wait for current decay, then change K1, wait ≥25 ms, then resume PWM. Loss of +5V_EARTH extinguishes the Board B LEDs → gate off.</text>
+<text x="40" y="1426" class="small">GPIO16 and GPIO21 must be LOW at boot (R6 / R7 10 kΩ to T3). PWM-off, wait for current decay, then change K1, wait ≥25 ms, then resume PWM. Loss of +5V_EARTH extinguishes the Board B LEDs → gate off.</text>
 </svg>

@@ -67,6 +67,30 @@ bool Door::magnetOk() const {
          !enc_->magnetTooStrong();
 }
 
+bool Door::busOk() const {
+  return enc_ && enc_->ok();
+}
+
+const char* Door::magnetLabel() const {
+  if (!busOk()) {
+    return "unread";
+  }
+  if (enc_->magnetTooWeak()) {
+    return "too weak";
+  }
+  if (enc_->magnetTooStrong()) {
+    return "too strong";
+  }
+  if (enc_->magnetDetected()) {
+    return "detected";
+  }
+  return "lost";
+}
+
+uint8_t Door::agc() const {
+  return enc_ ? enc_->agc() : 0;
+}
+
 uint16_t Door::rawAngle() const {
   return enc_ ? enc_->rawAngle() : 0;
 }

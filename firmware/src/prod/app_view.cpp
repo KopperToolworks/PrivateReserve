@@ -164,7 +164,8 @@ void App::composeDiag() {
         "Stored calibration"};
     char vals[12][16];
     copy(vals[0], 16, key_->present() ? "present" : "absent");
-    copy(vals[1], 16, door.magnetOk() ? "ok" : "fault");
+    copy(vals[1], 16,
+         door.magnetOk() ? "ok" : (door.busOk() ? "no mag" : "no i2c"));
     copy(vals[2], 16, door.bothMarks() ? "BOTH" : "clear");
     copy(vals[3], 16, close_rocker ? "close held" : (open_rocker ? "open held" : "off"));
     snprintf(vals[4], 16, "%.2f A", fabsf(door.amps()));
@@ -176,7 +177,7 @@ void App::composeDiag() {
     copy(vals[10], 16, sta_up_ ? "STA" : "AP");
     copy(vals[11], 16, store.somReady() ? "ok" : "setup");
     uint8_t pips[12] = {1, 0, 0, 1, 1, 1, 2, 2, 1, 1, 1, 1};
-    pips[1] = door.magnetOk() ? 1 : 3;
+    pips[1] = door.magnetOk() ? 1 : (door.busOk() ? 2 : 3);
     pips[2] = door.bothMarks() ? 3 : 1;
     pips[8] = store.tablesArmed() ? 1 : 2;
     pips[11] = store.somReady() ? 1 : 2;
@@ -259,19 +260,19 @@ void App::composeDiag() {
                door.rawAngle() * (360.0f / 4096.0f));
       snprintf(view_.hero_right2, sizeof(view_.hero_right2), "%.1f rev/s",
                door.revPerSec());
-      snprintf(tmp, sizeof(tmp), "%u - %s", door.rawAngle(),
-               door.magnetOk() ? "OK" : "BAD");
-      row(0, "raw angle - magnet", tmp);
-      snprintf(tmp, sizeof(tmp), "%u - %s", 0, door.magnetOk() ? "detected" : "lost");
-      row(1, "status", door.magnetOk() ? "detected" : "fault", !door.magnetOk());
+      row(0, "I2C 0x36", door.busOk() ? "ACK" : "NACK", !door.busOk());
+      snprintf(tmp, sizeof(tmp), "%u - %s", door.rawAngle(), door.magnetLabel());
+      row(1, "raw angle - magnet", tmp, !door.magnetOk());
+      snprintf(tmp, sizeof(tmp), "%u", door.agc());
+      row(2, "AGC (mid ~128)", tmp, !door.busOk());
       snprintf(tmp, sizeof(tmp), "+/- %ld cnt",
                static_cast<long>(store.settings.as5600_jitter_counts));
-      row(2, "jitter band at rest", tmp);
+      row(3, "jitter band at rest", tmp);
       snprintf(tmp, sizeof(tmp), "%ld / %ld cnt",
                static_cast<long>(store.cal.drift_open),
                static_cast<long>(store.cal.drift_close));
-      row(3, "drift last re-sync (open / close)", tmp);
-      view_.nrows = 4;
+      row(4, "drift last re-sync (open / close)", tmp);
+      view_.nrows = 5;
       pin("GPIO43/44 - T10/T9 - I2C 0x36 - 12-bit", "4096 cnt/rev - 100 kHz");
       ftr2("PRESS zero log", "HOLD back");
       break;
@@ -723,7 +724,9 @@ void App::composeCal() {
                static_cast<long>(jitter_max_ - jitter_min_));
       copy(view_.hero_sub, sizeof(view_.hero_sub), "peak-to-peak at rest");
       view_.hero_cls = 'k';
-      row(0, "samples - magnet", door.magnetOk() ? "OK" : "BAD");
+      snprintf(tmp, sizeof(tmp), "%s - %s",
+               door.busOk() ? "I2C ACK" : "I2C NACK", door.magnetLabel());
+      row(0, "samples - magnet", tmp, !door.magnetOk());
       snprintf(tmp, sizeof(tmp), "%ld cnt / 500 ms",
                static_cast<long>(store.settings.as5600_min_progress_counts));
       row(1, "sets stall minimum progress", tmp);

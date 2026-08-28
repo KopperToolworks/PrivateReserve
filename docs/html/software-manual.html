@@ -180,7 +180,7 @@
       </thead>
       <tbody>
         <tr><td>Bottle door key</td><td>49E / SS49E</td><td>GPIO1, T23</td><td>Magnet present or absent. Automatic open/close.</td></tr>
-        <tr><td>Shaft encoder</td><td>AS5600</td><td>GPIO43/44, T10/T9</td><td>Door position as accumulated counts.</td></tr>
+        <tr><td>Shaft encoder</td><td>AS5600</td><td>GPIO43/44, T10/T9</td><td>Door position as accumulated counts. Diagnostics shows I²C ACK/NACK separately from magnet STATUS.</td></tr>
         <tr><td>Current load</td><td>ACS712-05B</td><td>GPIO2, T22</td><td>Motor current. Envelope and snug.</td></tr>
         <tr><td>Open marker</td><td>NC switch</td><td>GPIO17, T7</td><td>Near-end flag, open side.</td></tr>
         <tr><td>Close marker</td><td>NC switch</td><td>GPIO3, T21</td><td>Near-end flag, close side.</td></tr>
@@ -626,7 +626,7 @@
           <tr><td><code>1b of 8</code></td><td>Header right.</td></tr>
           <tr><td><code>± 3 cnt</code> (green)</td><td>Hero. Peak-to-peak AS5600 counts at rest.</td></tr>
           <tr><td><code>peak-to-peak at rest · 2.0 s window</code></td><td>How long the band was watched.</td></tr>
-          <tr><td><code>samples · magnet</code> · <code>200 at 10 ms · OK</code></td><td>Sample count and magnet status from the AS5600.</td></tr>
+          <tr><td><code>samples · magnet</code> · <code>I2C ACK · detected</code></td><td>Bus then STATUS. <code>I2C ACK</code> means the chip answered. <code>detected</code> / <code>lost</code> / <code>too weak</code> / <code>too strong</code> is magnet quality. <code>I2C NACK</code> plus <code>unread</code> means the bus failed.</td></tr>
           <tr><td><code>sets stall minimum progress</code> · <code>8 cnt / 500 ms</code></td><td>Stall check needs more motion than rest jitter. Derived from this band, not guessed.</td></tr>
           <tr><td><code>sets accumulation deadband</code> · <code>3 cnt</code></td><td>Counts inside this band do not walk idle position.</td></tr>
           <tr><td>Progress, two green + one amber, <code>baselines</code> · <code>2 of 3</code></td><td>Current zero accepted. Shaft is now. Key remains.</td></tr>
@@ -932,7 +932,7 @@
           <tr><td><code>DIAG · menu</code></td><td>Header left.</td></tr>
           <tr><td><code>1–8 of 12 ▾</code></td><td>Header right. This window is the first eight rows. The triangle means more items below.</td></tr>
           <tr><td>Green pip + highlight + <code>Bottle door key — 49E</code> + <code>PRESENT</code></td><td>Selected. Hall sensor. Value is live cooked state.</td></tr>
-          <tr><td>Green pip + <code>Motor rotary encoder — AS5600</code> + <code>OK</code></td><td>Shaft magnet detected, I²C good.</td></tr>
+          <tr><td>Green pip + <code>Motor rotary encoder — AS5600</code> + <code>OK</code></td><td>I²C ACK and shaft magnet in range. Amber pip + <code>no mag</code> means the bus is live but STATUS is lost, too weak, or too strong. Red pip + <code>no i2c</code> means the chip did not ACK at 0x36.</td></tr>
           <tr><td>Green pip + <code>Limit switches</code> + <code>CLEAR</code></td><td>Neither marker is made.</td></tr>
           <tr><td>Green pip + <code>Override rockers</code> + <code>CLOSE HELD</code></td><td>Close throw is made right now. Centre does nothing. PRESS on that page pulses a throw through the same path as the hardware.</td></tr>
           <tr><td>Green pip + <code>Motor current load — ACS712</code> + <code>0.00 A</code></td><td>Live amps at rest.</td></tr>
@@ -991,7 +991,7 @@
 
     <section class="shot">
       <h2>3. Motor rotary encoder — AS5600</h2>
-      <p>The only source of door position. It also carries the jitter band and the drift from the last marker re-sync.</p>
+      <p>The only source of door position. It also carries the jitter band and the drift from the last marker re-sync. I²C health and magnet STATUS are separate: <code>ACK</code> with <code>no mag</code> on the menu means the chip answered and the magnet is unreadable.</p>
       <figure class="lcd">
         <img src="shots/diag-03.png" width="320" alt="DIAG shaft encoder: 12690 counts, 148.3 degrees, 1.7 rev/s CCW">
         <figcaption>Figure 3. DIAG · shaft encoder. 62% of span, magnet OK.</figcaption>
@@ -1008,8 +1008,9 @@
           <tr><td>Angle dial</td><td>Single-turn AS5600 angle inside the current revolution. Not the multi-turn door position.</td></tr>
           <tr><td><code>148.3°</code></td><td>That single-turn angle in degrees.</td></tr>
           <tr><td><code>1.7 rev/s CCW</code></td><td>Live shaft speed and direction.</td></tr>
-          <tr><td><code>raw angle · magnet</code> · <code>1 687 · OK</code></td><td>12-bit raw angle (0–4095) and magnet quality.</td></tr>
-          <tr><td><code>AGC · status</code> · <code>128 · detected</code></td><td>Automatic gain and magnet-detected flag from the chip.</td></tr>
+          <tr><td><code>I2C 0x36</code> · <code>ACK</code> or <code>NACK</code></td><td>Live bus. ACK means the last STATUS/angle read succeeded. Magnet can still be unreadable.</td></tr>
+          <tr><td><code>raw angle · magnet</code> · <code>1 687 · detected</code></td><td>12-bit raw angle (0–4095) and STATUS: detected, lost, too weak, too strong, or unread if the bus failed.</td></tr>
+          <tr><td><code>AGC (mid ~128)</code> · <code>128</code></td><td>Automatic gain. Meaningful only on ACK. Mid-range is a healthy air gap.</td></tr>
           <tr><td><code>jitter band at rest</code> · <code>± 3 cnt</code></td><td>Stage 1b capture. Growing band is an early warning for a weak magnet.</td></tr>
           <tr><td><code>drift last re-sync (open / close)</code> · <code>−12 / +7 cnt</code></td><td>Correction applied the last time each marker was seen. Growing drift means lost turns or a slipping magnet.</td></tr>
           <tr><td>Pin strip: <code>GPIO43/44</code> · <code>T10/T9</code> · <code>I²C 0x36</code> · <code>12-bit</code></td><td>SCL/SDA, terminals, bus address, resolution.</td></tr>

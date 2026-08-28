@@ -192,8 +192,14 @@
     <h3>Power</h3>
     <p>Board C receives the motor outer rails from the inter-box 140 V feed
       and Wago distribution (see DIN layout,
-      row B). The fused <code>+70V</code> high rail enters at
-      <strong>T1</strong> after external fuse F1. The low outer rail
+      row B). AnTek <code>+70V</code> is interlocked in the <strong>PSU box</strong>
+      (AC-in and DC-out relays, coils on <code>+12V_GD</code>) before that feed
+      reaches F1, the Wago star, K1, and <strong>T1</strong>. Run those coil
+      leads in the <strong>AC</strong> inter-box passage, not beside the ±70&nbsp;V
+      PWM pair. Details:
+      DIN enclosure — 140 V interlock relays.
+      The fused <code>+70V</code> high rail enters at
+      <strong>T1</strong> after that interlock and F1. The low outer rail
       <code>−70V</code> enters at <strong>T2</strong>. Those terminals feed
       D9 cathode, TVS1, and Q1 source on-board. K1 high-side contacts
       (NO1/NC2) take fused <code>+70V</code> from the Wago star, not through
@@ -216,7 +222,7 @@
         <tr><th>Terminal</th><th>Label</th><th>Net</th><th>Attaches</th></tr>
       </thead>
       <tbody>
-        <tr><td><strong>T1</strong></td><td><strong>+70V</strong></td><td><code>+70V</code></td><td><strong>Power in.</strong> Fused high rail from Wago / F1 out → D9 K, TVS1 K (board-internal)</td></tr>
+        <tr><td><strong>T1</strong></td><td><strong>+70V</strong></td><td><code>+70V</code></td><td><strong>Power in.</strong> After PSU-box DC interlock, then F1 / Wago → D9 K, TVS1 K (board-internal)</td></tr>
         <tr><td><strong>T2</strong></td><td><strong>−70V</strong></td><td><code>−70V</code></td><td><strong>Power in.</strong> Motor low outer rail → Q1 source, TVS1 A, Rgs/Dz return (board-internal)</td></tr>
         <tr><td><strong>T3</strong></td><td><strong>GATE</strong></td><td>gate</td><td>Board B TC4426 OUT B (100 Ω may be on B or at Q1; see Motor_Driver_Wiring.md)</td></tr>
         <tr><td><strong>T4</strong></td><td><strong>NC1</strong></td><td><code>SW</code></td><td>K1 pin 12 (NC1) — return contact → Q1 drain / D9 anode on-board</td></tr>

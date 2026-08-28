@@ -248,7 +248,7 @@ def build():
         64,
         "text",
         "Private Reserve · as-built dual Adafruit Perma-Proto 1/2 · "
-        "LilyGo T-Display-S3 + EC11 · T1–T24 · Rev 2026-08-22",
+        "LilyGo T-Display-S3 + EC11 · T1–T24 · Rev 2026-08-27",
     )
 
     s.rect(40, 78, 2200, 68, "warn")
@@ -359,6 +359,15 @@ def build():
         s.mid(x - 12, Y_BOT_PIN + 22, "nctext" if hdr_kind == "nc" else "small",
               f"p{p['pin']}")
 
+    # R6 / R7 geometry (PWM vertical hops the DIR tap at y_tap_dir)
+    x_pwm = XS[4]
+    x_dir = XS[5]
+    x_t3 = XS[2]
+    x_r6 = (XS[3] + XS[4]) / 2
+    x_r7 = x_t3 + 20
+    y_tap_dir = 368
+    y_tap_pwm = 388
+
     # Wires: top strip → top pins. Only T1 joins +3V3; others hop that rail.
     for i, p in enumerate(TOP):
         x = XS[i]
@@ -372,28 +381,41 @@ def build():
             s.line(x, Y33, x, Y_TOP_PIN, "v33")
         elif p["kind"] == "nc":
             s.hop_v(x, y0, Y_TOP_PIN, [Y33], "nc", C_NC)
+        elif p["t"] == "T5":
+            # Hop +3V3 and the DIR pull-down run; R6 taps below that hop.
+            s.hop_v(x, y0, Y_TOP_PIN, [Y33, y_tap_dir], cls, color)
         else:
             s.hop_v(x, y0, Y_TOP_PIN, [Y33], cls, color)
         if p["kind"] != "nc":
             s.circle(x, Y_TOP_PIN, 4, color)
 
-    # R7 10 kΩ DIR pull-down (on the DIR column)
-    x_dir = XS[5]
-    x_r7 = XS[2] + 20
-    y_tap = 368
-    y_r7 = 404
-    s.circle(x_dir, y_tap, 4, C_IO)
-    s.line(x_dir, y_tap, x_r7, y_tap, "earth")
-    s.line(x_r7, y_tap, x_r7, y_r7, "earth")
-    s.circle(x_r7, y_tap, 4, C_IO)
-    s.res_v(x_r7, y_r7, 28, 52, "10k")
-    y_r7_gnd = DISP_Y - 22
-    s.line(x_r7, y_r7 + 52, x_r7, y_r7_gnd, "gnd")
-    s.line(x_r7, y_r7_gnd, XS[2], y_r7_gnd, "gnd")
-    s.circle(XS[2], y_r7_gnd, 4, C_GND)
-    s.text(x_r7 + 20, y_r7 + 24, "label", "R7")
-    s.text(x_r7 + 20, y_r7 + 40, "small", "DIR pull-down")
-    s.text(x_r7 + 20, y_r7 + 56, "small", "holds B LED off")
+    # R6 10 kΩ PWM pull-down (T5 → T3) and R7 10 kΩ DIR pull-down (T6 → T3)
+    y_r = 404
+    y_pd_gnd = DISP_Y - 22
+
+    s.circle(x_pwm, y_tap_pwm, 4, C_IO)
+    s.line(x_pwm, y_tap_pwm, x_r6, y_tap_pwm, "earth")
+    s.line(x_r6, y_tap_pwm, x_r6, y_r, "earth")
+    s.circle(x_r6, y_tap_pwm, 4, C_IO)
+    s.res_v(x_r6, y_r, 28, 52, "10k")
+    s.line(x_r6, y_r + 52, x_r6, y_pd_gnd, "gnd")
+    s.line(x_r6, y_pd_gnd, x_t3, y_pd_gnd, "gnd")
+    s.circle(x_t3, y_pd_gnd, 4, C_GND)
+    s.text(x_r6 + 20, y_r + 24, "label", "R6")
+    s.text(x_r6 + 20, y_r + 40, "small", "PWM pull-down")
+    s.text(x_r6 + 20, y_r + 56, "small", "holds B LED off")
+
+    s.circle(x_dir, y_tap_dir, 4, C_IO)
+    s.line(x_dir, y_tap_dir, x_r7, y_tap_dir, "earth")
+    s.line(x_r7, y_tap_dir, x_r7, y_r, "earth")
+    s.circle(x_r7, y_tap_dir, 4, C_IO)
+    s.res_v(x_r7, y_r, 28, 52, "10k")
+    s.line(x_r7, y_r + 52, x_r7, y_pd_gnd, "gnd")
+    s.line(x_r7, y_pd_gnd, x_t3, y_pd_gnd, "gnd")
+    s.circle(x_t3, y_pd_gnd, 4, C_GND)
+    s.text(x_r7 + 20, y_r + 24, "label", "R7")
+    s.text(x_r7 + 20, y_r + 40, "small", "DIR pull-down")
+    s.text(x_r7 + 20, y_r + 56, "small", "holds B LED off")
 
     # ---- EC11 (right of the module) ----
     ex, ey, ew, eh = 1368, 508, 268, 236
@@ -450,7 +472,7 @@ def build():
     s.circle(xr33, Y33, 4, C_V33)
     s.circle(xr33, Y_BOT_PIN, 4, C_V33)
 
-    # GND rail — header GNDs are common on the module; proto rail is T14 / R7 / EC11
+    # GND rail — header GNDs are common on the module; proto rail is T14 / R6 / R7 / EC11
     s.line(XS[1], YGND, enc_end, YGND, "gnd")
     s.circle(XS[1], YGND, 5, C_GND)
     s.text(XS[1] + 10, YGND - 12, "gndtext",
@@ -551,8 +573,8 @@ def build():
         1348,
         "small",
         "3-pin earth cable to Board B:  T5 PWM · T6 DIR · T12 MCU_GND.  "
-        "No floating supply on that cable.  R7 is on this board; 220 Ω / "
-        "270 Ω LED resistors are on Board B.",
+        "R6 / R7 10 kΩ pull-downs (PWM / DIR → T3) are on this board; "
+        "220 Ω / 270 Ω LED resistors are on Board B.",
     )
     s.text(
         66,
@@ -580,7 +602,7 @@ def build():
     s.text(tx + 12, 410, "pin", "T6   DIR  GPIO21  →  Board B T8")
     s.text(tx + 12, 428, "pin", "T12  MCU_GND          →  Board B T5")
     s.text(tx + 12, 450, "small", "Keyed 3-pin earth cable. No +5V_ISO / −70V.")
-    s.text(tx + 12, 468, "small", "R7 keeps DIR low if A is dark or resetting.")
+    s.text(tx + 12, 468, "small", "R6 / R7 hold PWM / DIR low if A is dark.")
     s.text(tx + 12, 486, "small", "See schematics/Board_B.svg")
 
     s.rect(tx, 508, 524, 292, "box")
@@ -614,7 +636,7 @@ def build():
     s.rect(tx, 1036, 524, 320, "part")
     s.text(tx + 12, 1064, "label", "Private Reserve")
     s.text(tx + 12, 1088, "text", "DWG  schematics/Board_A.svg")
-    s.text(tx + 12, 1110, "text", "REV  2026-08-22 · earth control")
+    s.text(tx + 12, 1110, "text", "REV  2026-08-27 · earth control")
     s.text(tx + 12, 1142, "small", "Datasheets:")
     s.text(tx + 12, 1162, "small", "T-Display-S3 · ESP32-S3")
     s.text(tx + 12, 1180, "small", "EC11 · ACS712-05B")
@@ -629,9 +651,9 @@ def build():
         40,
         ON_Y + ON_H + 28,
         "small",
-        "GPIO16 and GPIO21 must be LOW at boot. PWM-off, wait for current "
-        "decay, then change K1, wait ≥25 ms, then resume PWM. Loss of "
-        "+5V_EARTH extinguishes the Board B LEDs → gate off.",
+        "GPIO16 and GPIO21 must be LOW at boot (R6 / R7 10 kΩ to T3). PWM-off, "
+        "wait for current decay, then change K1, wait ≥25 ms, then resume PWM. "
+        "Loss of +5V_EARTH extinguishes the Board B LEDs → gate off.",
     )
 
     a("</svg>")
