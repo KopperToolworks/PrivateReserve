@@ -13,6 +13,13 @@ constexpr int kJogDutyPctMax = 25;
 constexpr int kJogStepEditMinMs = 200;
 constexpr int kJogStepEditMaxMs = 1000;
 constexpr int kJogStepEditIncMs = 50;
+constexpr int kJogStepEditMinCounts = 16;
+constexpr int kJogStepEditMaxCounts = 512;
+constexpr int kJogStepEditIncCounts = 16;
+
+bool isJogScreen(Screen s) {
+  return s == Screen::DiagJog || s == Screen::DiagJogCounts;
+}
 
 int dutyToPct(uint16_t duty) {
   return static_cast<int>(
@@ -141,7 +148,7 @@ void App::revertRecentTurn() {
 }
 
 void App::go(Screen s) {
-  if (screen_ == Screen::DiagJog && s != Screen::DiagJog) {
+  if (isJogScreen(screen_) && !isJogScreen(s)) {
     persistJogSettings();
   }
   clearDiagInject();
@@ -154,7 +161,7 @@ void App::go(Screen s) {
   ignore_[0] = 0;
   if (s == Screen::Status) {
     owner_ = MotorOwner::Som;
-  } else if (s == Screen::DiagJog) {
+  } else if (isJogScreen(s)) {
     owner_ = MotorOwner::Jog;
     jog_set_dirty_ = false;
   } else if (s == Screen::DiagObstTest) {
@@ -189,6 +196,12 @@ void App::handle(Cmd cmd, int32_t arg, const char* text) {
       } else if (arg > 0) {
         door.startJog(Travel::Close);
       }
+    } else if (screen_ == Screen::DiagJogCounts) {
+      if (arg < 0) {
+        door.startJogCounts(Travel::Open);
+      } else if (arg > 0) {
+        door.startJogCounts(Travel::Close);
+      }
     }
     return;
   }
@@ -214,6 +227,7 @@ void App::persistJogSettings() {
   }
   store.pending.pwm_jog_duty = store.settings.pwm_jog_duty;
   store.pending.jog_step_ms = store.settings.jog_step_ms;
+  store.pending.jog_step_counts = store.settings.jog_step_counts;
   store.persistSettings();
   jog_set_dirty_ = false;
 }
@@ -222,7 +236,16 @@ void App::nudgeJogSetting(int32_t dir) {
   if (cursor_ == 1) {
     int pct = dutyToPct(store.settings.pwm_jog_duty) + static_cast<int>(dir);
     store.settings.pwm_jog_duty = pctToDuty(pct);
-  } else if (cursor_ == 2) {
+  } else if (screen_ == Screen::DiagJogCounts) {
+    int32_t c = store.settings.jog_step_counts + dir * kJogStepEditIncCounts;
+    if (c < kJogStepEditMinCounts) {
+      c = kJogStepEditMinCounts;
+    }
+    if (c > kJogStepEditMaxCounts) {
+      c = kJogStepEditMaxCounts;
+    }
+    store.settings.jog_step_counts = c;
+  } else {
     int32_t ms = static_cast<int32_t>(store.settings.jog_step_ms) +
                  dir * kJogStepEditIncMs;
     if (ms < kJogStepEditMinMs) {
@@ -242,7 +265,7 @@ void App::cancelProc() {
   owner_ = MotorOwner::Som;
   if (screen_ >= Screen::CalMenu && screen_ <= Screen::CalReview) {
     go(Screen::CalMenu);
-  } else if (screen_ == Screen::DiagJog || screen_ == Screen::DiagObstTest) {
+  } else if (isJogScreen(screen_) || screen_ == Screen::DiagObstTest) {
     go(Screen::DiagMenu);
   }
   copy(ignore_, sizeof(ignore_), "cancelled");
@@ -269,6 +292,7 @@ void App::onHold() {
       go(Screen::ModeMenu);
       break;
     case Screen::DiagJog:
+    case Screen::DiagJogCounts:
     case Screen::DiagObstTest:
       cancelProc();
       break;
@@ -346,6 +370,16 @@ void App::onTurn(int32_t n) {
     door.startJog(dir > 0 ? Travel::Close : Travel::Open);
     return;
   }
+  if (screen_ == Screen::DiagJogCounts) {
+    if (cursor_ == 1 || cursor_ == 2) {
+      nudgeJogSetting(dir);
+      return;
+    }
+    if (!door.startJogCounts(dir > 0 ? Travel::Close : Travel::Open)) {
+      copy(ignore_, sizeof(ignore_), door.lastHint());
+    }
+    return;
+  }
   if (screen_ == Screen::SetEdit) {
     applyEdit(dir);
     return;
@@ -417,7 +451,7 @@ void App::onTurn(int32_t n) {
       wrap(5);
       break;
     case Screen::DiagMenu:
-      wrap(12);
+      wrap(13);
       break;
     case Screen::CalMenu:
       wrap(9);
@@ -679,10 +713,11 @@ void App::onPress() {
       static const Screen kDiag[] = {
           Screen::DiagBottleKey, Screen::DiagShaft,     Screen::DiagLimits,
           Screen::DiagRockers,   Screen::DiagCurrent,   Screen::DiagPwm,
-          Screen::DiagJog,       Screen::DiagObstTest,  Screen::DiagTableClose,
-          Screen::DiagEc11,      Screen::DiagNetwork,   Screen::DiagCalStatus};
+          Screen::DiagJog,       Screen::DiagJogCounts, Screen::DiagObstTest,
+          Screen::DiagTableClose, Screen::DiagEc11,     Screen::DiagNetwork,
+          Screen::DiagCalStatus};
       go(kDiag[cursor_]);
-      if (kDiag[cursor_] == Screen::DiagJog) {
+      if (isJogScreen(kDiag[cursor_])) {
         owner_ = MotorOwner::Jog;
       }
       if (kDiag[cursor_] == Screen::DiagObstTest) {
@@ -723,6 +758,7 @@ void App::onPress() {
       }
       break;
     case Screen::DiagJog:
+    case Screen::DiagJogCounts:
       if (!door.idle()) {
         door.cancel();
         break;
@@ -1409,7 +1445,7 @@ void App::update() {
 
 void App::listItem(uint8_t i, const char* label, const char* value, uint8_t pip,
                    bool sel) {
-  if (i >= 12) {
+  if (i >= 13) {
     return;
   }
   copy(view_.items[i].label, sizeof(view_.items[i].label), label);
@@ -1420,8 +1456,8 @@ void App::listItem(uint8_t i, const char* label, const char* value, uint8_t pip,
 
 uint8_t App::compactMenu(uint8_t total) {
   uint8_t vis = kMenuVisible;
-  if (vis > 12) {
-    vis = 12;
+  if (vis > 13) {
+    vis = 13;
   }
   if (total <= vis) {
     view_.nitems = total;

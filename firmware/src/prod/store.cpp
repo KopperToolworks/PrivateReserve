@@ -90,6 +90,9 @@ void Store::load() {
   if (settings.jog_step_ms < 200 || settings.jog_step_ms > 1000) {
     settings.jog_step_ms = 400;
   }
+  if (settings.jog_step_counts < 16 || settings.jog_step_counts > 512) {
+    settings.jog_step_counts = 64;
+  }
   if (cal.format != 3) {
     cal = CalRecord{};
     clearTable(empty_table);

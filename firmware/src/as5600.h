@@ -28,6 +28,7 @@ class As5600Sensor {
   bool readRegisters(uint8_t reg, uint8_t* buf, uint8_t len);
 
   uint8_t addr_ = 0x36;
+  uint8_t field_div_ = 0;
   uint16_t raw_angle_ = 0;
   uint8_t status_ = 0;
   uint8_t agc_ = 0;

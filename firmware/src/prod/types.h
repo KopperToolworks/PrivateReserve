@@ -24,6 +24,7 @@ enum class Screen : uint8_t {
   DiagCurrent,
   DiagPwm,
   DiagJog,
+  DiagJogCounts,
   DiagObstTest,
   DiagTableClose,
   DiagTableOpen,
@@ -155,6 +156,7 @@ struct Settings {
   uint32_t switch_debounce_ms = 25;
   uint32_t wifi_sta_timeout_ms = 15000;
   uint32_t jog_step_ms = 400;
+  int32_t jog_step_counts = 64;
   uint32_t obstruction_inrush_skip_ms = 400;
   uint32_t current_decay_timeout_ms = 2000;
   uint32_t move_timeout_ms = 30000;
@@ -259,7 +261,7 @@ struct View {
     char value[28];
     uint8_t pip;
     bool sel;
-  } items[12];
+  } items[13];
   uint8_t nitems = 0;
 
   char pin_parts[80] = "";

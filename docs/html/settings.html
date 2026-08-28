@@ -82,7 +82,7 @@
           <tr><td>Highlight + <code>Cruise duty</code> + <code>512 → 544</code> (544 amber)</td><td>Selected. Stored 512, pending 544. Changing this invalidates both learned tables.</td></tr>
           <tr><td><code>Minimum moving duty</code> · <code>64</code></td><td>Floor while the profile is moving. Below this the motor may not break away.</td></tr>
           <tr><td><code>Creep duty</code> · <code>96</code></td><td>Duty for marker seeks, snug, and short calibration moves.</td></tr>
-          <tr><td><code>Jog duty</code> · <code>96</code></td><td>10-bit duty for each timed detent on the diagnostic jog page. That page edits it as 5–25% and step as 200–1000&nbsp;ms.</td></tr>
+          <tr><td><code>Jog duty</code> · <code>96</code></td><td>10-bit duty for both diagnostic jog pages. Those pages edit it as 5–25%. Time jog also edits step as 200–1000&nbsp;ms. Position jog edits step as 16–512 counts.</td></tr>
           <tr><td><code>Accelerate</code> · <code>3000 MS</code></td><td>Time to climb from moving floor to cruise. Changing it invalidates tables.</td></tr>
           <tr><td><code>Cruise time</code> · <code>6000 MS</code></td><td>Time at cruise duty. Changing it invalidates tables. Clipped at the bottom of this shot.</td></tr>
           <tr><td><code>Decelerate</code> · <code>3000 MS</code> (off-screen)</td><td>Seventh value. TURN to it. Time to drop from cruise to creep. Changing it invalidates tables.</td></tr>

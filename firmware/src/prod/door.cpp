@@ -12,6 +12,9 @@ constexpr uint32_t kDecayMinMs = 50;
 constexpr uint32_t kJogStepMinMs = 200;
 constexpr uint32_t kJogStepMaxMs = 1000;
 constexpr uint32_t kJogQueueMaxMs = 4000;
+constexpr int32_t kJogStepMinCounts = 16;
+constexpr int32_t kJogStepMaxCounts = 512;
+constexpr int32_t kJogQueueMaxCounts = 2048;
 
 float clampf(float v, float lo, float hi) {
   if (v < lo) {
@@ -227,12 +230,20 @@ float Door::readAmps() {
 
 void Door::unwrap() {
   if (!enc_ || !enc_->update()) {
+    if (countJogActive()) {
+      abortCountJog("encoder unread");
+      return;
+    }
     if (running() && !sensorFreeJog()) {
       latch(FaultId::SensorFault);
     }
     return;
   }
   if (!magnetOk()) {
+    if (countJogActive()) {
+      abortCountJog("magnet lost");
+      return;
+    }
     if (running() && !sensorFreeJog()) {
       latch(FaultId::SensorFault);
     }
@@ -247,6 +258,11 @@ void Door::unwrap() {
   }
   if (d > 2048 || d < -2048) {
     trusted_ = false;
+    if (countJogActive()) {
+      abortCountJog("encoder jump");
+      last_raw_ = raw;
+      return;
+    }
     if (running() && !sensorFreeJog()) {
       latch(FaultId::SensorFault);
     }
@@ -302,6 +318,7 @@ void Door::enterBlank(Travel next) {
 void Door::startMove(Travel dir, bool reverse) {
   next_is_cal_ = false;
   next_is_jog_ = false;
+  jog_by_counts_ = false;
   if (bothMarks()) {
     latch(FaultId::LimitHit);
     snprintf(hint_, sizeof(hint_), "both markers active");
@@ -323,6 +340,8 @@ void Door::cancel() { stopMotionKeepK1(); }
 void Door::stopMotionKeepK1() {
   applyDuty(0);
   jog_remaining_ms_ = 0;
+  jog_remaining_counts_ = 0;
+  jog_by_counts_ = false;
   next_is_jog_ = false;
   if (phase_ != DoorPhase::Fault) {
     setPhase(DoorPhase::Idle);
@@ -351,7 +370,14 @@ void Door::acknowledgeFault() {
 }
 
 bool Door::sensorFreeJog() const {
-  return next_is_jog_ || phase_ == DoorPhase::Jog;
+  return !jog_by_counts_ && (next_is_jog_ || phase_ == DoorPhase::Jog);
+}
+
+bool Door::countJogActive() const {
+  return jog_by_counts_ &&
+         (next_is_jog_ || phase_ == DoorPhase::Jog ||
+          phase_ == DoorPhase::DecayWait || phase_ == DoorPhase::PwmBlank ||
+          phase_ == DoorPhase::RelaySettle);
 }
 
 Travel Door::jogCommandDir() const {
@@ -384,35 +410,91 @@ void Door::clearFaultForJog() {
   setPhase(DoorPhase::Idle);
 }
 
-void Door::startJog(Travel dir) {
+int32_t Door::jogStepCounts() const {
+  int32_t step = store.settings.jog_step_counts;
+  if (step < kJogStepMinCounts) {
+    step = kJogStepMinCounts;
+  }
+  if (step > kJogStepMaxCounts) {
+    step = kJogStepMaxCounts;
+  }
+  return step;
+}
+
+void Door::abortCountJog(const char* why) {
+  snprintf(hint_, sizeof(hint_), "%s", why);
+  stopMotionKeepK1();
+}
+
+void Door::queueJog(Travel dir, uint32_t step_ms, int32_t step_counts,
+                    bool by_counts) {
   clearFaultForJog();
-  const uint32_t step = jogStepMs();
   last_event_ = FaultId::None;
   next_is_cal_ = false;
 
-  if (sensorFreeJog()) {
+  const bool same_kind = next_is_jog_ || phase_ == DoorPhase::Jog ||
+                         phase_ == DoorPhase::DecayWait ||
+                         phase_ == DoorPhase::PwmBlank ||
+                         phase_ == DoorPhase::RelaySettle;
+  if (same_kind && jog_by_counts_ != by_counts) {
+    return;
+  }
+
+  if (same_kind && (next_is_jog_ || phase_ == DoorPhase::Jog ||
+                    phase_ == DoorPhase::DecayWait ||
+                    phase_ == DoorPhase::PwmBlank ||
+                    phase_ == DoorPhase::RelaySettle)) {
     if (jogCommandDir() == dir) {
-      jog_remaining_ms_ += step;
-      if (jog_remaining_ms_ > kJogQueueMaxMs) {
-        jog_remaining_ms_ = kJogQueueMaxMs;
+      if (by_counts) {
+        jog_remaining_counts_ += step_counts;
+        if (jog_remaining_counts_ > kJogQueueMaxCounts) {
+          jog_remaining_counts_ = kJogQueueMaxCounts;
+        }
+      } else {
+        jog_remaining_ms_ += step_ms;
+        if (jog_remaining_ms_ > kJogQueueMaxMs) {
+          jog_remaining_ms_ = kJogQueueMaxMs;
+        }
       }
       return;
     }
-    if (jog_remaining_ms_ > step) {
-      jog_remaining_ms_ -= step;
-      return;
+    if (by_counts) {
+      if (jog_remaining_counts_ > step_counts) {
+        jog_remaining_counts_ -= step_counts;
+        return;
+      }
+      jog_remaining_counts_ = step_counts;
+    } else {
+      if (jog_remaining_ms_ > step_ms) {
+        jog_remaining_ms_ -= step_ms;
+        return;
+      }
+      jog_remaining_ms_ = step_ms;
     }
-    // Opposite detent used up the queue. Start the other way through the
-    // same PWM-off / decay / blank / K1 / settle path as every other reverse.
-    jog_remaining_ms_ = step;
+    jog_by_counts_ = by_counts;
     next_is_jog_ = true;
     enterBlank(dir);
     return;
   }
 
-  jog_remaining_ms_ = step;
+  jog_by_counts_ = by_counts;
+  jog_remaining_ms_ = by_counts ? 0 : step_ms;
+  jog_remaining_counts_ = by_counts ? step_counts : 0;
   next_is_jog_ = true;
   enterBlank(dir);
+}
+
+void Door::startJog(Travel dir) {
+  queueJog(dir, jogStepMs(), 0, false);
+}
+
+bool Door::startJogCounts(Travel dir) {
+  if (!magnetOk()) {
+    snprintf(hint_, sizeof(hint_), "encoder not healthy");
+    return false;
+  }
+  queueJog(dir, 0, jogStepCounts(), true);
+  return true;
 }
 
 void Door::startCreep(Travel dir) {
@@ -526,7 +608,7 @@ uint16_t Door::smoothDuty(uint32_t elapsed, uint32_t dur, uint16_t from,
   return static_cast<uint16_t>(v + 0.5f);
 }
 
-void Door::advance(uint32_t now) {
+void Door::advance(uint32_t now, uint32_t dt) {
   const Settings& s = store.settings;
   const uint32_t elapsed = now - phase_t_;
 
@@ -562,6 +644,7 @@ void Door::advance(uint32_t now) {
                                                        : s.relay_settle_ms;
       if (elapsed >= after) {
         if (next_is_jog_) {
+          last_delta_ = 0;
           setPhase(DoorPhase::Jog);
           applyDuty(s.pwm_jog_duty);
           break;
@@ -649,13 +732,30 @@ void Door::advance(uint32_t now) {
       break;
 
     case DoorPhase::Jog:
-      if (jog_remaining_ms_ <= kControlLoopMs) {
+      if (jog_by_counts_) {
+        int32_t progress = last_delta_;
+        if (dir_ == Travel::Open) {
+          progress = -progress;
+        }
+        if (progress < 0) {
+          progress = 0;
+        }
+        if (jog_remaining_counts_ <= progress) {
+          stopMotionKeepK1();
+          break;
+        }
+        jog_remaining_counts_ -= progress;
+        applyDuty(s.pwm_jog_duty);
+        pwm_on_ms_ += dt;
+        break;
+      }
+      if (jog_remaining_ms_ <= dt) {
         stopMotionKeepK1();
         break;
       }
-      jog_remaining_ms_ -= kControlLoopMs;
+      jog_remaining_ms_ -= dt;
       applyDuty(s.pwm_jog_duty);
-      pwm_on_ms_ += kControlLoopMs;
+      pwm_on_ms_ += dt;
       break;
 
     case DoorPhase::Calibrating:
@@ -676,7 +776,25 @@ void Door::advance(uint32_t now) {
 
 void Door::update() {
   esp_task_wdt_reset();
-  unwrap();
+  const uint32_t now = millis();
+  uint32_t dt = last_ms_ == 0 ? kControlLoopMs : now - last_ms_;
+  last_ms_ = now;
+  if (dt < 1) {
+    dt = 1;
+  }
+  if (dt > 200) {
+    dt = 200;
+  }
+  if (sensorFreeJog()) {
+    skip_enc_ = true;
+  } else if (skip_enc_) {
+    if (enc_ && enc_->update()) {
+      last_raw_ = enc_->rawAngle();
+    }
+    skip_enc_ = false;
+  } else {
+    unwrap();
+  }
   debounceMarks();
   current_tick_ = !current_tick_;
   if (current_tick_) {
@@ -746,5 +864,5 @@ void Door::update() {
     }
   }
 
-  advance(millis());
+  advance(millis(), dt);
 }

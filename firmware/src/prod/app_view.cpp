@@ -139,7 +139,7 @@ void App::composeDocs() {
 
 void App::composeDiag() {
   char nbuf[12];
-  snprintf(nbuf, sizeof(nbuf), "%u / 13",
+  snprintf(nbuf, sizeof(nbuf), "%u / 14",
            static_cast<unsigned>(screen_) - static_cast<unsigned>(Screen::DiagMenu));
 
   auto hdr = [&](const char* m) {
@@ -149,20 +149,21 @@ void App::composeDiag() {
 
   if (screen_ == Screen::DiagMenu) {
     copy(view_.hdr_mode, sizeof(view_.hdr_mode), "DIAG - menu");
-    const char* labels[12] = {
+    const char* labels[13] = {
         "Bottle door key - 49E",
         "Motor rotary encoder - AS5600",
         "Limit switches",
         "Override rockers",
         "Motor current load - ACS712",
         "Motor PWM and direction",
-        "Manual jog",
+        "Jog by time",
+        "Jog by position",
         "Obstruction test",
         "Obstruction table",
         "EC11 knob and button",
         "Network and OTA",
         "Stored calibration"};
-    char vals[12][16];
+    char vals[13][16];
     copy(vals[0], 16, key_->present() ? "present" : "absent");
     copy(vals[1], 16,
          door.magnetOk() ? "ok" : (door.busOk() ? "no mag" : "no i2c"));
@@ -170,22 +171,24 @@ void App::composeDiag() {
     copy(vals[3], 16, close_rocker ? "close held" : (open_rocker ? "open held" : "off"));
     snprintf(vals[4], 16, "%.2f A", fabsf(door.amps()));
     copy(vals[5], 16, door.idle() ? "idle" : phaseName(door.phase()));
-    copy(vals[6], 16, "moves motor");
-    copy(vals[7], 16, "moves motor");
-    copy(vals[8], 16, store.tablesArmed() ? "armed" : "stale");
-    copy(vals[9], 16, "ok");
-    copy(vals[10], 16, sta_up_ ? "STA" : "AP");
-    copy(vals[11], 16, store.somReady() ? "ok" : "setup");
-    uint8_t pips[12] = {1, 0, 0, 1, 1, 1, 2, 2, 1, 1, 1, 1};
+    copy(vals[6], 16, "no encoder");
+    copy(vals[7], 16, door.magnetOk() ? "needs enc" : "locked");
+    copy(vals[8], 16, "moves motor");
+    copy(vals[9], 16, store.tablesArmed() ? "armed" : "stale");
+    copy(vals[10], 16, "ok");
+    copy(vals[11], 16, sta_up_ ? "STA" : "AP");
+    copy(vals[12], 16, store.somReady() ? "ok" : "setup");
+    uint8_t pips[13] = {1, 0, 0, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1};
     pips[1] = door.magnetOk() ? 1 : (door.busOk() ? 2 : 3);
     pips[2] = door.bothMarks() ? 3 : 1;
-    pips[8] = store.tablesArmed() ? 1 : 2;
-    pips[11] = store.somReady() ? 1 : 2;
-    for (uint8_t i = 0; i < 12; ++i) {
+    pips[7] = door.magnetOk() ? 2 : 3;
+    pips[9] = store.tablesArmed() ? 1 : 2;
+    pips[12] = store.somReady() ? 1 : 2;
+    for (uint8_t i = 0; i < 13; ++i) {
       listItem(i, labels[i], vals[i], pips[i], i == cursor_);
     }
-    const uint8_t start = compactMenu(12);
-    snprintf(view_.hdr_net, sizeof(view_.hdr_net), "%u-%u of 12",
+    const uint8_t start = compactMenu(13);
+    snprintf(view_.hdr_net, sizeof(view_.hdr_net), "%u-%u of 13",
              start + 1, start + view_.nitems);
     ftr3("TURN scroll", "PRESS open", "HOLD exit");
     return;
@@ -425,12 +428,12 @@ void App::composeDiag() {
       break;
 
     case Screen::DiagJog:
-      hdr("jog");
+      hdr("jog by time");
       view_.hero = View::Hero::Warn;
-      copy(view_.hero_big, sizeof(view_.hero_big), "MOTOR LIVE - JOG");
+      copy(view_.hero_big, sizeof(view_.hero_big), "MOTOR LIVE - TIME");
       copy(view_.hero_sub, sizeof(view_.hero_sub),
-           "EC11 only - opposite blanks before reverse");
-      view_.show_travel = true;
+           "encoder unused - time per detent");
+      view_.show_travel = false;
       {
         const int pct = static_cast<int>(
             (static_cast<uint32_t>(store.settings.pwm_jog_duty) * 100u +
@@ -446,16 +449,55 @@ void App::composeDiag() {
       row(1, "step - remaining", tmp, false, cursor_ == 2);
       view_.nrows = 2;
       view_.spark = 2;
-      if (door.magnetOk()) {
-        snprintf(lv, sizeof(lv), "%ld cnt", static_cast<long>(door.position()));
-      } else {
-        copy(lv, sizeof(lv), "enc --");
-      }
-      pin("GPIO16 - GPIO21 - T5 / T6", lv);
+      pin("GPIO16 - GPIO21", "encoder ignored");
       if (cursor_ == 1) {
         ftr3("TURN duty 5-25%", "PRESS next", "HOLD exit");
       } else if (cursor_ == 2) {
         ftr3("TURN step 200-1000", "PRESS next", "HOLD exit");
+      } else if (door.idle()) {
+        ftr3("TURN jog", "PRESS edit", "HOLD exit");
+      } else {
+        ftr3("TURN jog", "PRESS stop", "HOLD exit");
+      }
+      break;
+
+    case Screen::DiagJogCounts:
+      hdr("jog by position");
+      view_.hero = View::Hero::Warn;
+      if (!door.magnetOk()) {
+        copy(view_.hero_big, sizeof(view_.hero_big), "ENCODER REQUIRED");
+        copy(view_.hero_sub, sizeof(view_.hero_sub),
+             door.busOk() ? "magnet not healthy" : "I2C not responding");
+      } else {
+        copy(view_.hero_big, sizeof(view_.hero_big), "MOTOR LIVE - COUNTS");
+        copy(view_.hero_sub, sizeof(view_.hero_sub),
+             "stops if encoder is lost");
+      }
+      view_.show_travel = true;
+      {
+        const int pct = static_cast<int>(
+            (static_cast<uint32_t>(store.settings.pwm_jog_duty) * 100u +
+             (kPwmMaxDuty / 2u)) /
+            kPwmMaxDuty);
+        snprintf(tmp, sizeof(tmp), "%d %% - %s", pct,
+                 door.k1Open() ? "OPEN" : "CLOSE");
+        row(0, "jog duty - direction", tmp, false, cursor_ == 1);
+      }
+      snprintf(tmp, sizeof(tmp), "%ld - %ld cnt",
+               static_cast<long>(store.settings.jog_step_counts),
+               static_cast<long>(door.jogRemainingCounts()));
+      row(1, "step - remaining", tmp, false, cursor_ == 2);
+      view_.nrows = 2;
+      view_.spark = 2;
+      snprintf(lv, sizeof(lv), "%ld cnt - %s",
+               static_cast<long>(door.position()), door.magnetLabel());
+      pin("AS5600 T5 / T6", lv);
+      if (cursor_ == 1) {
+        ftr3("TURN duty 5-25%", "PRESS next", "HOLD exit");
+      } else if (cursor_ == 2) {
+        ftr3("TURN step 16-512", "PRESS next", "HOLD exit");
+      } else if (!door.magnetOk()) {
+        ftr3("encoder locked", "PRESS edit", "HOLD exit");
       } else if (door.idle()) {
         ftr3("TURN jog", "PRESS edit", "HOLD exit");
       } else {

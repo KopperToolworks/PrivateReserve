@@ -51,7 +51,10 @@ class Door {
   void cancel();
   void acknowledgeFault();
   void startJog(Travel dir);
+  bool startJogCounts(Travel dir);
   uint32_t jogRemainingMs() const { return jog_remaining_ms_; }
+  int32_t jogRemainingCounts() const { return jog_remaining_counts_; }
+  bool jogByCounts() const { return jog_by_counts_; }
   void startCreep(Travel dir);
   void holdCreep();
   void stopMotionKeepK1();
@@ -74,11 +77,15 @@ class Door {
   void checkEnvelope(uint32_t now);
   void checkStall(uint32_t now);
   void checkTravelCap();
-  void advance(uint32_t now);
+  void advance(uint32_t now, uint32_t dt);
   bool sensorFreeJog() const;
+  bool countJogActive() const;
   Travel jogCommandDir() const;
   void clearFaultForJog();
+  void abortCountJog(const char* why);
   uint32_t jogStepMs() const;
+  int32_t jogStepCounts() const;
+  void queueJog(Travel dir, uint32_t step_ms, int32_t step_counts, bool by_counts);
   uint16_t smoothDuty(uint32_t elapsed, uint32_t dur, uint16_t from,
                       uint16_t to) const;
   bool inCreepOrSnug() const;
@@ -118,6 +125,10 @@ class Door {
   uint32_t stall_t_ = 0;
   int32_t stall_pos_ = 0;
   uint32_t jog_remaining_ms_ = 0;
+  int32_t jog_remaining_counts_ = 0;
+  bool jog_by_counts_ = false;
+  bool skip_enc_ = false;
+  uint32_t last_ms_ = 0;
   bool oc_hold_ = false;
   bool env_hold_ = false;
   bool reversed_this_chain_ = false;

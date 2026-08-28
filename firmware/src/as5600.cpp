@@ -32,12 +32,14 @@ void As5600Sensor::begin(uint8_t sda, uint8_t scl, uint8_t addr) {
   addr_ = addr;
   Wire.begin(sda, scl);
   Wire.setClock(100000);  // 100 kHz is more tolerant on jumper-wire benches
+  Wire.setTimeOut(10);    // default 50 ms; a NACK must not stall the motor loop
   ok_ = false;
   status_ok_ = false;
   raw_angle_ = 0;
   status_ = 0;
   agc_ = 0;
   magnitude_ = 0;
+  field_div_ = 0;
   update();
 }
 
@@ -53,10 +55,14 @@ bool As5600Sensor::update() {
   raw_angle_ = static_cast<uint16_t>(((head[1] & 0x0F) << 8) | head[2]);
   ok_ = true;
 
-  uint8_t field[3];
-  if (readRegisters(kRegAgc, field, 3)) {
-    agc_ = field[0];
-    magnitude_ = static_cast<uint16_t>(((field[1] & 0x0F) << 8) | field[2]);
+  // AGC / magnitude are display-only. Skip most ticks so a weak bus cannot
+  // double the I²C cost (and timeout) of every control loop.
+  if ((++field_div_ & 0x0F) == 0) {
+    uint8_t field[3];
+    if (readRegisters(kRegAgc, field, 3)) {
+      agc_ = field[0];
+      magnitude_ = static_cast<uint16_t>(((field[1] & 0x0F) << 8) | field[2]);
+    }
   }
 
   return true;
