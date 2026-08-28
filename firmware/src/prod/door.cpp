@@ -127,6 +127,11 @@ void Door::sampleJitter(int32_t& min_c, int32_t& max_c) {
   }
 }
 
+void Door::pollEncoder() {
+  skip_enc_ = false;
+  unwrap();
+}
+
 void Door::applyDuty(uint16_t d) {
   duty_ = d;
   const uint16_t ledc =
@@ -645,6 +650,9 @@ void Door::advance(uint32_t now, uint32_t dt) {
       if (elapsed >= after) {
         if (next_is_jog_) {
           last_delta_ = 0;
+          stall_t_ = now;
+          stall_pos_ = counts_;
+          pwm_on_ms_ = 0;
           setPhase(DoorPhase::Jog);
           applyDuty(s.pwm_jog_duty);
           break;
@@ -828,9 +836,11 @@ void Door::update() {
     if (phase_ == DoorPhase::Fault) {
       return;
     }
-    checkTravelCap();
-    if (phase_ == DoorPhase::Fault) {
-      return;
+    if (phase_ != DoorPhase::Jog) {
+      checkTravelCap();
+      if (phase_ == DoorPhase::Fault) {
+        return;
+      }
     }
 
     const bool dest_open = dir_ == Travel::Open && openMark();

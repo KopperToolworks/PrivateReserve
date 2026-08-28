@@ -164,6 +164,12 @@ void App::go(Screen s) {
   } else if (isJogScreen(s)) {
     owner_ = MotorOwner::Jog;
     jog_set_dirty_ = false;
+    if (s == Screen::DiagJogCounts) {
+      if (!door.jogByCounts() && door.running()) {
+        door.cancel();
+      }
+      door.pollEncoder();
+    }
   } else if (s == Screen::DiagObstTest) {
     owner_ = MotorOwner::ObstTest;
   } else if (s >= Screen::CalPathClear && s <= Screen::CalLearnLoaded) {

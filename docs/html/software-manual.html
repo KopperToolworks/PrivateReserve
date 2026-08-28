@@ -110,7 +110,7 @@
 
     <h2>3. Command priority</h2>
     <p>Hard overcurrent and sensor or limit faults outrank all commands. Obstruction handling outranks ordinary commands. Among ordinary sources the order is <strong>EC11 → web → rocker → hall</strong>. At most one state-changing command runs per control cycle.</p>
-    <p>A live calibration or diagnostic-jog step owns the motor. Hall and rocker events may show on the screen. They cannot preempt that step. Main accepts hall and rocker triggers. Diagnostics has two jog pages. <strong>Jog by time</strong> is an EC11 (or web keypad) millisecond queue. PRESS while idle edits duty (5–25%) and time per detent (200–1000&nbsp;ms). It does not read the shaft encoder. <strong>Jog by position</strong> queues counts and runs only while the AS5600 and magnet are healthy. Current still draws as a live graph when the ACS712 is sampling.</p>
+    <p>A live calibration or diagnostic-jog step owns the motor. Hall and rocker events may show on the screen. They cannot preempt that step. Main accepts hall and rocker triggers. Diagnostics has two jog pages. <strong>Jog by time</strong> is an EC11 (or web keypad) millisecond queue. PRESS while idle edits duty (5–25%) and time per detent (200–1000&nbsp;ms). The encoder is not polled while that queue is moving. <strong>Jog by position</strong> queues relative shaft counts (no origin required) and runs only while the AS5600 and magnet are healthy. Opening that page polls the encoder. Current still draws as a live graph when the ACS712 is sampling.</p>
     <p>There is no operator Stop on Main. Cancel exists only for a running calibration or diagnostic procedure. Cancel removes PWM, waits for current decay, leaves K1 unchanged, discards incomplete results, and returns to that mode’s menu.</p>
     <p>Never write NVS while the motor runs. Config writes need an idle motor.</p>
 
@@ -190,7 +190,7 @@
     </table>
 
     <h2>7. Needs setup</h2>
-    <p>If origin, marker spans, or the calibration format is invalid, Main blocks automatic motion. Only guided calibration and diagnostic jog may move the motor. Time jog still runs without a trusted shaft position. Position jog requires a healthy encoder. Duty and step are edited on those pages. Hall and rocker triggers stay disabled.</p>
+    <p>If origin, marker spans, or the calibration format is invalid, Main blocks automatic motion. Only guided calibration and diagnostic jog may move the motor. Time jog still runs without a trusted shaft position. Position jog needs a healthy encoder but not a known origin (relative counts). Duty and step are edited on those pages. Hall and rocker triggers stay disabled.</p>
     <p>The AS5600 is single-turn. The stroke spans several turns. After power loss the firmware enters <code>PositionUnknown</code> and needs a guided seek to the open marker. Direction verify must pass before any limit seek.</p>
     <p>With an invalid obstruction table, automatic Main motion stays blocked. Recovery uses the 2.50&nbsp;A hard ceiling until a relearn arms the table.</p>
     </section>
@@ -912,11 +912,12 @@
       They carry an amber banner while live. Hall and rocker cannot preempt
       them. HOLD cancels: PWM off, current decay, K1 unchanged. A short PRESS
       while moving also drops PWM (sampled in the main loop, not an interrupt).
-      <strong>Jog by time</strong> queues milliseconds per EC11 detent. It does
-      not read the shaft encoder, so a NACK on I²C cannot stretch or stall the
-      move. Leftover queue time expires on its own.
-      <strong>Jog by position</strong> queues shaft counts. It runs only while
-      the AS5600 ACKs and the magnet is in range; a lost encoder stops PWM.
+      <strong>Jog by time</strong> queues milliseconds per EC11 detent. While
+      that move is running it does not read the shaft encoder, so a NACK on I²C
+      cannot stretch the queue. Leftover queue time expires on its own.
+      <strong>Jog by position</strong> queues relative shaft counts. It does not
+      need a known origin. It runs only while the AS5600 ACKs and the magnet is
+      in range; a lost encoder stops PWM. Opening that page polls the encoder.
     </div>
 
     <section class="shot">
@@ -1151,7 +1152,7 @@
 
     <section class="shot">
       <h2>8. Jog by time</h2>
-      <p>Owns the motor. Each EC11 detent (or web − / +) queues a fixed run time at jog duty. Same-direction clicks add to that queue. Opposite clicks subtract; when the queue is gone, that click reverses through the normal PWM-off, decay, blank, and K1 settle windows. PRESS while idle cycles duty (5–25%) and time per detent (200–1000&nbsp;ms). The shaft encoder is not polled on this page, so I²C NACKs cannot stretch the queue. Markers and the learned envelope do not start, stop, or abort the move. Current is a live 0–2.50&nbsp;A graph when the ACS712 is sampling; it is display-only. The pin strip reads <code>encoder ignored</code>.</p>
+      <p>Owns the motor. Each EC11 detent (or web − / +) queues a fixed run time at jog duty. Same-direction clicks add to that queue. Opposite clicks subtract; when the queue is gone, that click reverses through the normal PWM-off, decay, blank, and K1 settle windows. PRESS while idle cycles duty (5–25%) and time per detent (200–1000&nbsp;ms). <strong>While that timed move is running</strong>, the shaft encoder is not polled, so I²C NACKs cannot stretch the queue. Idle on this page still reads the AS5600 (same as most diagnostic screens). After PWM stops, one catch-up read refreshes STATUS. Markers and the learned envelope do not start, stop, or abort the move. Current is a live 0–2.50&nbsp;A graph when the ACS712 is sampling; it is display-only. The pin strip reads <code>encoder ignored</code>.</p>
       <figure class="lcd">
         <img src="shots/diag-08.png" width="320" alt="DIAG jog by time: MOTOR LIVE, duty percent, step milliseconds, live current graph">
         <figcaption>Figure 8. DIAG · jog by time. Timed queue. Live firmware titles the page MOTOR LIVE — TIME and omits the travel widget.</figcaption>
@@ -1164,7 +1165,7 @@
           <tr><td><code>DIAG · jog by time</code></td><td>Header left.</td></tr>
           <tr><td><code>7 / 14</code></td><td>Header right.</td></tr>
           <tr><td><code>MOTOR LIVE — TIME</code></td><td>Amber banner. This page owns the motor. Hall and rocker cannot preempt it.</td></tr>
-          <tr><td><code>encoder unused — time per detent</code></td><td>Banner detail. AS5600 I²C is skipped for the whole move.</td></tr>
+          <tr><td><code>encoder unused — time per detent</code></td><td>Banner detail. AS5600 I²C is skipped only while the timed queue is moving, not while this page is idle.</td></tr>
           <tr><td><code>jog duty · direction</code> · <code>9 % · CLOSE</code></td><td>Jog PWM as a percent of 10-bit full scale (5–25%). K1 for this jog. PRESS while idle highlights this row; TURN changes it.</td></tr>
           <tr><td><code>step · remaining</code> · <code>400 ms · 800 ms</code></td><td>Time added per detent (200–1000&nbsp;ms, 50&nbsp;ms steps) and how much powered time is still queued. Queue caps at 4&nbsp;s. Remaining is wall-clock, not loop ticks.</td></tr>
           <tr><td>Live amp strip · 0–2.50 scale</td><td>ACS712 history. Display-only. Not used to run or stop the jog.</td></tr>
@@ -1178,7 +1179,7 @@
 
     <section class="shot">
       <h2>9. Jog by position</h2>
-      <p>Owns the motor only while the AS5600 ACKs and STATUS shows a magnet that is neither too weak nor too strong. That is not the same as a trusted origin; calibration is not required. Each detent queues shaft counts at the same jog duty (default 64 counts, 16–512 in steps of 16). Same-direction clicks extend the count queue (cap 2048). Opposite clicks subtract, then reverse through the same blanking path as time jog. The stall watchdog still applies. If I²C fails or STATUS drops out of range, PWM stops immediately without latching a sensor fault. While locked, the banner title is <code>ENCODER REQUIRED</code> and the subtitle names the check that failed. No dedicated LCD shot in this set; chrome matches time jog with counts in place of milliseconds. The pin strip still shows live counts and the magnet label.</p>
+      <p>Owns the motor only while the AS5600 ACKs and STATUS shows a magnet that is neither too weak nor too strong. That is not a trusted origin; calibration is not required. The queue is <strong>relative</strong>: each detent is shaft counts in the commanded direction from the live unwrap, not distance from open or close. The pin strip may still show accumulated counts from origin when origin is trusted. Opening this page cancels a leftover time-jog move and forces an encoder poll so the lock banner is not a stale STATUS from a skipped I²C window. Each detent uses the same jog duty (default 64 counts, 16–512 in steps of 16). Same-direction clicks extend the count queue (cap 2048). Opposite clicks subtract, then reverse through the same blanking path as time jog. The stall watchdog is armed when PWM starts so an old timer cannot trip on the first frame. Travel-cap (absolute) is not applied on this page. If I²C fails or STATUS drops out of range, PWM stops immediately without latching a sensor fault. While locked, the banner title is <code>ENCODER REQUIRED</code> and the subtitle names the check that failed. No dedicated LCD shot in this set; chrome matches time jog with counts in place of milliseconds.</p>
       <table>
         <thead>
           <tr><th>On screen</th><th>Meaning</th></tr>
@@ -1195,7 +1196,7 @@
           <tr><td><code>STATUS: magnet lost</code></td><td>Banner detail. Chip ACKed. Magnet-detect bit clear (and not the too-weak/too-strong pair).</td></tr>
           <tr><td>Travel widget</td><td>Shown. Live counts and magnet label on the pin strip (<code>AS5600 T5 / T6</code>).</td></tr>
           <tr><td><code>jog duty · direction</code></td><td>Same 5–25% duty as time jog. Shared setting.</td></tr>
-          <tr><td><code>step · remaining</code> · counts</td><td>Counts added per detent and remaining distance in the commanded direction.</td></tr>
+          <tr><td><code>step · remaining</code> · counts</td><td>Relative counts per detent and remaining in the commanded direction. Not a target absolute position.</td></tr>
           <tr><td><code>TURN jog</code></td><td>Ignored while locked. Otherwise same CW close / CCW open as time jog.</td></tr>
           <tr><td><code>PRESS stop</code> / <code>HOLD exit</code></td><td>Same cancel rules as time jog.</td></tr>
         </tbody>

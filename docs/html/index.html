@@ -105,7 +105,7 @@
 
     <h2>3. Command priority</h2>
     <p>Hard overcurrent and sensor or limit faults outrank all commands. Obstruction handling outranks ordinary commands. Among ordinary sources the order is <strong>EC11 → web → rocker → hall</strong>. At most one state-changing command runs per control cycle.</p>
-    <p>A live calibration or diagnostic-jog step owns the motor. Hall and rocker events may show on the screen. They cannot preempt that step. Main accepts hall and rocker triggers. Diagnostics has two jog pages. <strong>Jog by time</strong> is an EC11 (or web keypad) millisecond queue. PRESS while idle edits duty (5–25%) and time per detent (200–1000&nbsp;ms). It does not read the shaft encoder. <strong>Jog by position</strong> queues counts and runs only while the AS5600 and magnet are healthy. Current still draws as a live graph when the ACS712 is sampling.</p>
+    <p>A live calibration or diagnostic-jog step owns the motor. Hall and rocker events may show on the screen. They cannot preempt that step. Main accepts hall and rocker triggers. Diagnostics has two jog pages. <strong>Jog by time</strong> is an EC11 (or web keypad) millisecond queue. PRESS while idle edits duty (5–25%) and time per detent (200–1000&nbsp;ms). The encoder is not polled while that queue is moving. <strong>Jog by position</strong> queues relative shaft counts (no origin required) and runs only while the AS5600 and magnet are healthy. Opening that page polls the encoder. Current still draws as a live graph when the ACS712 is sampling.</p>
     <p>There is no operator Stop on Main. Cancel exists only for a running calibration or diagnostic procedure. Cancel removes PWM, waits for current decay, leaves K1 unchanged, discards incomplete results, and returns to that mode’s menu.</p>
     <p>Never write NVS while the motor runs. Config writes need an idle motor.</p>
 
@@ -185,7 +185,7 @@
     </table>
 
     <h2>7. Needs setup</h2>
-    <p>If origin, marker spans, or the calibration format is invalid, Main blocks automatic motion. Only guided calibration and diagnostic jog may move the motor. Time jog still runs without a trusted shaft position. Position jog requires a healthy encoder. Duty and step are edited on those pages. Hall and rocker triggers stay disabled.</p>
+    <p>If origin, marker spans, or the calibration format is invalid, Main blocks automatic motion. Only guided calibration and diagnostic jog may move the motor. Time jog still runs without a trusted shaft position. Position jog needs a healthy encoder but not a known origin (relative counts). Duty and step are edited on those pages. Hall and rocker triggers stay disabled.</p>
     <p>The AS5600 is single-turn. The stroke spans several turns. After power loss the firmware enters <code>PositionUnknown</code> and needs a guided seek to the open marker. Direction verify must pass before any limit seek.</p>
     <p>With an invalid obstruction table, automatic Main motion stays blocked. Recovery uses the 2.50&nbsp;A hard ceiling until a relearn arms the table.</p>
 

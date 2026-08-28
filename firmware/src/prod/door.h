@@ -62,6 +62,7 @@ class Door {
   void setOriginHere();
   void setTrusted(bool v) { trusted_ = v; }
   void sampleJitter(int32_t& min_c, int32_t& max_c);
+  void pollEncoder();
 
  private:
   void applyDuty(uint16_t d);
