@@ -6,6 +6,8 @@
 #include "fonts/FreeSans9pt7b.h"
 
 #include <cstdio>
+#include <cstring>
+#include <esp_task_wdt.h>
 
 namespace {
 uint16_t rgb(Arduino_GFX* g, uint8_t r, uint8_t gc, uint8_t b) {
@@ -16,14 +18,28 @@ void text(Arduino_GFX* g, int x, int y, uint16_t c, const char* s) {
   g->setTextSize(1);
   g->setTextColor(c);
   g->setCursor(x, y);
-  g->print(s);
+  if (!s) {
+    return;
+  }
+  char buf[80];
+  const size_t n = strnlen(s, sizeof(buf) - 1);
+  memcpy(buf, s, n);
+  buf[n] = 0;
+  g->print(buf);
 }
 
 void text2(Arduino_GFX* g, int x, int y, uint16_t c, const char* s) {
   g->setTextSize(2);
   g->setTextColor(c);
   g->setCursor(x, y);
-  g->print(s);
+  if (!s) {
+    return;
+  }
+  char buf[48];
+  const size_t n = strnlen(s, sizeof(buf) - 1);
+  memcpy(buf, s, n);
+  buf[n] = 0;
+  g->print(buf);
 }
 
 void pip(Arduino_GFX* g, int x, int y, uint8_t p, uint16_t ok, uint16_t warn,
@@ -106,6 +122,7 @@ void lcdBegin(Arduino_GFX* canvas) {
 }
 
 void lcdDraw(Arduino_GFX* g) {
+  esp_task_wdt_reset();
   const View& v = app.view();
   const uint16_t bg = rgb(g, 11, 13, 16);
   const uint16_t panel = rgb(g, 20, 24, 29);
@@ -350,9 +367,10 @@ void lcdDraw(Arduino_GFX* g) {
   }
 
   if (v.ntiles) {
+    const uint8_t ntiles = v.ntiles > 4 ? 4 : v.ntiles;
     const int cols = v.tile_cols ? v.tile_cols : 4;
     const int tw = (308 - (cols - 1) * 4) / cols;
-    for (uint8_t i = 0; i < v.ntiles; ++i) {
+    for (uint8_t i = 0; i < ntiles; ++i) {
       const int x = 6 + (i % cols) * (tw + 4);
       const int ty = y + (i / cols) * 40;
       g->fillRect(x, ty, tw, 38, panel);
@@ -362,13 +380,14 @@ void lcdDraw(Arduino_GFX* g) {
       text(g, x + 16, ty + 14, textc, v.tiles[i].v);
       text(g, x + 4, ty + 26, faint, v.tiles[i].g);
     }
-    y += ((v.ntiles + cols - 1) / cols) * 40 + 2;
+    y += ((ntiles + cols - 1) / cols) * 40 + 2;
   }
 
   if (v.nitems) {
+    const uint8_t nitems = v.nitems > 14 ? 14 : v.nitems;
     g->setFont(&FreeSans9pt7b);
     g->setTextSize(1);
-    for (uint8_t i = 0; i < v.nitems; ++i) {
+    for (uint8_t i = 0; i < nitems; ++i) {
       const int iy = y + i * kMenuRowPx;
       if (v.items[i].sel) {
         g->fillRect(6, iy, 308, kMenuRowPx, rgb(g, 29, 39, 51));
@@ -378,23 +397,29 @@ void lcdDraw(Arduino_GFX* g) {
         pip(g, 14, iy + 8, v.items[i].pip, ok, move, fault, idle);
       }
       text(g, 22, iy + 12, textc, v.items[i].label);
+      char vb[28];
+      const size_t vn = strnlen(v.items[i].value, sizeof(vb) - 1);
+      memcpy(vb, v.items[i].value, vn);
+      vb[vn] = 0;
       int16_t x1 = 0, y1 = 0;
       uint16_t tw = 0, th = 0;
-      g->getTextBounds(v.items[i].value, 0, 0, &x1, &y1, &tw, &th);
-      text(g, 314 - static_cast<int>(tw), iy + 12, faint, v.items[i].value);
+      g->getTextBounds(vb, 0, 0, &x1, &y1, &tw, &th);
+      text(g, 314 - static_cast<int>(tw), iy + 12, faint, vb);
     }
     g->setFont(nullptr);
     g->setTextSize(1);
-    y += v.nitems * kMenuRowPx + 2;
+    y += nitems * kMenuRowPx + 2;
   }
 
-  for (uint8_t i = 0; i < v.nrows; ++i) {
+  const uint8_t nrows = v.nrows > 6 ? 6 : v.nrows;
+  for (uint8_t i = 0; i < nrows; ++i) {
     if (v.rows[i].sel) {
       g->fillRect(6, y - 1, 308, 11, rgb(g, 29, 39, 51));
       g->fillRect(6, y - 1, 2, 11, accent);
     }
     text(g, 10, y, dim, v.rows[i].k);
-    const int vw = strlen(v.rows[i].v) * 6;
+    const int vw =
+        static_cast<int>(strnlen(v.rows[i].v, sizeof(v.rows[i].v))) * 6;
     text(g, 314 - vw, y, v.rows[i].dim ? faint : textc, v.rows[i].v);
     y += 11;
   }
@@ -420,13 +445,16 @@ void lcdDraw(Arduino_GFX* g) {
     g->fillRect(6, 144, 308, 13, rgb(g, 16, 20, 24));
     g->drawRect(6, 144, 308, 13, line);
     text(g, 8, 147, dim, v.pin_parts);
-    const int vw = strlen(v.pin_lv) * 6;
+    const int vw =
+        static_cast<int>(strnlen(v.pin_lv, sizeof(v.pin_lv))) * 6;
     text(g, 312 - vw, 147, textc, v.pin_lv);
   }
 
   int fx = 6;
-  for (uint8_t i = 0; i < v.nftr; ++i) {
+  const uint8_t nftr = v.nftr > 3 ? 3 : v.nftr;
+  for (uint8_t i = 0; i < nftr; ++i) {
     text(g, fx, 159, faint, v.ftr[i]);
-    fx += strlen(v.ftr[i]) * 6 + 12;
+    fx += static_cast<int>(strnlen(v.ftr[i], sizeof(v.ftr[i]))) * 6 + 12;
   }
+  esp_task_wdt_reset();
 }

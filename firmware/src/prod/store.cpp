@@ -2,6 +2,7 @@
 
 #include <Preferences.h>
 #include <cstring>
+#include <esp_task_wdt.h>
 
 #if __has_include("wifi_secrets.h")
 #include "wifi_secrets.h"
@@ -18,6 +19,61 @@ constexpr const char* kNs = "prsv";
 
 void clearTable(LoadTable& t) {
   t = LoadTable{};
+}
+
+bool printableCString(const char* s, size_t cap, size_t min_len) {
+  const size_t n = strnlen(s, cap);
+  if (n < min_len || n >= cap) {
+    return false;
+  }
+  for (size_t i = 0; i < n; ++i) {
+    const unsigned char c = static_cast<unsigned char>(s[i]);
+    if (c < 0x20 || c > 0x7e) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Mid-struct NVS inserts shift later char[] fields by 2 or 4 bytes.
+// "PrivateReserve" then loads as "ateReserve".
+bool shiftedDefault(const char* got, const char* def) {
+  const size_t n = strlen(def);
+  for (size_t off = 2; off <= 4; off += 2) {
+    if (off < n && strcmp(got, def + off) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void forceTerm(char* s, size_t n) {
+  if (n) {
+    s[n - 1] = 0;
+  }
+}
+
+void restoreApDefaults(Settings& s, bool& dirty) {
+#if PR_HAS_WIFI_SECRETS
+  const char* ap = kApSsid;
+  const char* pw = kApPassword;
+#else
+  const char* ap = "PrivateReserve";
+  const char* pw = "reserved";
+#endif
+  if (!printableCString(s.wifi_ap_ssid, sizeof(s.wifi_ap_ssid), 1) ||
+      shiftedDefault(s.wifi_ap_ssid, ap)) {
+    strncpy(s.wifi_ap_ssid, ap, sizeof(s.wifi_ap_ssid) - 1);
+    forceTerm(s.wifi_ap_ssid, sizeof(s.wifi_ap_ssid));
+    dirty = true;
+  }
+  if (!printableCString(s.wifi_ap_password, sizeof(s.wifi_ap_password), 0) ||
+      shiftedDefault(s.wifi_ap_password, pw) ||
+      strcmp(s.wifi_ap_password, "reservebench1") == 0) {
+    strncpy(s.wifi_ap_password, pw, sizeof(s.wifi_ap_password) - 1);
+    forceTerm(s.wifi_ap_password, sizeof(s.wifi_ap_password));
+    dirty = true;
+  }
 }
 }  // namespace
 
@@ -71,12 +127,12 @@ void Store::load() {
   }
 #endif
   nvs.getBytes("set", &settings, sizeof(settings));
-  if (strcmp(settings.wifi_ap_password, "reservebench1") == 0) {
-    strncpy(settings.wifi_ap_password, "reserved",
-            sizeof(settings.wifi_ap_password) - 1);
-    settings.wifi_ap_password[sizeof(settings.wifi_ap_password) - 1] = 0;
-    persistSettings();
-  }
+  forceTerm(settings.wifi_sta_ssid, sizeof(settings.wifi_sta_ssid));
+  forceTerm(settings.wifi_sta_password, sizeof(settings.wifi_sta_password));
+  forceTerm(settings.wifi_ap_ssid, sizeof(settings.wifi_ap_ssid));
+  forceTerm(settings.wifi_ap_password, sizeof(settings.wifi_ap_password));
+  bool persist = false;
+  restoreApDefaults(settings, persist);
   nvs.getBytes("cal", &cal, sizeof(cal));
   nvs.getBytes("tempty", &empty_table, sizeof(empty_table));
   nvs.getBytes("tload", &loaded_table, sizeof(loaded_table));
@@ -93,6 +149,9 @@ void Store::load() {
   if (settings.jog_step_counts < 16 || settings.jog_step_counts > 512) {
     settings.jog_step_counts = 64;
   }
+  if (persist) {
+    persistSettings();
+  }
   if (cal.format != 3) {
     cal = CalRecord{};
     clearTable(empty_table);
@@ -108,7 +167,11 @@ bool Store::saveSettings(const Settings& s) {
 }
 
 bool Store::persistSettings() {
-  return nvs.putBytes("set", &settings, sizeof(settings)) == sizeof(settings);
+  esp_task_wdt_reset();
+  const bool ok =
+      nvs.putBytes("set", &settings, sizeof(settings)) == sizeof(settings);
+  esp_task_wdt_reset();
+  return ok;
 }
 
 bool Store::saveCal(const CalRecord& c) {

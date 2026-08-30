@@ -98,7 +98,7 @@
           <tr><td><code>MAIN</code></td><td>Header left. Setup is complete. Automatic motion is allowed.</td></tr>
           <tr><td>Green pip + <code>STA 192.168.1.42</code></td><td>Header right. ESP32 joined site Wi-Fi as a station. HTTP is on this address.</td></tr>
           <tr><td><code>OPENING</code> (amber)</td><td>Hero. Current action. Amber means the motor is moving.</td></tr>
-          <tr><td><code>cruise · key removed</code></td><td>Motion phase and why the move started. Cruise is the middle of the profile. The bottle key is absent.</td></tr>
+          <tr><td><code>cruise · N in left</code></td><td>Motion phase and remaining throw to the destination marker. The bottle key is absent.</td></tr>
           <tr><td><code>1.42 A</code></td><td>Live motor current from the ACS712 after scale.</td></tr>
           <tr><td>Green fill on the current bar</td><td>Live amps as a share of the 2.50&nbsp;A hard ceiling. Green because 1.42&nbsp;A is under this bin’s trip.</td></tr>
           <tr><td>Red tick on the current bar</td><td>This bin’s learned trip (1.60&nbsp;A). Not the hard ceiling.</td></tr>
@@ -265,7 +265,7 @@
         </tbody>
       </table>
     </section>
-    <p>Web nav tabs send the same jumps: Main, Calibration, Diagnostics, Settings, Docs. They turn the LCD on if it was blank.</p>
+    <p>Web nav tabs send the same jumps: Main, Calibration, Diagnostics, Settings, Docs. They turn the LCD on if it was blank. Settings is a heavier first paint (group list plus a possible NVS write when leaving jog); the firmware feeds the watchdog on that path so HTTP does not die after the list shows.</p>
 
     <section class="shot" id="documentation">
       <h2>2.2 Documentation</h2>

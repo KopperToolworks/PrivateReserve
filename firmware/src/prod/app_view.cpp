@@ -139,7 +139,7 @@ void App::composeDocs() {
 
 void App::composeDiag() {
   char nbuf[12];
-  snprintf(nbuf, sizeof(nbuf), "%u / 14",
+  snprintf(nbuf, sizeof(nbuf), "%u / 15",
            static_cast<unsigned>(screen_) - static_cast<unsigned>(Screen::DiagMenu));
 
   auto hdr = [&](const char* m) {
@@ -149,7 +149,7 @@ void App::composeDiag() {
 
   if (screen_ == Screen::DiagMenu) {
     copy(view_.hdr_mode, sizeof(view_.hdr_mode), "DIAG - menu");
-    const char* labels[13] = {
+    const char* labels[14] = {
         "Bottle door key - 49E",
         "Motor rotary encoder - AS5600",
         "Limit switches",
@@ -158,12 +158,13 @@ void App::composeDiag() {
         "Motor PWM and direction",
         "Jog by time",
         "Jog by position",
+        "Run to limit",
         "Obstruction test",
         "Obstruction table",
         "EC11 knob and button",
         "Network and OTA",
         "Stored calibration"};
-    char vals[13][16];
+    char vals[14][16];
     copy(vals[0], 16, key_->present() ? "present" : "absent");
     copy(vals[1], 16,
          door.magnetOk() ? "ok" : (door.busOk() ? "no mag" : "no i2c"));
@@ -173,22 +174,23 @@ void App::composeDiag() {
     copy(vals[5], 16, door.idle() ? "idle" : phaseName(door.phase()));
     copy(vals[6], 16, "no encoder");
     copy(vals[7], 16, door.magnetOk() ? "needs enc" : "locked");
-    copy(vals[8], 16, "moves motor");
-    copy(vals[9], 16, store.tablesArmed() ? "armed" : "stale");
-    copy(vals[10], 16, "ok");
-    copy(vals[11], 16, sta_up_ ? "STA" : "AP");
-    copy(vals[12], 16, store.somReady() ? "ok" : "setup");
-    uint8_t pips[13] = {1, 0, 0, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1};
+    copy(vals[8], 16, "no encoder");
+    copy(vals[9], 16, "moves motor");
+    copy(vals[10], 16, store.tablesArmed() ? "armed" : "stale");
+    copy(vals[11], 16, "ok");
+    copy(vals[12], 16, sta_up_ ? "STA" : "AP");
+    copy(vals[13], 16, store.somReady() ? "ok" : "setup");
+    uint8_t pips[14] = {1, 0, 0, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1};
     pips[1] = door.magnetOk() ? 1 : (door.busOk() ? 2 : 3);
     pips[2] = door.bothMarks() ? 3 : 1;
     pips[7] = door.magnetOk() ? 2 : 3;
-    pips[9] = store.tablesArmed() ? 1 : 2;
-    pips[12] = store.somReady() ? 1 : 2;
-    for (uint8_t i = 0; i < 13; ++i) {
+    pips[10] = store.tablesArmed() ? 1 : 2;
+    pips[13] = store.somReady() ? 1 : 2;
+    for (uint8_t i = 0; i < 14; ++i) {
       listItem(i, labels[i], vals[i], pips[i], i == cursor_);
     }
-    const uint8_t start = compactMenu(13);
-    snprintf(view_.hdr_net, sizeof(view_.hdr_net), "%u-%u of 13",
+    const uint8_t start = compactMenu(14);
+    snprintf(view_.hdr_net, sizeof(view_.hdr_net), "%u-%u of 14",
              start + 1, start + view_.nitems);
     ftr3("TURN scroll", "PRESS open", "HOLD exit");
     return;
@@ -285,31 +287,31 @@ void App::composeDiag() {
       hdr("limit markers");
       view_.ntiles = 2;
       view_.tile_cols = 2;
-      copy(view_.tiles[0].k, sizeof(view_.tiles[0].k), "Open marker - GPIO17 - T7");
+      copy(view_.tiles[0].k, sizeof(view_.tiles[0].k), "Close marker - GPIO03 - T21");
       copy(view_.tiles[0].v, sizeof(view_.tiles[0].v),
-           door.openMark() ? "ACTIVE" : "CLEAR");
-      view_.tiles[0].pip =
-          door.openMarkForced() ? 2 : (door.openMark() ? 1 : 0);
-      view_.tiles[0].sel = cursor_ == 0;
-      if (door.openMarkForced()) {
-        snprintf(view_.tiles[0].g, sizeof(view_.tiles[0].g), "SIM - pin %s",
-                 gpioLvl(pins::kLimitUpper));
-      } else {
-        copy(view_.tiles[0].g, sizeof(view_.tiles[0].g),
-             gpioLvl(pins::kLimitUpper));
-      }
-      copy(view_.tiles[1].k, sizeof(view_.tiles[1].k), "Close marker - GPIO03 - T21");
-      copy(view_.tiles[1].v, sizeof(view_.tiles[1].v),
            door.closeMark() ? "ACTIVE" : "CLEAR");
-      view_.tiles[1].pip =
+      view_.tiles[0].pip =
           door.closeMarkForced() ? 2 : (door.closeMark() ? 1 : 0);
-      view_.tiles[1].sel = cursor_ == 1;
+      view_.tiles[0].sel = cursor_ == 0;
       if (door.closeMarkForced()) {
-        snprintf(view_.tiles[1].g, sizeof(view_.tiles[1].g), "SIM - pin %s",
+        snprintf(view_.tiles[0].g, sizeof(view_.tiles[0].g), "SIM - pin %s",
                  gpioLvl(pins::kLimitLower));
       } else {
-        copy(view_.tiles[1].g, sizeof(view_.tiles[1].g),
+        copy(view_.tiles[0].g, sizeof(view_.tiles[0].g),
              gpioLvl(pins::kLimitLower));
+      }
+      copy(view_.tiles[1].k, sizeof(view_.tiles[1].k), "Open marker - GPIO17 - T7");
+      copy(view_.tiles[1].v, sizeof(view_.tiles[1].v),
+           door.openMark() ? "ACTIVE" : "CLEAR");
+      view_.tiles[1].pip =
+          door.openMarkForced() ? 2 : (door.openMark() ? 1 : 0);
+      view_.tiles[1].sel = cursor_ == 1;
+      if (door.openMarkForced()) {
+        snprintf(view_.tiles[1].g, sizeof(view_.tiles[1].g), "SIM - pin %s",
+                 gpioLvl(pins::kLimitUpper));
+      } else {
+        copy(view_.tiles[1].g, sizeof(view_.tiles[1].g),
+             gpioLvl(pins::kLimitUpper));
       }
       row(0, "polarity", "HIGH = marker or cut wire");
       row(1, "both active check", door.bothMarks() ? "FAIL" : "pass",
@@ -510,6 +512,49 @@ void App::composeDiag() {
       }
       break;
 
+    case Screen::DiagRunLimit:
+      hdr("run to limit");
+      view_.hero = View::Hero::Warn;
+      copy(view_.hero_big, sizeof(view_.hero_big), "MOTOR LIVE - LIMIT");
+      if (ignore_[0]) {
+        copy(view_.hero_sub, sizeof(view_.hero_sub), ignore_);
+      } else {
+        copy(view_.hero_sub, sizeof(view_.hero_sub),
+             "encoder unused - stop on marker");
+      }
+      view_.show_travel = false;
+      view_.ntiles = 2;
+      view_.tile_cols = 2;
+      copy(view_.tiles[0].k, sizeof(view_.tiles[0].k), "Open to GPIO17");
+      copy(view_.tiles[0].v, sizeof(view_.tiles[0].v),
+           door.openMark() ? "AT MARK" : "CLEAR");
+      view_.tiles[0].pip = door.openMark() ? 1 : 0;
+      view_.tiles[0].sel = cursor_ == 0;
+      copy(view_.tiles[0].g, sizeof(view_.tiles[0].g), gpioLvl(pins::kLimitUpper));
+      copy(view_.tiles[1].k, sizeof(view_.tiles[1].k), "Close to GPIO03");
+      copy(view_.tiles[1].v, sizeof(view_.tiles[1].v),
+           door.closeMark() ? "AT MARK" : "CLEAR");
+      view_.tiles[1].pip = door.closeMark() ? 1 : 0;
+      view_.tiles[1].sel = cursor_ == 1;
+      copy(view_.tiles[1].g, sizeof(view_.tiles[1].g), gpioLvl(pins::kLimitLower));
+      {
+        const int pct = static_cast<int>(
+            (static_cast<uint32_t>(store.settings.pwm_jog_duty) * 100u +
+             (kPwmMaxDuty / 2u)) /
+            kPwmMaxDuty);
+        snprintf(tmp, sizeof(tmp), "%d %% - %s", pct, phaseName(door.phase()));
+        row(0, "jog duty - phase", tmp);
+      }
+      view_.nrows = 1;
+      view_.spark = 1;
+      pin("GPIO16 - GPIO21", "encoder ignored");
+      if (door.idle()) {
+        ftr3("TURN select", "PRESS run", "HOLD exit");
+      } else {
+        ftr3("TURN ignored", "PRESS stop", "HOLD exit");
+      }
+      break;
+
     case Screen::DiagObstTest:
       hdr("obstruction test");
       if (door.lastEvent() == FaultId::LearnedObstructionClose ||
@@ -676,14 +721,11 @@ void App::composeCal() {
   };
 
   if (screen_ == Screen::CalMenu) {
-    hdr("stages", "9 items");
-    listItem(0, "1 - Baselines (current, shaft, key)",
-             stageWord(store.cal.current_zero_ok && store.cal.jitter_ok &&
-                           store.cal.bottle_key_ok,
-                       false, "done"),
-             stagePip(store.cal.current_zero_ok && store.cal.jitter_ok &&
-                          store.cal.bottle_key_ok,
-                      false),
+    hdr("stages", "10 items");
+    listItem(0, "1 - Baselines (current, shaft)",
+             stageWord(store.cal.current_zero_ok && store.cal.jitter_ok, false,
+                       "done"),
+             stagePip(store.cal.current_zero_ok && store.cal.jitter_ok, false),
              cursor_ == 0);
     listItem(1, "2 - Direction verify",
              stageWord(store.cal.direction_ok, false, "match"),
@@ -714,10 +756,13 @@ void App::composeCal() {
                        "optional"),
              stagePip(store.cal.table_loaded_ok, store.cal.table_loaded_stale),
              cursor_ == 7);
-    listItem(8, "Review and save", door.idle() ? "ready" : "motor busy", 1,
-             cursor_ == 8);
-    const uint8_t start = compactMenu(9);
-    snprintf(view_.hdr_net, sizeof(view_.hdr_net), "%u-%u of 9", start + 1,
+    listItem(8, "9 - Bottle door key - 49E",
+             stageWord(store.cal.bottle_key_ok, false, "done"),
+             stagePip(store.cal.bottle_key_ok, false), cursor_ == 8);
+    listItem(9, "Review and save", door.idle() ? "ready" : "motor busy", 1,
+             cursor_ == 9);
+    const uint8_t start = compactMenu(10);
+    snprintf(view_.hdr_net, sizeof(view_.hdr_net), "%u-%u of 10", start + 1,
              start + view_.nitems);
     ftr3("TURN scroll", "PRESS open", "HOLD exit");
     return;
@@ -745,7 +790,7 @@ void App::composeCal() {
 
   switch (screen_) {
     case Screen::CalCurrentZero:
-      hdr("baseline - current", "1a of 8");
+      hdr("baseline - current", "1a of 9");
       view_.hero = View::Hero::Action;
       snprintf(view_.hero_big, sizeof(view_.hero_big), "%.3f", door.zeroVolts());
       view_.hero_cls = 'k';
@@ -760,12 +805,12 @@ void App::composeCal() {
       view_.show_prog = true;
       view_.prog[0] = 2;
       copy(view_.prog_l, sizeof(view_.prog_l), "baselines");
-      copy(view_.prog_r, sizeof(view_.prog_r), "1 of 3");
+      copy(view_.prog_r, sizeof(view_.prog_r), "1 of 2");
       ftr2("PRESS accept", "HOLD cancel");
       break;
 
     case Screen::CalJitter:
-      hdr("baseline - shaft", "1b of 8");
+      hdr("baseline - shaft", "1b of 9");
       view_.hero = View::Hero::Action;
       snprintf(view_.hero_big, sizeof(view_.hero_big), "+/- %ld",
                static_cast<long>(jitter_max_ - jitter_min_));
@@ -785,12 +830,12 @@ void App::composeCal() {
       view_.prog[0] = 1;
       view_.prog[1] = 2;
       copy(view_.prog_l, sizeof(view_.prog_l), "baselines");
-      copy(view_.prog_r, sizeof(view_.prog_r), "2 of 3");
+      copy(view_.prog_r, sizeof(view_.prog_r), "2 of 2");
       ftr2("PRESS accept", "HOLD cancel");
       break;
 
     case Screen::CalBottleKey:
-      hdr("baseline - key", "1c of 8");
+      hdr("bottle key", "9 of 9");
       view_.hero = View::Hero::Action;
       snprintf(view_.hero_big, sizeof(view_.hero_big), "%u", key_->rawAdc());
       copy(view_.hero_sub, sizeof(view_.hero_sub),
@@ -810,16 +855,14 @@ void App::composeCal() {
                                               : "present -> OPEN");
       view_.nrows = 3;
       view_.show_prog = true;
-      view_.prog[0] = 1;
-      view_.prog[1] = 1;
-      view_.prog[2] = 2;
-      copy(view_.prog_l, sizeof(view_.prog_l), "baselines");
-      copy(view_.prog_r, sizeof(view_.prog_r), "3 of 3");
+      view_.prog[0] = 2;
+      copy(view_.prog_l, sizeof(view_.prog_l), "bottle key");
+      copy(view_.prog_r, sizeof(view_.prog_r), "1 of 1");
       ftr2("PRESS accept", "HOLD cancel");
       break;
 
     case Screen::CalDirection:
-      hdr("direction verify", "2 of 8");
+      hdr("direction verify", "2 of 9");
       view_.hero = View::Hero::Action;
       copy(view_.hero_big, sizeof(view_.hero_big),
            door.running() ? "CREEP OPEN" : "STOPPED");
@@ -834,7 +877,7 @@ void App::composeCal() {
       break;
 
     case Screen::CalOpenMarker:
-      hdr("open marker", "3 of 8");
+      hdr("open marker", "3 of 9");
       view_.hero = View::Hero::Action;
       snprintf(view_.hero_big, sizeof(view_.hero_big), "probe %u/3", probe_n_);
       snprintf(view_.hero_sub, sizeof(view_.hero_sub), "spread %ld cnt - origin 0",
@@ -847,7 +890,7 @@ void App::composeCal() {
       break;
 
     case Screen::CalCloseMarker:
-      hdr("close marker", "4 of 8");
+      hdr("close marker", "4 of 9");
       view_.hero = View::Hero::Action;
       snprintf(view_.hero_big, sizeof(view_.hero_big), "probe %u/3", probe_n_);
       snprintf(view_.hero_sub, sizeof(view_.hero_sub), "spread %ld - pos %ld",
@@ -861,7 +904,7 @@ void App::composeCal() {
       break;
 
     case Screen::CalSeated:
-      hdr("closed seated", "5 of 8");
+      hdr("closed seated", "5 of 9");
       view_.hero = View::Hero::Action;
       snprintf(view_.hero_big, sizeof(view_.hero_big), "%ld",
                static_cast<long>(door.position()));
@@ -877,7 +920,7 @@ void App::composeCal() {
       break;
 
     case Screen::CalStroke: {
-      hdr("stroke entry", "6 of 8");
+      hdr("stroke entry", "6 of 9");
       view_.show_entry = true;
       view_.show_range = true;
       snprintf(view_.entry_val, sizeof(view_.entry_val), "%.1f",
@@ -914,7 +957,7 @@ void App::composeCal() {
     case Screen::CalLearnLoaded:
       hdr(screen_ == Screen::CalLearnEmpty ? "learn - empty"
                                            : "learn - loaded",
-          screen_ == Screen::CalLearnEmpty ? "7 of 8" : "8 of 8");
+          screen_ == Screen::CalLearnEmpty ? "7 of 9" : "8 of 9");
       view_.hero = View::Hero::Warn;
       snprintf(view_.hero_big, sizeof(view_.hero_big), "RUN %u / 6", learn_run_);
       snprintf(view_.hero_sub, sizeof(view_.hero_sub), "%s - reverse OFF",
@@ -934,10 +977,12 @@ void App::composeCal() {
            door.idle() ? "READY TO SAVE" : "MOTOR BUSY");
       copy(view_.hero_sub, sizeof(view_.hero_sub),
            door.idle() ? "motor idle - current decayed" : "wait for idle");
-      view_.nitems = 6;
+      view_.nitems = 7;
       listItem(0, "Baselines",
-               store.cal.current_zero_ok ? "ok" : "missing",
-               stagePip(store.cal.current_zero_ok, false), false);
+               store.cal.current_zero_ok && store.cal.jitter_ok ? "ok"
+                                                                : "missing",
+               stagePip(store.cal.current_zero_ok && store.cal.jitter_ok, false),
+               false);
       listItem(1, "Direction - markers - seated",
                store.cal.open_marker_ok && store.cal.close_marker_ok ? "ok"
                                                                      : "missing",
@@ -954,7 +999,10 @@ void App::composeCal() {
                          "ok"),
                stagePip(store.cal.table_loaded_ok, store.cal.table_loaded_stale),
                false);
-      listItem(5, "Single NVS write", "format v3", 1, true);
+      listItem(5, "Bottle door key",
+               store.cal.bottle_key_ok ? "ok" : "missing",
+               stagePip(store.cal.bottle_key_ok, false), false);
+      listItem(6, "Single NVS write", "format v3", 1, true);
       ftr2("PRESS save", "HOLD back");
       break;
 

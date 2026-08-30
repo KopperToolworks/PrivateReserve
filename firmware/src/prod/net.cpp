@@ -44,16 +44,26 @@ void netBegin() {
   if (!sta_ok) {
     WiFi.mode(WIFI_AP);
     WiFi.setSleep(WIFI_PS_NONE);
-    if (s.wifi_ap_password[0] != '\0') {
-      WiFi.softAP(s.wifi_ap_ssid, s.wifi_ap_password);
+    char ap[33];
+    char pw[65];
+    strncpy(ap, s.wifi_ap_ssid, sizeof(ap) - 1);
+    ap[sizeof(ap) - 1] = 0;
+    strncpy(pw, s.wifi_ap_password, sizeof(pw) - 1);
+    pw[sizeof(pw) - 1] = 0;
+    if (ap[0] == '\0') {
+      strncpy(ap, "PrivateReserve", sizeof(ap) - 1);
+      ap[sizeof(ap) - 1] = 0;
+    }
+    if (pw[0] != '\0') {
+      WiFi.softAP(ap, pw);
     } else {
-      WiFi.softAP(s.wifi_ap_ssid);
+      WiFi.softAP(ap);
     }
     Serial.print(F("[net] SoftAP "));
-    Serial.print(s.wifi_ap_ssid);
-    if (s.wifi_ap_password[0] != '\0') {
+    Serial.print(ap);
+    if (pw[0] != '\0') {
       Serial.print(F("  pw "));
-      Serial.print(s.wifi_ap_password);
+      Serial.print(pw);
     } else {
       Serial.print(F("  open"));
     }

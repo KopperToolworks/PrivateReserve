@@ -18,7 +18,8 @@ constexpr int kJogStepEditMaxCounts = 512;
 constexpr int kJogStepEditIncCounts = 16;
 
 bool isJogScreen(Screen s) {
-  return s == Screen::DiagJog || s == Screen::DiagJogCounts;
+  return s == Screen::DiagJog || s == Screen::DiagJogCounts ||
+         s == Screen::DiagRunLimit;
 }
 
 int dutyToPct(uint16_t duty) {
@@ -160,6 +161,11 @@ void App::go(Screen s) {
   last_turn_ms_ = 0;
   ignore_[0] = 0;
   if (s == Screen::Status) {
+    if (owner_ != MotorOwner::Som && key_) {
+      last_key_ = key_->state();
+      last_open_rocker_ = open_rocker;
+      last_close_rocker_ = close_rocker;
+    }
     owner_ = MotorOwner::Som;
   } else if (isJogScreen(s)) {
     owner_ = MotorOwner::Jog;
@@ -178,6 +184,11 @@ void App::go(Screen s) {
              s == Screen::SetMenu || s == Screen::ModeMenu ||
              s == Screen::Docs) {
     if (!door.running()) {
+      if (owner_ != MotorOwner::Som && key_) {
+        last_key_ = key_->state();
+        last_open_rocker_ = open_rocker;
+        last_close_rocker_ = close_rocker;
+      }
       owner_ = MotorOwner::Som;
     }
   }
@@ -299,6 +310,7 @@ void App::onHold() {
       break;
     case Screen::DiagJog:
     case Screen::DiagJogCounts:
+    case Screen::DiagRunLimit:
     case Screen::DiagObstTest:
       cancelProc();
       break;
@@ -374,6 +386,21 @@ void App::onTurn(int32_t n) {
       return;
     }
     door.startJog(dir > 0 ? Travel::Close : Travel::Open);
+    return;
+  }
+  if (screen_ == Screen::DiagRunLimit) {
+    if (door.running()) {
+      return;
+    }
+    int i = static_cast<int>(cursor_) + dir;
+    if (i < 0) {
+      i = 1;
+    }
+    if (i > 1) {
+      i = 0;
+    }
+    cursor_ = static_cast<uint8_t>(i);
+    noteMenuTurn(s0, c0);
     return;
   }
   if (screen_ == Screen::DiagJogCounts) {
@@ -457,10 +484,10 @@ void App::onTurn(int32_t n) {
       wrap(5);
       break;
     case Screen::DiagMenu:
-      wrap(13);
+      wrap(14);
       break;
     case Screen::CalMenu:
-      wrap(9);
+      wrap(10);
       break;
     case Screen::SetMenu:
       wrap(7);
@@ -719,7 +746,8 @@ void App::onPress() {
       static const Screen kDiag[] = {
           Screen::DiagBottleKey, Screen::DiagShaft,     Screen::DiagLimits,
           Screen::DiagRockers,   Screen::DiagCurrent,   Screen::DiagPwm,
-          Screen::DiagJog,       Screen::DiagJogCounts, Screen::DiagObstTest,
+          Screen::DiagJog,       Screen::DiagJogCounts, Screen::DiagRunLimit,
+          Screen::DiagObstTest,
           Screen::DiagTableClose, Screen::DiagEc11,     Screen::DiagNetwork,
           Screen::DiagCalStatus};
       go(kDiag[cursor_]);
@@ -740,9 +768,9 @@ void App::onPress() {
       break;
     case Screen::DiagLimits:
       if (cursor_ == 0) {
-        door.setOpenMarkForce(!door.openMarkForced());
-      } else {
         door.setCloseMarkForce(!door.closeMarkForced());
+      } else {
+        door.setOpenMarkForce(!door.openMarkForced());
       }
       break;
     case Screen::DiagRockers:
@@ -772,18 +800,30 @@ void App::onPress() {
       persistJogSettings();
       cursor_ = static_cast<uint8_t>((cursor_ + 1) % 3);
       break;
+    case Screen::DiagRunLimit:
+      if (!door.idle()) {
+        door.cancel();
+        break;
+      }
+      if (!door.startRunToLimit(cursor_ == 0 ? Travel::Open : Travel::Close)) {
+        copy(ignore_, sizeof(ignore_), door.lastHint());
+      } else {
+        ignore_[0] = 0;
+      }
+      break;
     case Screen::DiagEc11:
       detents_ = 0;
       rotary_raw_ = 0;
       break;
     case Screen::CalMenu:
-      if (cursor_ == 8) {
+      if (cursor_ == 9) {
         go(Screen::CalReview);
       } else {
         static const Screen kCal[] = {
             Screen::CalCurrentZero, Screen::CalDirection, Screen::CalOpenMarker,
             Screen::CalCloseMarker, Screen::CalSeated,    Screen::CalStroke,
-            Screen::CalLearnEmpty,  Screen::CalLearnLoaded};
+            Screen::CalLearnEmpty,  Screen::CalLearnLoaded,
+            Screen::CalBottleKey};
         startStage(kCal[cursor_]);
       }
       break;
@@ -829,8 +869,7 @@ void App::onPress() {
       store.settings.as5600_min_progress_counts =
           store.cal.jitter_pp * 2 + 2;
       store.cal.jitter_ok = true;
-      go(Screen::CalBottleKey);
-      key_capture_ = 0;
+      go(Screen::CalMenu);
       break;
     }
     case Screen::CalBottleKey:
@@ -1441,8 +1480,10 @@ void App::update() {
     snprintf(net_label_, sizeof(net_label_), "STA %s",
              WiFi.localIP().toString().c_str());
   } else if (ap_up_) {
-    snprintf(net_label_, sizeof(net_label_), "AP %s",
-             store.settings.wifi_ap_ssid);
+    char ap[33];
+    strncpy(ap, store.settings.wifi_ap_ssid, sizeof(ap) - 1);
+    ap[sizeof(ap) - 1] = 0;
+    snprintf(net_label_, sizeof(net_label_), "AP %s", ap);
   } else {
     copy(net_label_, sizeof(net_label_), "net down");
   }
@@ -1451,7 +1492,7 @@ void App::update() {
 
 void App::listItem(uint8_t i, const char* label, const char* value, uint8_t pip,
                    bool sel) {
-  if (i >= 13) {
+  if (i >= 14) {
     return;
   }
   copy(view_.items[i].label, sizeof(view_.items[i].label), label);
@@ -1462,8 +1503,8 @@ void App::listItem(uint8_t i, const char* label, const char* value, uint8_t pip,
 
 uint8_t App::compactMenu(uint8_t total) {
   uint8_t vis = kMenuVisible;
-  if (vis > 13) {
-    vis = 13;
+  if (vis > 14) {
+    vis = 14;
   }
   if (total <= vis) {
     view_.nitems = total;
@@ -1538,7 +1579,8 @@ const char* App::actionWord() const {
       return "SNUG";
     case DoorPhase::Jog:
       return "JOG";
-    case DoorPhase::Calibrating:
+    case DoorPhase::RunLimit:
+      return door.direction() == Travel::Open ? "OPENING" : "CLOSING";
       return "CAL";
     default:
       return phaseName(door.phase());
@@ -1557,7 +1599,7 @@ char App::actionClass() const {
 }
 
 void App::compose() {
-  view_ = View{};
+  memset(&view_, 0, sizeof(view_));
   view_.screen = screen_;
   view_.amps = fabsf(door.amps());
   view_.trip = door.binTrip();

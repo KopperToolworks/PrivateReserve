@@ -25,6 +25,7 @@ enum class Screen : uint8_t {
   DiagPwm,
   DiagJog,
   DiagJogCounts,
+  DiagRunLimit,
   DiagObstTest,
   DiagTableClose,
   DiagTableOpen,
@@ -73,6 +74,7 @@ enum class DoorPhase : uint8_t {
   Snug,
   CreepOpen,
   Jog,
+  RunLimit,
   Calibrating,
   Fault,
 };
@@ -263,7 +265,7 @@ struct View {
     char value[28];
     uint8_t pip;
     bool sel;
-  } items[13];
+  } items[14];
   uint8_t nitems = 0;
 
   char pin_parts[80] = "";
@@ -350,6 +352,8 @@ inline const char* phaseName(DoorPhase p) {
       return "creep open";
     case DoorPhase::Jog:
       return "jog";
+    case DoorPhase::RunLimit:
+      return "run to limit";
     case DoorPhase::Calibrating:
       return "calibrating";
     case DoorPhase::Fault:

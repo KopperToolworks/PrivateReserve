@@ -52,6 +52,7 @@ class Door {
   void acknowledgeFault();
   void startJog(Travel dir);
   bool startJogCounts(Travel dir);
+  bool startRunToLimit(Travel dir);
   uint32_t jogRemainingMs() const { return jog_remaining_ms_; }
   int32_t jogRemainingCounts() const { return jog_remaining_counts_; }
   bool jogByCounts() const { return jog_by_counts_; }
@@ -80,6 +81,7 @@ class Door {
   void checkTravelCap();
   void advance(uint32_t now, uint32_t dt);
   bool sensorFreeJog() const;
+  bool runToLimitActive() const;
   bool countJogActive() const;
   Travel jogCommandDir() const;
   void clearFaultForJog();
@@ -137,6 +139,7 @@ class Door {
   bool current_tick_ = false;
   bool next_is_cal_ = false;
   bool next_is_jog_ = false;
+  bool next_is_run_limit_ = false;
   char hint_[40] = "";
 };
 

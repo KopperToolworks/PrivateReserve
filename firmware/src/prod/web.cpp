@@ -12,6 +12,7 @@
 #include <cstdarg>
 #include <cmath>
 #include <cstring>
+#include <esp_task_wdt.h>
 
 namespace {
 WebServer server(80);
@@ -19,12 +20,15 @@ char json[12288];
 
 void jsonEsc(char* dst, size_t n, const char* s) {
   size_t o = 0;
-  if (!s) {
-    dst[0] = 0;
+  if (!s || n == 0) {
+    if (n) {
+      dst[0] = 0;
+    }
     return;
   }
-  while (*s && o + 2 < n) {
-    const unsigned char c = static_cast<unsigned char>(*s++);
+  const size_t lim = strnlen(s, 128);
+  for (size_t i = 0; i < lim && o + 2 < n; ++i) {
+    const unsigned char c = static_cast<unsigned char>(s[i]);
     if (c < 0x20) {
       continue;
     }
@@ -66,7 +70,12 @@ float jsonNum(float v) {
 }
 
 void buildState() {
+  esp_task_wdt_reset();
   const View& v = app.view();
+  const uint8_t ntiles = v.ntiles > 4 ? 4 : v.ntiles;
+  const uint8_t nrows = v.nrows > 6 ? 6 : v.nrows;
+  const uint8_t nitems = v.nitems > 14 ? 14 : v.nitems;
+  const uint8_t nftr = v.nftr > 3 ? 3 : v.nftr;
   char* p = json;
   const char* end = json + sizeof(json);
   json[0] = 0;
@@ -103,7 +112,7 @@ void buildState() {
           v.tile_cols ? v.tile_cols : 4u);
 
   append(p, end, ",\"tiles\":[");
-  for (uint8_t i = 0; i < v.ntiles; ++i) {
+  for (uint8_t i = 0; i < ntiles; ++i) {
     if (i) {
       append(p, end, ",");
     }
@@ -115,7 +124,7 @@ void buildState() {
             k, val, g, v.tiles[i].pip, v.tiles[i].sel ? "true" : "false");
   }
   append(p, end, "],\"rows\":[");
-  for (uint8_t i = 0; i < v.nrows; ++i) {
+  for (uint8_t i = 0; i < nrows; ++i) {
     if (i) {
       append(p, end, ",");
     }
@@ -126,7 +135,7 @@ void buildState() {
             v.rows[i].dim, v.rows[i].sel ? "true" : "false");
   }
   append(p, end, "],\"items\":[");
-  for (uint8_t i = 0; i < v.nitems; ++i) {
+  for (uint8_t i = 0; i < nitems; ++i) {
     if (i) {
       append(p, end, ",");
     }
@@ -137,7 +146,7 @@ void buildState() {
             v.items[i].pip, v.items[i].sel ? "true" : "false");
   }
   append(p, end, "],\"ftr\":[");
-  for (uint8_t i = 0; i < v.nftr; ++i) {
+  for (uint8_t i = 0; i < nftr; ++i) {
     if (i) {
       append(p, end, ",");
     }
@@ -518,8 +527,10 @@ if(window.visualViewport){visualViewport.addEventListener('resize',fit);visualVi
 void handleRoot() { server.send_P(200, "text/html", kPage); }
 void handleCss() { server.send_P(200, "text/css", kCss); }
 void handleState() {
+  esp_task_wdt_reset();
   buildState();
   server.send(200, "application/json", json);
+  esp_task_wdt_reset();
 }
 
 void copyWifi(char* live, char* pend, size_t n, const String& v) {
@@ -716,6 +727,7 @@ void handleScan() {
 }
 
 void handleCmd() {
+  esp_task_wdt_reset();
   const String c = server.arg("c");
   const int n = server.arg("n").toInt();
   const String v = server.arg("v");
@@ -762,6 +774,7 @@ void handleCmd() {
   }
   app.compose();
   server.send(200, "text/plain", "ok");
+  esp_task_wdt_reset();
 }
 }  // namespace
 

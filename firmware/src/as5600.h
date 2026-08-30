@@ -19,7 +19,9 @@ class As5600Sensor {
   bool magnetTooStrong() const { return (status_ & 0x08) != 0; }
   uint8_t statusRaw() const { return status_; }
 
-  // AGC (0x1A): 0..255 — mid-range (~128) is a healthy air gap
+  // AGC (0x1A): this board is 3.3 V, so the range is 0..128.
+  // Target ~64. 128 = max gain (magnet too weak). 0 = too strong.
+  // Do not treat 128 as mid-range; that is the 5 V 0..255 scale.
   uint8_t agc() const { return agc_; }
   // MAGNITUDE (0x1B): 12-bit field strength
   uint16_t magnitude() const { return magnitude_; }

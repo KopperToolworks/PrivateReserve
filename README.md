@@ -2,7 +2,7 @@
 
 Private Reserve is a door controller for openings that a stock garage opener is a poor fit for: a concealed or architectural door, a 140 V DC motor without the manufacturer's logic board, and a close that must seat against the frame rather than hit a hard stop.
 
-It ramps the motor with PWM instead of switching it full-on. A magnetic shaft encoder is the position source. Near-end markers only flag the last fraction of travel. Motor current both stops an obstruction mid-stroke and, after the close marker, snugs the door shut. The same firmware takes commands from a magnetic trigger, dual rocker stations, the on-box knob and LCD, and a phone web page that shares that LCD state.
+It follows a Door-pace S-curve on remaining throw (peak g and cruise speed) instead of switching the motor full-on. A magnetic shaft encoder is the position source. Near-end markers only flag the last fraction of travel. Motor current both stops an obstruction mid-stroke and, after the close marker, snugs the door shut. The same firmware takes commands from a magnetic trigger, dual rocker stations, the on-box knob and LCD, and a phone web page that shares that LCD state.
 
 The trigger is a hall sensor. A magnet placed over it opens the door. The magnet can be hidden in an object; the recess in the bottom of a bottle is one example.
 

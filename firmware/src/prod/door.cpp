@@ -166,6 +166,7 @@ void Door::latch(FaultId id) {
   last_event_ = id;
   setPhase(DoorPhase::Fault);
   reversed_this_chain_ = false;
+  next_is_run_limit_ = false;
 }
 
 const LoadTable* Door::table() const { return store.armedTable(); }
@@ -323,6 +324,7 @@ void Door::enterBlank(Travel next) {
 void Door::startMove(Travel dir, bool reverse) {
   next_is_cal_ = false;
   next_is_jog_ = false;
+  next_is_run_limit_ = false;
   jog_by_counts_ = false;
   if (bothMarks()) {
     latch(FaultId::LimitHit);
@@ -348,6 +350,7 @@ void Door::stopMotionKeepK1() {
   jog_remaining_counts_ = 0;
   jog_by_counts_ = false;
   next_is_jog_ = false;
+  next_is_run_limit_ = false;
   if (phase_ != DoorPhase::Fault) {
     setPhase(DoorPhase::Idle);
   }
@@ -376,6 +379,10 @@ void Door::acknowledgeFault() {
 
 bool Door::sensorFreeJog() const {
   return !jog_by_counts_ && (next_is_jog_ || phase_ == DoorPhase::Jog);
+}
+
+bool Door::runToLimitActive() const {
+  return next_is_run_limit_ || phase_ == DoorPhase::RunLimit;
 }
 
 bool Door::countJogActive() const {
@@ -436,6 +443,7 @@ void Door::queueJog(Travel dir, uint32_t step_ms, int32_t step_counts,
   clearFaultForJog();
   last_event_ = FaultId::None;
   next_is_cal_ = false;
+  next_is_run_limit_ = false;
 
   const bool same_kind = next_is_jog_ || phase_ == DoorPhase::Jog ||
                          phase_ == DoorPhase::DecayWait ||
@@ -499,6 +507,35 @@ bool Door::startJogCounts(Travel dir) {
     return false;
   }
   queueJog(dir, 0, jogStepCounts(), true);
+  return true;
+}
+
+bool Door::startRunToLimit(Travel dir) {
+  clearFaultForJog();
+  last_event_ = FaultId::None;
+  next_is_cal_ = false;
+  next_is_jog_ = false;
+  jog_by_counts_ = false;
+  if (bothMarks()) {
+    latch(FaultId::LimitHit);
+    snprintf(hint_, sizeof(hint_), "both markers active");
+    return false;
+  }
+  if (dir == Travel::Open && openMark()) {
+    snprintf(hint_, sizeof(hint_), "already at open marker");
+    return false;
+  }
+  if (dir == Travel::Close && closeMark()) {
+    snprintf(hint_, sizeof(hint_), "already at close marker");
+    return false;
+  }
+  next_is_run_limit_ = true;
+  if (!running()) {
+    reversed_this_chain_ = false;
+    resync_done_ = false;
+    move_t0_ = millis();
+  }
+  enterBlank(dir);
   return true;
 }
 
@@ -657,6 +694,12 @@ void Door::advance(uint32_t now, uint32_t dt) {
           applyDuty(s.pwm_jog_duty);
           break;
         }
+        if (next_is_run_limit_) {
+          pwm_on_ms_ = 0;
+          setPhase(DoorPhase::RunLimit);
+          applyDuty(s.pwm_jog_duty);
+          break;
+        }
         if (next_is_cal_) {
           setPhase(DoorPhase::Calibrating);
           applyDuty(s.pwm_creep_duty);
@@ -766,6 +809,11 @@ void Door::advance(uint32_t now, uint32_t dt) {
       pwm_on_ms_ += dt;
       break;
 
+    case DoorPhase::RunLimit:
+      applyDuty(s.pwm_jog_duty);
+      pwm_on_ms_ += dt;
+      break;
+
     case DoorPhase::Calibrating:
       applyDuty(s.pwm_creep_duty);
       pwm_on_ms_ += kControlLoopMs;
@@ -793,7 +841,7 @@ void Door::update() {
   if (dt > 200) {
     dt = 200;
   }
-  if (sensorFreeJog()) {
+  if (sensorFreeJog() || runToLimitActive()) {
     skip_enc_ = true;
   } else if (skip_enc_) {
     if (enc_ && enc_->update()) {
@@ -828,24 +876,32 @@ void Door::update() {
     if (phase_ == DoorPhase::Fault) {
       return;
     }
-    checkEnvelope(millis());
-    if (phase_ == DoorPhase::Fault) {
-      return;
-    }
-    checkStall(millis());
-    if (phase_ == DoorPhase::Fault) {
-      return;
-    }
-    if (phase_ != DoorPhase::Jog) {
-      checkTravelCap();
+    if (runToLimitActive()) {
+      const bool dest_open = dir_ == Travel::Open && openMark();
+      const bool dest_close = dir_ == Travel::Close && closeMark();
+      if (dest_open || dest_close) {
+        stopMotionKeepK1();
+        return;
+      }
+    } else {
+      checkEnvelope(millis());
       if (phase_ == DoorPhase::Fault) {
         return;
       }
-    }
+      checkStall(millis());
+      if (phase_ == DoorPhase::Fault) {
+        return;
+      }
+      if (phase_ != DoorPhase::Jog) {
+        checkTravelCap();
+        if (phase_ == DoorPhase::Fault) {
+          return;
+        }
+      }
 
-    const bool dest_open = dir_ == Travel::Open && openMark();
-    const bool dest_close = dir_ == Travel::Close && closeMark();
-    if (phase_ != DoorPhase::Calibrating && phase_ != DoorPhase::Jog) {
+      const bool dest_open = dir_ == Travel::Open && openMark();
+      const bool dest_close = dir_ == Travel::Close && closeMark();
+      if (phase_ != DoorPhase::Calibrating && phase_ != DoorPhase::Jog) {
       if (dest_open && !inCreepOrSnug()) {
         if (trusted_ && store.cal.open_marker_ok && !resync_done_) {
           const int32_t drift = position() - 0;
@@ -871,6 +927,7 @@ void Door::update() {
         }
         setPhase(DoorPhase::CreepClose);
       }
+    }
     }
   }
 

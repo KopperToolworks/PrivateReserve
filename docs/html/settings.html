@@ -40,6 +40,7 @@
     <section class="shot">
       <h2>1. Groups</h2>
       <p>Grouped by effect, not by NVS layout. The count on the right is how many values sit in each group. An amber pip marks a group that holds an unsaved change. Six rows fit. Service is the seventh row, off this shot until you TURN.</p>
+      <p>The web Settings tab paints that group list from <code>/api/state</code>, then keeps polling. Leaving jog to open Settings can write NVS on the same HTTP request as the first paint. The 3 s task watchdog used to miss those stretches, so the list appeared once and the controller stopped answering. Firmware now resets the watchdog around NVS, HTTP, and LCD draw, and it will not walk an unterminated NVS string forever.</p>
       <figure class="lcd">
         <img src="shots/set-01.png" width="320" alt="SET groups: Motion profile selected, 3 unsaved">
         <figcaption>Figure 1. SET · groups. Three unsaved changes. Motion profile selected.</figcaption>
@@ -51,12 +52,12 @@
         <tbody>
           <tr><td><code>SET · groups</code></td><td>Header left. Settings root.</td></tr>
           <tr><td><code>3 unsaved ▾</code></td><td>Header right. Three staged field edits. The triangle means more groups below.</td></tr>
-          <tr><td>Amber pip + highlight + <code>Motion profile</code> + <code>7 VALUES</code></td><td>Selected. Cruise, floors, creep, jog, accel, cruise time, decel. Amber because cruise duty is staged 512 → 544.</td></tr>
+          <tr><td>Amber pip + highlight + <code>Motion profile</code> + <code>4 VALUES</code></td><td>Selected. Door pace, min duty, creep, jog. Amber when pace is staged (invalidates tables).</td></tr>
           <tr><td>Green pip + <code>Travel and markers</code> + <code>6 VALUES</code></td><td>Caps, probe tolerance, resync drift. Some rows open a locked derived page.</td></tr>
           <tr><td>Amber pip + <code>Obstruction detection</code> + <code>5 VALUES</code></td><td>Inrush skip, snug amps, envelope knobs. Amber because this group also holds a staged edit in this example.</td></tr>
           <tr><td>Green pip + <code>Triggers and debounce</code> + <code>3 VALUES</code></td><td>Bottle-key polarity and switch debounce. Saving polarity re-arms from the current sensor level. It does not command a move.</td></tr>
           <tr><td>Green pip + <code>Display and knob</code> + <code>3 VALUES</code></td><td>Display timeout (minutes, default 5), HOLD min ms, HOLD max ms.</td></tr>
-          <tr><td>Green pip + <code>Network</code> + <code>5 VALUES</code></td><td>STA SSID, STA password, join timeout, AP name, AP password. Station password is web-only. Fallback AP password is shown in clear (default <code>reserved</code>). This row is clipped at the bottom of the panel.</td></tr>
+          <tr><td>Green pip + <code>Network</code> + <code>5 VALUES</code></td><td>STA SSID, STA password, join timeout, AP name, AP password. Station password is web-only. Fallback AP password is shown in clear (default <code>reserved</code>). This row is clipped at the bottom of the panel. A 4-byte NVS layout shift used to advertise SoftAP as <code>ateReserve</code> (the tail of <code>PrivateReserve</code>). Boot now restores the default name and password when that suffix is all that remains, then rewrites NVS.</td></tr>
           <tr><td><code>Service and defaults</code> + <code>5 ACTIONS</code> (off-screen)</td><td>Seventh group. TURN to it. Destructive. Figure 11. Clear station Wi-Fi is the fourth action; Reboot controller is the fifth. PRESS twice.</td></tr>
           <tr><td><code>TURN scroll</code></td><td>Move the highlight. Window the list.</td></tr>
           <tr><td><code>PRESS open</code></td><td>Enter the highlighted group.</td></tr>
@@ -79,7 +80,7 @@
         <tbody>
           <tr><td><code>SET · motion</code></td><td>Header left.</td></tr>
           <tr><td><code>7 values</code></td><td>Header right. Count in this group.</td></tr>
-          <tr><td>Highlight + <code>Cruise duty</code> + <code>512 → 544</code> (544 amber)</td><td>Selected. Stored 512, pending 544. Changing this invalidates both learned tables.</td></tr>
+          <tr><td>Highlight + <code>Door pace</code></td><td>Selected. Gentle…Brisk slider, speed-vs-throw graph, About X s and peak g. Changing pace invalidates both learned tables.</td></tr>
           <tr><td><code>Minimum moving duty</code> · <code>64</code></td><td>Floor while the profile is moving. Below this the motor may not break away.</td></tr>
           <tr><td><code>Creep duty</code> · <code>96</code></td><td>Duty for marker seeks, snug, and short calibration moves.</td></tr>
           <tr><td><code>Jog duty</code> · <code>96</code></td><td>10-bit duty for both diagnostic jog pages. Those pages edit it as 5–25%. Time jog also edits step as 200–1000&nbsp;ms. Position jog edits step as 16–512 counts.</td></tr>
@@ -133,7 +134,7 @@
           <tr><td><code>SET · confirm</code></td><td>Header left.</td></tr>
           <tr><td><code>cruise duty</code></td><td>Header right. Which field triggered this gate.</td></tr>
           <tr><td><code>RELEARN REQUIRED</code></td><td>Amber banner title.</td></tr>
-          <tr><td><code>Changing the profile invalidates both obstruction tables</code></td><td>Banner detail. Cruise duty, accel, cruise time, and decel all do this.</td></tr>
+          <tr><td><code>Changing the profile invalidates both obstruction tables</code></td><td>Banner detail. Door pace does this (same as the old cruise/accel/decel knobs).</td></tr>
           <tr><td>Amber pip + <code>Empty-rack table</code> + <code>ARMED → STALE</code></td><td>Empty envelope is in service now. After this save it will not be.</td></tr>
           <tr><td>Amber pip + <code>Loaded-rack table</code> + <code>STALE → STALE</code></td><td>Already stale. Stays stale.</td></tr>
           <tr><td>Red pip + <code>Until relearn, trip is</code> + <code>2.50 A CEILING ONLY</code></td><td>Protection drops to the hard ceiling. Main still runs, with less discrimination.</td></tr>
@@ -210,7 +211,7 @@
           <tr><td><code>Station SSID</code> · <code>house-iot</code></td><td>Stored STA network name. Shown in clear.</td></tr>
           <tr><td><code>Station password</code> · <code>******** (web only)</code></td><td>Masked. The LCD cannot edit it. On the web View of this screen, open <code>Set SSID and password</code>. That is a separate page at <code>/wifi</code> on the controller, with a phone keyboard and a Scan list. Scan takes a few seconds; the page stays live. It is not on the LCD.</td></tr>
           <tr><td><code>Join timeout</code> · <code>15 000 ms</code></td><td>How long STA join may run before SoftAP starts. This is a number. PRESS can edit it from the knob.</td></tr>
-          <tr><td><code>Fallback AP name</code> · <code>PrivateReserve</code></td><td>SoftAP SSID when STA is empty or join fails. Default name is <code>PrivateReserve</code>.</td></tr>
+          <tr><td><code>Fallback AP name</code> · <code>PrivateReserve</code></td><td>SoftAP SSID when STA is empty or join fails. Default name is <code>PrivateReserve</code>. If NVS was shifted by four bytes, this used to load as <code>ateReserve</code>; boot restores the default and rewrites the blob.</td></tr>
           <tr><td><code>Fallback AP password</code> · <code>reserved</code></td><td>Shown in clear. You need this before the web page exists. Default is <code>reserved</code>. Empty means an open AP. Change it later on <code>/wifi</code>.</td></tr>
           <tr><td>Amber line: <code>No login on the web page. Anyone on this network can move the door.</code></td><td>HTTP is port 80 with no application login. Do not expose that LAN.</td></tr>
           <tr><td><code>TURN scroll</code></td><td>Move among rows.</td></tr>
